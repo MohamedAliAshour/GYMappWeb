@@ -1,0 +1,378 @@
+﻿@model IEnumerable<GYMappWeb.ViewModels.TblUserMemberShip.TblUserMemberShipViewModel>
+
+@{
+    ViewData["Title"] = "Memberships";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .status-icon {
+        width: 24px;
+        height: 24px;
+        display: inline-block;
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+
+    .status-active {
+        background-image: url('/images/Active.png');
+    }
+
+    .status-inactive {
+        background-image: url('/images/Inactive.png');
+    }
+
+    /* Action buttons container */
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    /* Base button styles */
+    .icon-btn {
+        display: inline-block;
+        width: 33px;
+        height: 33px;
+        background-color: transparent;
+        border-radius: 4px;
+        padding: 3px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+        .icon-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+    /* Delete button styles */
+    .delete-btn {
+        border: 1px solid #dc3545;
+    }
+
+        .delete-btn:hover {
+            background-color: #dc3545;
+        }
+
+    /* Edit button styles */
+    .edit-btn {
+        border: 1px solid #42A5F5;
+    }
+
+        .edit-btn:hover {
+            background-color: #42A5F5;
+        }
+
+    /* Icon visibility control */
+    .icon-default {
+        display: block;
+    }
+
+    .icon-hover {
+        display: none;
+    }
+
+    .icon-btn:hover .icon-default {
+        display: none;
+    }
+
+    .icon-btn:hover .icon-hover {
+        display: block;
+    }
+
+    /* Modal styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+        display: none;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        padding: 25px;
+        width: 400px;
+        max-width: 90%;
+        color: white;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+        padding-bottom: 15px;
+        margin-bottom: 15px;
+    }
+
+    .modal-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.4);
+        padding-top: 15px;
+        margin-top: 15px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .btn-modal {
+        padding: 8px 20px;
+        border-radius: 4px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-modal-cancel {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+
+        .btn-modal-cancel:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+    .btn-modal-confirm {
+        background: rgba(220, 53, 69, 0.7);
+        border: 1px solid rgba(220, 53, 69, 0.9);
+        color: white;
+    }
+
+        .btn-modal-confirm:hover {
+            background: rgba(220, 53, 69, 0.9);
+        }
+
+    td:last-child {
+        text-align: center;
+    }
+
+    /* Add this to your site.css */
+    .btn-light {
+        color: #000 !important; /* Black text */
+    }
+
+        .btn-light:hover {
+            color: #000 !important; /* Keep black text on hover */
+        }
+</style>
+
+
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">Membership List</h2>
+                <a asp-action="Create" class="btn btn-light btn-sm">Create New</a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>User Code</th>
+                            <th>User Name</th>
+                            <th>Membership</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Freeze Days</th>
+                            @* <th>After Freeze</th> *@
+                            <th>Invitations</th>
+                            <th>Status</th>
+                            <th>Created By</th>
+                            <th>Created Date</th>
+
+                            <th>Offer</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            var originalEndDate = item.EndDate;
+                            var freezeDays = item.TotalFreezedDays ?? 0; // Handle null case
+                            var newEndDate = originalEndDate.AddDays(freezeDays);
+
+                            <tr id="membership-row-@item.UserMemberShipId">
+                                <td>@Html.DisplayFor(modelItem => item.User.UserCode)</td>
+                                <td>@Html.DisplayFor(modelItem => item.User.UserName)</td>
+                                <td>@Html.DisplayFor(modelItem => item.MemberShipTypes.Name)</td>
+                                <td>@item.StartDate.ToString("yyyy-MM-dd")</td>
+                                <td>@originalEndDate.ToString("yyyy-MM-dd")</td>
+                                <td>@freezeDays</td>
+                                @*  <td>
+                                    @if (freezeDays > 0)
+                                    {
+                                        <span class="text-success fw-bold">@newEndDate.ToString("yyyy-MM-dd")</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@originalEndDate.ToString("yyyy-MM-dd")</span>
+                                    }
+                                </td> *@
+                                <td>@Html.DisplayFor(modelItem => item.invitationUsed)</td>
+                                <td>
+                                    @if (item.IsActive)
+                                    {
+                                        <img src="~/images/Active.png" alt="Active" title="Active" style="width:24px; height:24px;" />
+                                    }
+                                    else
+                                    {
+                                        <img src="~/images/Inactive.png" alt="Inactive" title="Inactive" style="width:24px; height:24px;" />
+                                    }
+                                </td>
+                                <td>@Html.DisplayFor(modelItem => item.CreatedByUserName)</td>
+                                <td>@item.CreatedDate.ToString("yyyy-MM-dd")</td>
+
+                                <td>
+                                    @if (item.Off != null)
+                                    {
+                                        @Html.DisplayFor(modelItem => item.Off.OfferName)
+                                    }
+                                    else
+                                    {
+                                        <span>None</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="delete-btn icon-btn delete-membership-btn"
+                                                title="Delete"
+                                                data-membershipid="@item.UserMemberShipId"
+                                                data-username="@item.User.UserName"
+                                                data-membership="@item.MemberShipTypes.Name">
+                                            <img src="~/images/delete-red.png" alt="Delete" class="icon-default" />
+                                            <img src="~/images/delete-white.png" alt="Delete" class="icon-hover" />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4 class="mb-0">Confirm Delete</h4>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete the membership for <strong id="userNameToDelete"></strong> (<strong id="membershipNameToDelete"></strong>)?</p>
+            <p class="text-danger">This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal-cancel" id="cancelDelete">Cancel</button>
+            <button class="btn-modal btn-modal-confirm" id="confirmDelete">Delete</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const deleteModal = document.getElementById('deleteModal');
+            const userNameToDelete = document.getElementById('userNameToDelete');
+            const membershipNameToDelete = document.getElementById('membershipNameToDelete');
+            const cancelDelete = document.getElementById('cancelDelete');
+            const confirmDelete = document.getElementById('confirmDelete');
+
+            let membershipIdToDelete = null;
+            let membershipRowElement = null;
+
+            // Set up delete buttons
+            document.querySelectorAll('.delete-membership-btn').forEach(button => {
+                button.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    membershipIdToDelete = this.getAttribute('data-membershipid');
+                    const username = this.getAttribute('data-username');
+                    const membership = this.getAttribute('data-membership');
+
+                    membershipRowElement = document.getElementById(`membership-row-${membershipIdToDelete}`);
+                    userNameToDelete.textContent = username;
+                    membershipNameToDelete.textContent = membership;
+                    deleteModal.style.display = 'flex';
+                });
+            });
+
+            // Cancel button
+            cancelDelete.addEventListener('click', function () {
+                deleteModal.style.display = 'none';
+                membershipIdToDelete = null;
+                membershipRowElement = null;
+            });
+
+            // Confirm button - AJAX delete
+            confirmDelete.addEventListener('click', async function () {
+                if (!membershipIdToDelete) return;
+
+                // Show loading state
+                const originalText = confirmDelete.textContent;
+                confirmDelete.disabled = true;
+                confirmDelete.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
+
+                try {
+                    // First delete any related freezes
+                    const deleteFreezesResponse = await fetch(`/TblUserMemberShips/DeleteFreezes/${membershipIdToDelete}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!deleteFreezesResponse.ok) {
+                        throw new Error('Failed to delete related freezes');
+                    }
+
+                    // Then delete the membership
+                    const deleteResponse = await fetch(`/TblUserMemberShips/Delete/${membershipIdToDelete}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!deleteResponse.ok) {
+                        throw new Error('Failed to delete membership');
+                    }
+
+                    // Show success message and remove the row
+                    membershipRowElement.remove();
+
+                } catch (error) {
+                    alert('Error deleting: ' + error.message);
+                } finally {
+                    deleteModal.style.display = 'none';
+                    confirmDelete.disabled = false;
+                    confirmDelete.textContent = originalText;
+                    membershipIdToDelete = null;
+                    membershipRowElement = null;
+                }
+            });
+
+            // Close modal when clicking outside
+            deleteModal.addEventListener('click', function (e) {
+                if (e.target === deleteModal) {
+                    deleteModal.style.display = 'none';
+                    membershipIdToDelete = null;
+                    membershipRowElement = null;
+                }
+            });
+        });
+    </script>
+}

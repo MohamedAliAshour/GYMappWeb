@@ -1,0 +1,318 @@
+﻿@model IEnumerable<GYMappWeb.ViewModels.TblOffer.TblOfferViewModel>
+
+@{
+    ViewData["Title"] = "Offers";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Action buttons container */
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    /* Base button styles */
+    .icon-btn {
+        display: inline-block;
+        width: 33px;
+        height: 33px;
+        background-color: transparent;
+        border-radius: 4px;
+        padding: 3px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+        .icon-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+    /* Delete button styles */
+    .delete-btn {
+        border: 1px solid #dc3545;
+    }
+
+        .delete-btn:hover {
+            background-color: #dc3545;
+        }
+
+    /* Edit button styles */
+    .edit-btn {
+        border: 1px solid #42A5F5;
+    }
+
+        .edit-btn:hover {
+            background-color: #42A5F5;
+        }
+
+    /* Icon visibility control */
+    .icon-default {
+        display: block;
+    }
+
+    .icon-hover {
+        display: none;
+    }
+
+    .icon-btn:hover .icon-default {
+        display: none;
+    }
+
+    .icon-btn:hover .icon-hover {
+        display: block;
+    }
+
+    /* Modal styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+        display: none;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        padding: 25px;
+        width: 400px;
+        max-width: 90%;
+        color: white;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+        padding-bottom: 15px;
+        margin-bottom: 15px;
+    }
+
+    .modal-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.4);
+        padding-top: 15px;
+        margin-top: 15px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .btn-modal {
+        padding: 8px 20px;
+        border-radius: 4px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-modal-cancel {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+
+        .btn-modal-cancel:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+    .btn-modal-confirm {
+        background: rgba(220, 53, 69, 0.7);
+        border: 1px solid rgba(220, 53, 69, 0.9);
+        color: white;
+    }
+
+        .btn-modal-confirm:hover {
+            background: rgba(220, 53, 69, 0.9);
+        }
+
+    /* Add this to your site.css */
+    .btn-light {
+        color: #000 !important; /* Black text */
+    }
+
+        .btn-light:hover {
+            color: #000 !important; /* Keep black text on hover */
+        }
+</style>
+
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">Offer List</h2>
+                <a asp-action="Create" class="btn btn-light btn-sm">Create New</a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Offer Name</th>
+                            <th>Discount %</th>
+                            <th>Membership Type</th>
+                            <th>Created By</th>
+                            <th>Created Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr id="offer-row-@item.OffId">
+                                <td>@Html.DisplayFor(modelItem => item.OfferName)</td>
+                                <td>@Html.DisplayFor(modelItem => item.DiscountPrecentage)%</td>
+                                <td>
+                                    @if (item.MemberShipTypes != null)
+                                    {
+                                        @Html.DisplayFor(modelItem => item.MemberShipTypes.Name)
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">None</span>
+                                    }
+                                </td>
+                                <td>@Html.DisplayFor(modelItem => item.CreatedByUserName)</td>
+                                <td>@item.CreatedDate.ToString("yyyy-MM-dd")</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a asp-action="Edit" asp-route-id="@item.OffId" class="edit-btn icon-btn" title="Edit">
+                                            <img src="~/images/edit-blue.png" alt="Edit" class="icon-default" />
+                                            <img src="~/images/edit-black.png" alt="Edit" class="icon-hover" />
+                                        </a>
+                                        <button class="delete-btn icon-btn delete-offer-btn"
+                                                title="Delete"
+                                                data-offerid="@item.OffId"
+                                                data-offername="@item.OfferName"
+                                                data-discount="@item.DiscountPrecentage">
+                                            <img src="~/images/delete-red.png" alt="Delete" class="icon-default" />
+                                            <img src="~/images/delete-white.png" alt="Delete" class="icon-hover" />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4 class="mb-0">Confirm Offer Deletion</h4>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete the offer <strong id="offerNameToDelete"></strong> (<strong id="offerDiscountToDelete"></strong>% discount)?</p>
+            <p class="text-danger">This action cannot be undone and may affect existing memberships using this offer.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal-cancel" id="cancelDelete">Cancel</button>
+            <button class="btn-modal btn-modal-confirm" id="confirmDelete">Delete</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const deleteModal = document.getElementById('deleteModal');
+            const offerNameToDelete = document.getElementById('offerNameToDelete');
+            const offerDiscountToDelete = document.getElementById('offerDiscountToDelete');
+            const cancelDelete = document.getElementById('cancelDelete');
+            const confirmDelete = document.getElementById('confirmDelete');
+
+            let offerIdToDelete = null;
+            let offerRowElement = null;
+
+            // Set up delete buttons
+            document.querySelectorAll('.delete-offer-btn').forEach(button => {
+                button.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    offerIdToDelete = this.getAttribute('data-offerid');
+                    const offerName = this.getAttribute('data-offername');
+                    const discount = this.getAttribute('data-discount');
+
+                    offerRowElement = document.getElementById(`offer-row-${offerIdToDelete}`);
+                    offerNameToDelete.textContent = offerName;
+                    offerDiscountToDelete.textContent = discount;
+                    deleteModal.style.display = 'flex';
+                });
+            });
+
+            // Cancel button
+            cancelDelete.addEventListener('click', function () {
+                deleteModal.style.display = 'none';
+                offerIdToDelete = null;
+                offerRowElement = null;
+            });
+
+            // Confirm button - AJAX delete
+            confirmDelete.addEventListener('click', async function () {
+                if (!offerIdToDelete) return;
+
+                // Show loading state
+                const originalText = confirmDelete.textContent;
+                confirmDelete.disabled = true;
+                confirmDelete.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
+
+                try {
+                    // First check if there are any related memberships
+                    const checkResponse = await fetch(`/TblOffers/HasRelatedMemberships/${offerIdToDelete}`);
+                    const hasRelated = await checkResponse.json();
+
+                    if (hasRelated) {
+                        throw new Error('This offer has related memberships and cannot be deleted.');
+                    }
+
+                    // Then delete the offer
+                    const deleteResponse = await fetch(`/TblOffers/Delete/${offerIdToDelete}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!deleteResponse.ok) {
+                        throw new Error('Failed to delete offer');
+                    }
+
+                    // Remove the row from the table
+                    offerRowElement.remove();
+
+                } catch (error) {
+                    alert('Error deleting offer: ' + error.message);
+                } finally {
+                    deleteModal.style.display = 'none';
+                    confirmDelete.disabled = false;
+                    confirmDelete.textContent = originalText;
+                    offerIdToDelete = null;
+                    offerRowElement = null;
+                }
+            });
+
+            // Close modal when clicking outside
+            deleteModal.addEventListener('click', function (e) {
+                if (e.target === deleteModal) {
+                    deleteModal.style.display = 'none';
+                    offerIdToDelete = null;
+                    offerRowElement = null;
+                }
+            });
+        });
+    </script>
+}

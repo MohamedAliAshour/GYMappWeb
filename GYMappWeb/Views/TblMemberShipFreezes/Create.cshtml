@@ -1,0 +1,391 @@
+﻿@model GYMappWeb.ViewModels.TblMemberShipFreeze.TblMemberShipFreezeViewModel
+
+@{
+    ViewData["Title"] = "Create Membership Freeze";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .card {
+        /* Keep consistent styling */
+    }
+
+    #freezeDetailsGrid, #freezeRecordsGrid {
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        transition: max-height 1.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 1s ease-in-out;
+        display: block;
+    }
+
+        #freezeDetailsGrid.visible, #freezeRecordsGrid.visible {
+            max-height: 2000px; /* Increased to accommodate content */
+            opacity: 1;
+        }
+
+    #freezeDetailsGridBody tr, #freezeRecordsGridBody tr {
+        display: table-row !important;
+    }
+
+    .freeze-table {
+        margin-bottom: 20px;
+    }
+
+    /* Ensure form-floating labels work with Flatpickr */
+    .form-floating > .form-control:not(:placeholder-shown) ~ label {
+        opacity: .65;
+        transform: scale(.85) translateY(-0.5rem) translateX(0.15rem);
+    }
+
+    /* Alert styling */
+    .freeze-alert {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1100;
+        min-width: 400px;
+    }
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white">
+                    <h2 class="mb-0">Create New Membership Freeze</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" id="freezeForm">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-4"></div>
+
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <div class="form-floating">
+                                    <select asp-for="UserMemberShipId" class="form-select" id="userMembershipSelect">
+                                        <option value="">-- Select Membership --</option>
+                                        @foreach (var item in ViewBag.UserMemberShipId)
+                                        {
+                                            <option value="@item.Value">@item.Text</option>
+                                        }
+                                    </select>
+                                    <label asp-for="UserMemberShipId" class="form-label">Membership</label>
+                                    <span asp-validation-for="UserMemberShipId" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Membership Freeze Summary Grid -->
+                        <div class="mt-4 freeze-table" id="freezeDetailsGrid">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Freeze Count</th>
+                                        <th>Remaining Freeze Count</th>
+                                        <th>Total Freeze Days</th>
+                                        <th>Remaining Freeze Days</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="freezeDetailsGridBody"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="row g-3 mt-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="FreezeStartDate" class="form-control flatpickr-input" placeholder=" " id="freezeStartDate" />
+                                    <label asp-for="FreezeStartDate" class="form-label">Start Date</label>
+                                    <span asp-validation-for="FreezeStartDate" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="FreezeEndDate" class="form-control flatpickr-input" placeholder=" " id="freezeEndDate" />
+                                    <label asp-for="FreezeEndDate" class="form-label">End Date</label>
+                                    <span asp-validation-for="FreezeEndDate" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-3">
+                            <div class="col-md-12">
+                                <div class="form-floating">
+                                    <input asp-for="Reason" class="form-control" placeholder=" " />
+                                    <label asp-for="Reason" class="form-label">Reason</label>
+                                    <span asp-validation-for="Reason" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Freeze Records Grid -->
+                        <div class="mt-4 freeze-table" id="freezeRecordsGrid">
+                            <h5>Previous Freeze Records</h5>
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Duration (Days)</th>
+                                        <th>Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="freezeRecordsGridBody"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-dark btn-lg" id="submitButton">Create Freeze</button>
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2">Back to List</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function() {
+            // Variables to store freeze periods and date pickers
+            let freezePeriods = [];
+            let startDatePicker, endDatePicker;
+            const $summaryGrid = $('#freezeDetailsGrid');
+            const $summaryGridBody = $('#freezeDetailsGridBody');
+            const $recordsGrid = $('#freezeRecordsGrid');
+            const $recordsGridBody = $('#freezeRecordsGridBody');
+            let isInitialLoad = true;
+            let freezeDetails = {}; // To store current membership freeze details
+
+            // Function to show alert message
+            function showAlert(message, type = 'danger') {
+                // Remove any existing alerts
+                $('.freeze-alert').remove();
+
+                // Create new alert
+                const alertHtml = `
+                    <div class="alert alert-${type} freeze-alert alert-dismissible fade show" role="alert">
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+
+                $('body').append(alertHtml);
+
+                // Auto-dismiss after 5 seconds
+                setTimeout(() => {
+                    $('.freeze-alert').alert('close');
+                }, 5000);
+            }
+
+            // Function to format date as YYYY-MM-DD
+            function formatDate(date) {
+                return date.toISOString().split('T')[0];
+            }
+
+            // Function to calculate days between dates
+            function calculateDays(startDate, endDate) {
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                const diffTime = Math.abs(end - start);
+                return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Inclusive of both dates
+            }
+
+            // Function to update date picker disabled dates
+            function updateDatePickerDisabledDates() {
+                const disabledRanges = freezePeriods.map(period => ({
+                    from: formatDate(period.from),
+                    to: formatDate(period.to)
+                }));
+
+                startDatePicker.set('disable', disabledRanges);
+                endDatePicker.set('disable', disabledRanges);
+            }
+
+            // Function to toggle grid visibility
+            function toggleGrid($grid, show) {
+                if (show) {
+                    // Force reflow before adding class to trigger animation
+                    $grid[0].scrollHeight;
+                    $grid.addClass('visible');
+                } else {
+                    $grid.removeClass('visible');
+                }
+            }
+
+            // Function to load membership freeze details
+            function loadMembershipFreezeDetails(userMembershipId) {
+                if (!userMembershipId) {
+                    toggleGrid($summaryGrid, false);
+                    toggleGrid($recordsGrid, false);
+                    freezePeriods = []; // Clear frozen periods
+                    updateDatePickerDisabledDates();
+                    freezeDetails = {};
+                    return;
+                }
+
+                // Show loading states
+                $summaryGridBody.html('<tr><td colspan="4" class="text-center">Loading summary...</td></tr>');
+                $recordsGridBody.html('<tr><td colspan="4" class="text-center">Loading records...</td></tr>');
+
+                // Show grids with animation
+                toggleGrid($summaryGrid, true);
+                toggleGrid($recordsGrid, true);
+
+                // Fetch membership summary details
+                $.get(`/TblMemberShipFreezes/GetMembershipFreezeDetails?userMembershipId=${userMembershipId}`, function(summaryData) {
+                    if (summaryData) {
+                        freezeDetails = summaryData; // Store the details
+                        $summaryGridBody.html(`
+                            <tr>
+                                <td>${summaryData.freezeCount || 0}</td>
+                                <td>${summaryData.remainingFreezeCount || 0}</td>
+                                <td>${summaryData.totalFreezeDays || 0}</td>
+                                <td>${summaryData.remainingFreezeDays || 0}</td>
+                            </tr>
+                        `);
+                    }
+                }).fail(function() {
+                    $summaryGridBody.html('<tr><td colspan="4" class="text-center text-danger">Error loading summary</td></tr>');
+                });
+
+                // Fetch freeze records
+                $.get(`/TblMemberShipFreezes/GetFreezeRecords?userMembershipId=${userMembershipId}`, function(recordsData) {
+                    freezePeriods = []; // Reset frozen periods
+
+                    if (recordsData && recordsData.length > 0) {
+                        let recordsHtml = '';
+                        recordsData.forEach(record => {
+                            const duration = calculateDays(record.freezeStartDate, record.freezeEndDate);
+                            recordsHtml += `
+                                <tr>
+                                    <td>${record.freezeStartDate}</td>
+                                    <td>${record.freezeEndDate}</td>
+                                    <td>${duration}</td>
+                                    <td>${record.reason || '--'}</td>
+                                </tr>
+                            `;
+
+                            // Add to freeze periods (only if dates are valid)
+                            const startDate = new Date(record.freezeStartDate);
+                            const endDate = new Date(record.freezeEndDate);
+                            if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+                                freezePeriods.push({
+                                    from: startDate,
+                                    to: endDate
+                                });
+                            }
+                        });
+                        $recordsGridBody.html(recordsHtml);
+                    } else {
+                        $recordsGridBody.html('<tr><td colspan="4" class="text-center">No freeze records found</td></tr>');
+                    }
+
+                    // Update date picker disabled dates
+                    updateDatePickerDisabledDates();
+                }).fail(function() {
+                    $recordsGridBody.html('<tr><td colspan="4" class="text-center text-danger">Error loading records</td></tr>');
+                });
+            }
+
+            // Initialize Flatpickr with dark theme and date restrictions
+            startDatePicker = flatpickr("#freezeStartDate", {
+                minDate: "today",
+                dateFormat: "Y-m-d",
+                theme: "dark",
+                allowInput: true,
+                onChange: function(selectedDates, dateStr) {
+                    endDatePicker.set("minDate", dateStr);
+                    if (endDatePicker.selectedDates[0] && new Date(dateStr) >= endDatePicker.selectedDates[0]) {
+                        endDatePicker.clear();
+                    }
+                    // Trigger validation
+                    $("#freezeStartDate").trigger("change");
+                }
+            });
+
+            endDatePicker = flatpickr("#freezeEndDate", {
+                minDate: "today",
+                dateFormat: "Y-m-d",
+                theme: "dark",
+                allowInput: true,
+                onChange: function() {
+                    // Trigger validation
+                    $("#freezeEndDate").trigger("change");
+                }
+            });
+
+            // Membership select change handler
+            $('#userMembershipSelect').on('change', function() {
+                loadMembershipFreezeDetails($(this).val());
+            });
+
+            // Form submission handler
+            $('#freezeForm').on('submit', function(e) {
+                // Check if we have freeze details
+                if (!freezeDetails || Object.keys(freezeDetails).length === 0) {
+                    showAlert('Please select a membership first');
+                    return false;
+                }
+
+                // Get selected dates
+                const startDate = $('#freezeStartDate').val();
+                const endDate = $('#freezeEndDate').val();
+
+                // Check if dates are selected
+                if (!startDate || !endDate) {
+                    showAlert('Please select both start and end dates');
+                    return false;
+                }
+
+                // Calculate requested freeze days
+                const requestedDays = calculateDays(startDate, endDate);
+
+                // Check remaining freeze count
+                if (freezeDetails.remainingFreezeCount <= 0) {
+                    showAlert('No remaining freeze counts available for this membership');
+                    return false;
+                }
+
+                // Check remaining freeze days
+                if (freezeDetails.remainingFreezeDays <= 0) {
+                    showAlert('No remaining freeze days available for this membership');
+                    return false;
+                }
+
+                // Check if requested days exceed remaining days
+                if (requestedDays > freezeDetails.remainingFreezeDays) {
+                    showAlert(`You only have ${freezeDetails.remainingFreezeDays} remaining freeze days, but requested ${requestedDays} days`);
+                    return false;
+                }
+
+                // If all checks pass, allow form submission
+                return true;
+            });
+
+            // Initialize
+            toggleGrid($summaryGrid, false);
+            toggleGrid($recordsGrid, false);
+            isInitialLoad = false;
+
+            // Date validation
+            $('#freezeStartDate, #freezeEndDate').on('change', function() {
+                var startDate = new Date($('#freezeStartDate').val());
+                var endDate = new Date($('#freezeEndDate').val());
+
+                if (startDate && endDate && endDate <= startDate) {
+                    endDatePicker.clear();
+                    showAlert('End date must be after start date');
+                }
+            });
+
+            // Trigger change if there's a preselected value
+            if ($('#userMembershipSelect').val()) {
+                loadMembershipFreezeDetails($('#userMembershipSelect').val());
+            }
+        });
+    </script>
+}

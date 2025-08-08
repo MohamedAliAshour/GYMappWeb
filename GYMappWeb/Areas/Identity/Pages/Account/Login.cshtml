@@ -1,0 +1,91 @@
+﻿@page
+@model LoginModel
+@{
+    ViewData["Title"] = "Login";
+    Layout = "~/Views/Shared/_LoginLayout.cshtml";
+}
+
+<style>
+    /* Login-specific animation styles */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    }
+
+    .btn-provider {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+        .btn-provider:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+</style>
+
+<div class="animate-container">
+    <div class="row justify-content-center">
+        <!-- Login Card -->
+        <div class="col-md-5 animate-card delay-1">
+            <div class="card glass-card mb-4">
+                <div class="card-header">
+                    <h1 class="text-center">@ViewData["Title"]</h1>
+                </div>
+                <div class="card-body">
+                    <form id="account" method="post">
+                        <h2 class="text-center">TWINZ GYM</h2>
+                        <hr />
+                        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.UserName" class="form-control" autocomplete="username" aria-required="true" placeholder="Username" />
+                            <label asp-for="Input.UserName">Username</label>
+                            <span asp-validation-for="Input.UserName" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Password" />
+                            <label asp-for="Input.Password">Password</label>
+                            <span asp-validation-for="Input.Password" class="text-danger"></span>
+                        </div>
+
+                        <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary mb-3">Log in</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        @if ((Model.ExternalLogins?.Count ?? 0) != 0)
+        {
+            <!-- External Login Card -->
+            <div class="col-md-5 animate-card delay-2">
+                <div class="card glass-card">
+                    <div class="card-header">
+                        <h3 class="text-center">External Login</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                            <div class="d-grid gap-2">
+                                @foreach (var provider in Model.ExternalLogins!)
+                                {
+                                    <button type="submit" class="btn btn-provider" name="provider" value="@provider.Name" title="Log in using @provider.DisplayName">
+                                        <i class="fab fa-@provider.DisplayName.ToLower() me-2"></i> @provider.DisplayName
+                                    </button>
+                                }
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+}

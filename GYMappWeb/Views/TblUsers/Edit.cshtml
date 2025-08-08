@@ -1,0 +1,100 @@
+﻿@model GYMappWeb.ViewModels.TblUser.TblUserViewModel
+
+@{
+    ViewData["Title"] = "Edit User";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .card {
+        /* Keep other styles if any exist */
+    }
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white">
+                    <h2 class="mb-0">Edit User</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-4"></div>
+                        <input type="hidden" asp-for="UserId" />
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="UserCode" class="form-control" readonly />
+                                    <label asp-for="UserCode" class="form-label">User Code</label>
+                                    <span asp-validation-for="UserCode" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="UserName" class="form-control" maxlength="50" />
+                                    <label asp-for="UserName" class="form-label">User Name</label>
+                                    <span asp-validation-for="UserName" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="UserPhone" class="form-control"
+                                           maxlength="11"
+                                           pattern="[0-9]*"
+                                           inputmode="numeric"
+                                           title="Please enter only numbers (max 11 digits)" />
+                                    <label asp-for="UserPhone" class="form-label">Phone Number</label>
+                                    <span asp-validation-for="UserPhone" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="Notes" class="form-control"  maxlength="50"/>
+                                    <label asp-for="Notes" class="form-label">Notes</label>
+                                    <span asp-validation-for="Notes" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4" id="buttonContainer">
+                            <button type="submit" class="btn btn-dark btn-lg">Save Changes</button>
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2">Back to List</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function() {
+            // Restrict phone input to numbers only
+            $('#UserPhone').on('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+
+                // Enforce max length of 11
+                if (this.value.length > 11) {
+                    this.value = this.value.slice(0, 11);
+                }
+            });
+
+            // Prevent paste of non-numeric characters
+            $('#UserPhone').on('paste', function(e) {
+                var pasteData = e.originalEvent.clipboardData.getData('text');
+                if (!/^\d+$/.test(pasteData)) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+}

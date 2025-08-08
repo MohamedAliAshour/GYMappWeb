@@ -1,0 +1,28 @@
+﻿<script>
+    // Wait for everything to load
+    document.addEventListener('DOMContentLoaded', function() {
+        // First fade in the container
+        const container = document.querySelector('.animate-container');
+        if (container) container.style.opacity = 1;
+
+        // Then animate cards one by one
+        setTimeout(function() {
+            const cards = document.querySelectorAll('.animate-card');
+            cards.forEach((card, index) => {
+                // Calculate delay from class or use index
+                let delay = 100;
+                for (let i = 1; i <= 5; i++) {
+                    if (card.classList.contains('delay-' + i)) {
+                        delay = i * 100;
+                        break;
+                    }
+                }
+
+                // Apply animation after delay
+                setTimeout(() => {
+                    card.classList.add('animated');
+                }, delay + (index * 50));
+            });
+        }, 100);
+    });
+</script>

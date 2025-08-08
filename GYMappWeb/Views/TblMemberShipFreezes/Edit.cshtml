@@ -1,0 +1,60 @@
+﻿@model GYMappWeb.Models.TblMemberShipFreeze
+
+@{
+    ViewData["Title"] = "Edit";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Edit</h1>
+
+<h4>TblMemberShipFreeze</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="MemberShipFreezeId" />
+            <div class="form-group">
+                <label asp-for="UserMemberShipId" class="control-label"></label>
+                <select asp-for="UserMemberShipId" class="form-control" asp-items="ViewBag.UserMemberShipId"></select>
+                <span asp-validation-for="UserMemberShipId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FreezeStartDate" class="control-label"></label>
+                <input asp-for="FreezeStartDate" class="form-control" />
+                <span asp-validation-for="FreezeStartDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FreezeEndDate" class="control-label"></label>
+                <input asp-for="FreezeEndDate" class="form-control" />
+                <span asp-validation-for="FreezeEndDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Reason" class="control-label"></label>
+                <input asp-for="Reason" class="form-control" />
+                <span asp-validation-for="Reason" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CreatedBy" class="control-label"></label>
+                <input asp-for="CreatedBy" class="form-control" />
+                <span asp-validation-for="CreatedBy" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CreatedDate" class="control-label"></label>
+                <input asp-for="CreatedDate" class="form-control" />
+                <span asp-validation-for="CreatedDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

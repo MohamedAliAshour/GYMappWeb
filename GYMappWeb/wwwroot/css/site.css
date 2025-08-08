@@ -1,0 +1,310 @@
+/* site.css */
+html {
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+body {
+    margin-bottom: 60px;
+    background-image: url('/images/GYMMMM.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Table body text - darker and bold */
+.table tbody td {
+    color: rgba(0, 0, 0, 0.85) !important;
+    font-weight: 600 !important;
+    text-shadow: none !important;
+}
+
+/* Table styles */
+.table td,
+.table th {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.table .btn-group {
+    display: flex;
+    justify-content: center;
+}
+
+/* Navbar styling */
+.navbar {
+    background: rgba(0, 0, 0, 0.7) !important;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.navbar-brand {
+    font-size: 1.25rem;
+    padding: 0.5rem 0;
+    color: white !important;
+}
+
+.nav-link {
+    padding: 0.5rem 1rem;
+    color: white !important;
+}
+
+    .nav-link:hover {
+        opacity: 0.8;
+    }
+
+.navbar-toggler {
+    padding: 0.25rem 0.5rem;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Main content container */
+main .container {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    padding: 20px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    min-height: calc(100vh - 200px);
+}
+
+/* Footer styling */
+.footer {
+    background: rgba(0, 0, 0, 0.7) !important;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    padding: 1rem 0;
+    font-size: 0.9rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+}
+
+    .footer .container {
+        background: transparent !important;
+        backdrop-filter: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    .footer a {
+        color: white !important;
+    }
+
+/* Card styles */
+.card {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    color: white;
+}
+
+.card-header {
+    background: rgba(255, 255, 255, 0.3);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 12px 12px 0 0 !important;
+}
+
+/* ====== UPDATED FORM CONTROLS - BLACK BACKGROUNDS ====== */
+.form-control,
+.form-select,
+.form-control:focus,
+.form-select:focus {
+    background: #000 !important;
+    border: 1px solid #444 !important;
+    color: #fff !important;
+    padding: 0.375rem 0.75rem;
+}
+
+    .form-control::placeholder,
+    .form-select:invalid,{
+        color: #aaa !important;
+        opacity: 1 !important;
+    }
+
+    .form-control:focus,
+    .form-select:focus,{
+        background: #111 !important;
+        border-color: #666 !important;
+        box-shadow: 0 0 0 0.25rem rgba(100, 100, 100, 0.25);
+        color: #fff !important;
+    }
+
+    .form-select,
+    .form-select option {
+        background: #000 !important;
+        color: #fff !important;
+    }
+
+        .form-select:invalid {
+            color: #aaa !important;
+        }
+
+
+.form-check-input {
+    background-color: #000 !important;
+    border: 1px solid #444 !important;
+}
+
+    .form-check-input:checked {
+        background-color: #444 !important;
+        border-color: #444 !important;
+    }
+
+.input-group-text {
+    background-color: #222 !important;
+    border: 1px solid #444 !important;
+    color: #fff !important;
+}
+
+
+/* Buttons */
+.btn {
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-weight: 600;
+    transition: all 0.3s ease;
+    color: white;
+}
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 7px 20px rgba(0, 0, 0, 0.15);
+    }
+
+.btn-primary {
+    background: rgba(0, 123, 255, 0.7);
+}
+
+.btn-danger {
+    background: rgba(220, 53, 69, 0.7);
+}
+
+.btn-success {
+    background: rgba(40, 167, 69, 0.7);
+}
+
+/* ... (all remaining styles stay exactly the same) ... */
+
+/* Table backgrounds */
+.table tbody {
+    background-color: white !important;
+}
+
+    .table tbody tr {
+        background-color: white !important;
+    }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fa !important;
+        }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    main .container {
+        margin: 10px;
+        padding: 15px;
+        border-radius: 10px;
+    }
+
+    .navbar-collapse {
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 5px;
+    }
+}
+
+/* Utility classes */
+.text-white {
+    color: white !important;
+}
+
+.bg-transparent-dark {
+    background: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Animations */
+.animate-on-load {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s ease-out;
+}
+
+    .animate-on-load.animated {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+.animate-container {
+    opacity: 0;
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-card {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+    .animate-card.animated {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+.delay-1 {
+    transition-delay: 0.1s;
+}
+
+.delay-2 {
+    transition-delay: 0.2s;
+}
+
+.delay-3 {
+    transition-delay: 0.3s;
+}
+
+.delay-4 {
+    transition-delay: 0.4s;
+}
+
+.delay-5 {
+    transition-delay: 0.5s;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}

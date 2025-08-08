@@ -1,0 +1,145 @@
+﻿@model GYMappWeb.ViewModels.TblOffer.TblOfferViewModel
+
+@{
+    ViewData["Title"] = "Create Offer";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .card {
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-floating label {
+        color: #495057;
+    }
+
+    .btn-dark {
+        background-color: #343a40;
+        border-color: #343a40;
+    }
+
+    .btn-outline-secondary {
+        border-color: #6c757d;
+    }
+
+    .text-danger {
+        font-size: 0.875rem;
+    }
+
+    .form-select {
+        height: calc(3.5rem + 2px);
+        line-height: 1.25;
+    }
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white">
+                    <h2 class="mb-0">Create New Offer</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" id="offerForm">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-4"></div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="OfferName" class="form-control" placeholder=" " maxlength="50" required />
+                                    <label asp-for="OfferName" class="form-label">Offer Name</label>
+                                    <span asp-validation-for="OfferName" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="DiscountPrecentage" class="form-control" placeholder=" "
+                                           type="number" min="1" max="100" step="0.01" required />
+                                    <label asp-for="DiscountPrecentage" class="form-label">Discount Percentage</label>
+                                    <span asp-validation-for="DiscountPrecentage" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-3">
+                            <div class="col-md-12">
+                                <div class="form-floating">
+                                    <select asp-for="MemberShipTypesId" class="form-select" asp-items="ViewBag.MemberShipTypesId" required>
+                                        <option value="">-- Select Membership Type --</option>
+                                    </select>
+                                    <label asp-for="MemberShipTypesId" class="form-label">Membership Type</label>
+                                    <span asp-validation-for="MemberShipTypesId" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-dark btn-lg">Create Offer</button>
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2">Back to List</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function() {
+            // Custom validation for DiscountPercentage
+            $.validator.addMethod("percentageRange", function(value, element) {
+                var percentage = parseFloat(value);
+                return this.optional(element) || (percentage >= 1 && percentage <= 100);
+            }, "Discount must be between 1% and 100%.");
+
+            // Initialize form validation
+            $("#offerForm").validate({
+                rules: {
+                    OfferName: {
+                        required: true,
+                        maxlength: 50
+                    },
+                    DiscountPrecentage: {
+                        required: true,
+                        number: true,
+                        percentageRange: true
+                    },
+                    MemberShipTypesId: {
+                        required: true
+                    }
+                },
+                messages: {
+                    OfferName: {
+                        required: "Please enter an offer name",
+                        maxlength: "Offer name cannot exceed 50 characters"
+                    },
+                    DiscountPrecentage: {
+                        required: "Please enter discount percentage",
+                        number: "Please enter a valid number",
+                        percentageRange: "Discount must be between 1% and 100%"
+                    },
+                    MemberShipTypesId: {
+                        required: "Please select a membership type"
+                    }
+                },
+                errorElement: 'span',
+                errorPlacement: function (error, element) {
+                    error.addClass('text-danger');
+                    element.closest('.form-floating').append(error);
+                },
+                highlight: function (element, errorClass, validClass) {
+                    $(element).addClass('is-invalid').removeClass('is-valid');
+                },
+                unhighlight: function (element, errorClass, validClass) {
+                    $(element).removeClass('is-invalid').addClass('is-valid');
+                }
+            });
+        });
+    </script>
+}

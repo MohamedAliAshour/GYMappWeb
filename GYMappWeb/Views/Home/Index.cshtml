@@ -1,0 +1,200 @@
+﻿@model GYMappWeb.ViewModels.Dashboard.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<style>
+    /* Animation Styles (unchanged) */
+    .animate-card {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+    }
+
+        .animate-card.animated {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
+
+    .delay-1 {
+        transition-delay: 0.1s !important;
+    }
+
+    .delay-2 {
+        transition-delay: 0.2s !important;
+    }
+
+    .delay-3 {
+        transition-delay: 0.3s !important;
+    }
+
+    .delay-4 {
+        transition-delay: 0.4s !important;
+    }
+
+    .delay-5 {
+        transition-delay: 0.5s !important;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    .animate-container {
+        animation: fadeIn 0.5s ease-out forwards !important;
+    }
+
+    /* Only adding this new style for the specific header texts */
+    .stat-label {
+        font-size: 1.1rem !important; /* Increased from default */
+        font-weight: 700 !important;
+    }
+</style>
+
+<div class="container-fluid animate-container">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    </div>
+    <!-- Stats Cards Row -->
+    <div class="row">
+        <!-- Total Members Card -->
+        <div class="col-xl-3 col-md-6 mb-4 animate-card delay-1">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="stat-label text-xs text-primary text-uppercase mb-1">
+                                TOTAL MEMBERS
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalMembers</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Memberships Card -->
+        <div class="col-xl-3 col-md-6 mb-4 animate-card delay-2">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="stat-label text-xs text-success text-uppercase mb-1">
+                                ACTIVE MEMBERSHIPS
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.ActiveMemberships</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-id-card fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expiring Memberships Card -->
+        <div class="col-xl-3 col-md-6 mb-4 animate-card delay-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="stat-label text-xs text-warning text-uppercase mb-1">
+                                EXPIRING THIS WEEK
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.ExpiringMemberships</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-times fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rest of your content remains exactly the same -->
+    <!-- Content Row -->
+    <div class="row">
+        <!-- Recent Freezes -->
+        <div class="col-xl-6 col-lg-6 animate-card delay-2">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-light">RECENT MEMBERSHIP FREEZES</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>MEMBER</th>
+                                    <th>START DATE</th>
+                                    <th>END DATE</th>
+                                    <th>REASON</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var freeze in Model.RecentFreezes)
+                                {
+                                    <tr>
+                                        <td>@freeze.UserMemberShip?.UserName</td>
+                                        <td>@freeze.FreezeStartDate.ToString("d")</td>
+                                        <td>@freeze.FreezeEndDate.ToString("d")</td>
+                                        <td>@freeze.Reason</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+       @*  <!-- Quick Actions -->
+        <div class="col-xl-6 col-lg-6 animate-card delay-3">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-light">QUICK ACTIONS</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <a asp-controller="TblUsers" asp-action="Create" class="btn btn-success btn-block">
+                                <i class="fas fa-user-plus"></i> Add New Member
+                            </a>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <a asp-controller="TblUserMemberShips" asp-action="Create" class="btn btn-info btn-block">
+                                <i class="fas fa-id-card"></i> Create Membership
+                            </a>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <a asp-controller="TblMemberShipFreezes" asp-action="Create" class="btn btn-warning btn-block">
+                                <i class="fas fa-pause"></i> Freeze Membership
+                            </a>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <a asp-controller="Reports" asp-action="Index" class="btn btn-primary btn-block">
+                                <i class="fas fa-chart-bar"></i> View Reports
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> *@
+    </div>
+</div>
+
+<link href="~/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+<script src="~/vendor/chart.js/Chart.min.js"></script>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

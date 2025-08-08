@@ -1,0 +1,352 @@
+﻿@model GYMappWeb.ViewModels.TblUserMemberShip.TblUserMemberShipViewModel
+
+@{
+    ViewData["Title"] = "Create Membership";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .card {
+        /* Remove transition but keep other styles if any exist */
+    }
+
+    #membershipGrid {
+        opacity: 0;
+        display: none;
+        overflow: hidden; /* Add this to prevent content clipping during animation */
+    }
+
+        #membershipGrid.visible {
+            opacity: 1;
+        }
+
+    #membershipGridBody tr {
+        display: table-row !important;
+    }
+
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white">
+                    <h2 class="mb-0">Create New Membership</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-4"></div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="StartDate" class="form-control" id="startDateInput" type="text" readonly value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                                    <label asp-for="StartDate" class="form-label">Start Date</label>
+                                    <span asp-validation-for="StartDate" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="EndDate" class="form-control" id="endDateInput" autocomplete="off" readonly />
+                                    <label asp-for="EndDate" class="form-label">End Date</label>
+                                    <span asp-validation-for="EndDate" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-3">
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <select asp-for="OffId" class="form-select" id="offIdSelect">
+                                        <option value="">--Select--</option>
+                                        <!-- Options will be populated dynamically -->
+                                    </select>
+                                    <label asp-for="OffId" class="form-label">Offer</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <select asp-for="UserId" class="form-select" id="userIdSelect">
+                                        <option value="">--Select--</option>
+                                        @foreach (var item in ViewBag.UserId)
+                                        {
+                                            <option value="@item.Value">@item.Text</option>
+                                        }
+                                    </select>
+                                    <label asp-for="UserId" class="form-label">User</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <select asp-for="MemberShipTypesId" class="form-select" id="membershipTypeDropdown">
+                                        <option value="">--Select--</option>
+                                        @foreach (var item in ViewBag.MemberShipTypesId)
+                                        {
+                                            <option value="@item.Value">@item.Text</option>
+                                        }
+                                    </select>
+                                    <label asp-for="MemberShipTypesId" class="form-label">Membership Type</label>
+                                    <span asp-validation-for="MemberShipTypesId" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Update the table headers in your HTML -->
+                        <div class="mt-4" id="membershipGrid">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Username</th>
+                                        <th>Membership</th>
+                                        <th>Price</th>
+                                        <th>Discount%</th>
+                                        <th>Price</th>
+                                        <th>Invitation</th>
+                                        <th>Freeze Days</th>
+                                        <th>Freeze Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="membershipGridBody"></tbody>
+                            </table>
+                        </div>
+                        <div class="mt-4" id="buttonContainer">
+                            <button type="submit" class="btn btn-dark btn-lg">Create Membership</button>
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2">Back to List</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    <script>
+        $(document).ready(function () {
+            const membershipDurations = JSON.parse('@Html.Raw(Json.Serialize(ViewBag.MembershipDurations))');
+            const membershipDetails = JSON.parse('@Html.Raw(Json.Serialize(ViewBag.MembershipDetails))');
+            const userDetails = JSON.parse('@Html.Raw(Json.Serialize(ViewBag.UserDetails))');
+            const offerDetails = JSON.parse('@Html.Raw(Json.Serialize(ViewBag.OfferDetails))');
+            const membershipFeatures = JSON.parse('@Html.Raw(Json.Serialize(ViewBag.MembershipFeatures))') || {};
+
+            const $grid = $('#membershipGrid');
+            const $gridBody = $('#membershipGridBody');
+
+            // Store all offers initially
+            const allOffers = @Html.Raw(Json.Serialize(ViewBag.AllOffers));
+
+            // Set initial state and flag
+            $grid.hide().removeClass('visible');
+            let isInitialLoad = true;
+
+            // Function to filter offers based on membership type
+            function filterOffers(membershipTypeId) {
+                const $offIdSelect = $('#offIdSelect');
+                $offIdSelect.empty();
+                $offIdSelect.append('<option value="">--Select--</option>');
+
+                if (!membershipTypeId) {
+                    // If no membership type selected, show all offers
+                    allOffers.forEach(offer => {
+                        $offIdSelect.append(`<option value="${offer.value}">${offer.text}</option>`);
+                    });
+
+                    // Only update grid if not initial load
+                    if (!isInitialLoad) {
+                        updateGrid();
+                    }
+                    return;
+                }
+
+                // Filter offers that match the selected membership type or have no specific type
+                const filteredOffers = allOffers.filter(offer => {
+                    const offerData = offerDetails.find(o => o.id == offer.value);
+                    return !offerData || !offerData.membershipTypeId || offerData.membershipTypeId == membershipTypeId;
+                });
+
+                filteredOffers.forEach(offer => {
+                    $offIdSelect.append(`<option value="${offer.value}">${offer.text}</option>`);
+                });
+
+                updateGrid(); // Update grid after filtering
+            }
+
+            function updateGrid() {
+                const userId = $('#userIdSelect').val();
+                const membershipTypeId = $('#membershipTypeDropdown').val();
+                const offId = $('#offIdSelect').val();
+
+                // Convert to numbers if not empty
+                const numUserId = userId ? parseInt(userId) : null;
+                const numMembershipTypeId = membershipTypeId ? parseInt(membershipTypeId) : null;
+                const numOffId = offId ? parseInt(offId) : null;
+
+                // Only expand the grid if Membership Type is selected
+                if (!numMembershipTypeId) {
+                    $gridBody.empty();
+                    $('#endDateInput').val('');
+
+                    // Skip animation on initial load
+                    if (!isInitialLoad) {
+                        $grid.stop(true, true).fadeTo(300, 0, function() {
+                            $(this).slideUp(400, function() {
+                                $(this).removeClass('visible');
+                            });
+                        });
+                    } else {
+                        $grid.hide().removeClass('visible');
+                    }
+                    return;
+                }
+
+                // Find the selected items
+                const user = numUserId ? userDetails.find(u => u.id === numUserId) : null;
+                const membership = membershipDetails.find(m => m.id === numMembershipTypeId);
+                const offer = numOffId ? offerDetails.find(o => o.id === numOffId) : null;
+                const features = membershipFeatures[membershipTypeId] || {};
+
+                // Prepare data for display
+                const username = user?.name ?? '--';
+                const membershipName = membership?.name ?? '--';
+                const price = membership?.price ? parseFloat(membership.price) : 0;
+                const discountPercentage = offer?.percentage ?? 0;
+                const invitationCount = features.invitationCount ?? '--';
+                const totalFreezeDays = features.totalFreezeDays ?? '--';
+                const freezeCount = features.freezeCount ?? '--';
+
+                let discountedPrice = '--';
+                if (offer && price > 0) {
+                    discountedPrice = (price - (price * discountPercentage / 100)).toFixed(2);
+                } else if (price > 0) {
+                    discountedPrice = price.toFixed(2);
+                }
+
+                $gridBody.html(`
+                    <tr>
+                        <td>${username}</td>
+                        <td>${membershipName}</td>
+                        <td>${price > 0 ? price.toFixed(2) : '--'}</td>
+                        <td>${discountPercentage}</td>
+                        <td>${discountedPrice}</td>
+                        <td>${invitationCount}</td>
+                        <td>${totalFreezeDays}</td>
+                        <td>${freezeCount}</td>
+                    </tr>
+                `);
+
+                // Set End Date based on duration
+                const durationMonths = membershipDurations[membershipTypeId.toString()];
+                if (durationMonths) {
+                    const startDate = new Date($('#startDateInput').val());
+                    const endDate = new Date(startDate);
+                    endDate.setMonth(endDate.getMonth() + parseInt(durationMonths));
+                    $('#endDateInput').val(endDate.toISOString().split('T')[0]);
+                }
+
+                // Show the grid with animation only if it's not already visible
+                if (!$grid.hasClass('visible')) {
+                    $grid.css({
+                        display: 'block',
+                        height: 0,
+                        opacity: 0
+                    }).stop(true, true).animate({
+                        height: $grid[0].scrollHeight
+                    }, 800, 'swing', function() {
+                        $(this).animate({
+                            opacity: 1
+                        }, 600, 'swing', function() {
+                            $(this).addClass('visible').css('height', 'auto');
+                        });
+                    });
+                }
+            }
+
+            // Initialize with all offers
+            filterOffers(null);
+            isInitialLoad = false;
+
+            // Event handlers
+            $('#membershipTypeDropdown').on('change', function() {
+                const membershipTypeId = $(this).val();
+                filterOffers(membershipTypeId);
+            });
+
+            $('#userIdSelect, #offIdSelect').on('change', function() {
+                if ($('#membershipTypeDropdown').val()) {
+                    updateGrid();
+                }
+            });
+
+            // Active membership validation
+            $('#userIdSelect').on('change', async function() {
+                const userId = $(this).val();
+                if (!userId) return;
+
+                try {
+                    const response = await fetch(`/UserMemberShips/CheckActiveMembership?userId=${userId}`);
+                    if (!response.ok) throw new Error('Network error');
+
+                    const data = await response.json();
+                    if (data.hasActiveMembership) {
+                        const warningHtml = `
+                            <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                User already has an active membership (ends ${data.endDate})
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
+
+                        $('.alert-warning').remove();
+                        $(this).closest('.form-floating').after(warningHtml);
+                    } else {
+                        $('.alert-warning').remove();
+                    }
+                } catch (error) {
+                    console.error('Validation error:', error);
+                }
+            });
+
+            // Form submission validation
+            $('form').on('submit', async function(e) {
+                const userId = $('#userIdSelect').val();
+                if (!userId) return true;
+
+                try {
+                    const response = await fetch(`/UserMemberShips/CheckActiveMembership?userId=${userId}`);
+                    if (!response.ok) throw new Error('Network error');
+
+                    const data = await response.json();
+                    if (data.hasActiveMembership) {
+                        e.preventDefault();
+
+                        const alertHtml = `
+                            <div class="alert alert-danger alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3" style="z-index: 1100;">
+                                <strong>Cannot create membership:</strong> User already has an active membership (ends ${data.endDate})
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
+
+                        $('.alert-danger').remove();
+                        $('body').append(alertHtml);
+
+                        setTimeout(() => {
+                            $('.alert-danger').alert('close');
+                        }, 5000);
+
+                        return false;
+                    }
+                    return true;
+                } catch (error) {
+                    console.error('Validation error:', error);
+                    return true;
+                }
+            });
+        });
+    </script>
+}
+
+
+
+

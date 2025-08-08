@@ -1,0 +1,222 @@
+﻿@model GYMappWeb.Models.TblUserMemberShip
+
+@{
+    ViewData["Title"] = "Edit Membership";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .card {
+        /* Remove transition but keep other styles if any exist */
+    }
+
+    #membershipGrid {
+        opacity: 0;
+        display: none;
+        overflow: hidden; /* Add this to prevent content clipping during animation */
+    }
+
+        #membershipGrid.visible {
+            opacity: 1;
+        }
+
+    #membershipGridBody tr {
+        display: table-row !important;
+    }
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white">
+                    <h2 class="mb-0">Edit Membership</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-4"></div>
+                        <input type="hidden" asp-for="UserMemberShipId" />
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="StartDate" class="form-control" id="startDateInput" type="date" />
+                                    <label asp-for="StartDate" class="form-label">Start Date</label>
+                                    <span asp-validation-for="StartDate" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="EndDate" class="form-control" id="endDateInput" type="date" />
+                                    <label asp-for="EndDate" class="form-label">End Date</label>
+                                    <span asp-validation-for="EndDate" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-3">
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <select asp-for="OffId" class="form-select" id="offIdSelect">
+                                        <option value="">--Select--</option>
+                                        @foreach (var item in ViewBag.OffId)
+                                        {
+                                            <option value="@item.Value">@item.Text</option>
+                                        }
+                                    </select>
+                                    <label asp-for="OffId" class="form-label">Offer</label>
+                                    <span asp-validation-for="OffId" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <select asp-for="UserId" class="form-select" id="userIdSelect">
+                                        <option value="">--Select--</option>
+                                        @foreach (var item in ViewBag.UserId)
+                                        {
+                                            <option value="@item.Value">@item.Text</option>
+                                        }
+                                    </select>
+                                    <label asp-for="UserId" class="form-label">User</label>
+                                    <span asp-validation-for="UserId" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <select asp-for="MemberShipTypesId" class="form-select" id="membershipTypeDropdown">
+                                        <option value="">--Select--</option>
+                                        @foreach (var item in ViewBag.MemberShipTypesId)
+                                        {
+                                            <option value="@item.Value">@item.Text</option>
+                                        }
+                                    </select>
+                                    <label asp-for="MemberShipTypesId" class="form-label">Membership Type</label>
+                                    <span asp-validation-for="MemberShipTypesId" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-3">
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input asp-for="invitationUsed" class="form-control" />
+                                    <label asp-for="invitationUsed" class="form-label">Invitations Used</label>
+                                    <span asp-validation-for="invitationUsed" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input asp-for="TotalFreezedDays" class="form-control" />
+                                    <label asp-for="TotalFreezedDays" class="form-label">Total Freeze Days</label>
+                                    <span asp-validation-for="TotalFreezedDays" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4" id="membershipGrid">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Username</th>
+                                        <th>Membership</th>
+                                        <th>Price</th>
+                                        <th>Discount%</th>
+                                        <th>Final Price</th>
+                                        <th>Invitations</th>
+                                        <th>Freeze Days</th>
+                                        <th>Freeze Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="membershipGridBody"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-4" id="buttonContainer">
+                            <button type="submit" class="btn btn-dark btn-lg">Save Changes</button>
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2">Back to List</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function () {
+            const membershipDurations = JSON.parse('@Html.Raw(Json.Serialize(ViewBag.MembershipDurations))');
+            const membershipDetails = JSON.parse('@Html.Raw(Json.Serialize(ViewBag.MembershipDetails))');
+            const userDetails = JSON.parse('@Html.Raw(Json.Serialize(ViewBag.UserDetails))');
+            const offerDetails = JSON.parse('@Html.Raw(Json.Serialize(ViewBag.OfferDetails))');
+            const membershipFeatures = JSON.parse('@Html.Raw(Json.Serialize(ViewBag.MembershipFeatures))') || {};
+
+            const $grid = $('#membershipGrid');
+            const $gridBody = $('#membershipGridBody');
+
+            function updateGrid() {
+                const userId = $('#userIdSelect').val();
+                const membershipTypeId = $('#membershipTypeDropdown').val();
+                const offId = $('#offIdSelect').val();
+
+                // Convert to numbers if not empty
+                const numUserId = userId ? parseInt(userId) : null;
+                const numMembershipTypeId = membershipTypeId ? parseInt(membershipTypeId) : null;
+                const numOffId = offId ? parseInt(offId) : null;
+
+                // Find the selected items
+                const user = numUserId ? userDetails.find(u => u.id === numUserId) : null;
+                const membership = membershipDetails.find(m => m.id === numMembershipTypeId);
+                const offer = numOffId ? offerDetails.find(o => o.id === numOffId) : null;
+                const features = membershipFeatures[membershipTypeId] || {};
+
+                // Prepare data for display
+                const username = user?.name ?? '--';
+                const membershipName = membership?.name ?? '--';
+                const price = membership?.price ? parseFloat(membership.price) : 0;
+                const discountPercentage = offer?.percentage ?? 0;
+                const invitationCount = features.invitationCount ?? '--';
+                const totalFreezeDays = features.totalFreezeDays ?? '--';
+                const freezeCount = features.freezeCount ?? '--';
+
+                let discountedPrice = '--';
+                if (offer && price > 0) {
+                    discountedPrice = (price - (price * discountPercentage / 100)).toFixed(2);
+                } else if (price > 0) {
+                    discountedPrice = price.toFixed(2);
+                }
+
+                $gridBody.html(`
+                    <tr>
+                        <td>${username}</td>
+                        <td>${membershipName}</td>
+                        <td>${price > 0 ? price.toFixed(2) : '--'}</td>
+                        <td>${discountPercentage}</td>
+                        <td>${discountedPrice}</td>
+                        <td>${invitationCount}</td>
+                        <td>${totalFreezeDays}</td>
+                        <td>${freezeCount}</td>
+                    </tr>
+                `);
+
+                // Show the grid (no hide/show logic for edit since we always want it visible)
+                if (!$grid.hasClass('visible')) {
+                    $grid.addClass('visible').css({
+                        display: 'table',
+                        opacity: 1
+                    });
+                }
+            }
+
+            // Initialize the grid with current values
+            updateGrid();
+
+            // Event handlers
+            $('#membershipTypeDropdown, #userIdSelect, #offIdSelect').on('change', updateGrid);
+        });
+    </script>
+}
