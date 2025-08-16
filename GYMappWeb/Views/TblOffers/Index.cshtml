@@ -1,4 +1,4 @@
-﻿@model IEnumerable<GYMappWeb.ViewModels.TblOffer.TblOfferViewModel>
+﻿@model GYMappWeb.Helper.PagedResult<GYMappWeb.ViewModels.TblOffer.GetWithPaginationTblOfferViewModel>
 
 @{
     ViewData["Title"] = "Offers";
@@ -143,6 +143,45 @@
         .btn-light:hover {
             color: #000 !important; /* Keep black text on hover */
         }
+
+    /* Pagination styles */
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .search-create-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .search-input {
+        width: 250px;
+    }
+
+    /* Black pagination with white text */
+    .pagination .page-item .page-link {
+        background-color: #000;
+        color: #fff;
+        border-color: #333;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #333;
+        border-color: #444;
+    }
+
+    .pagination .page-item.disabled .page-link {
+        background-color: #555;
+        color: #ccc;
+    }
+
+    .pagination .page-item .page-link:hover {
+        background-color: #333;
+        color: #fff;
+    }
 </style>
 
 <div class="container py-4">
@@ -150,7 +189,11 @@
         <div class="card-header bg-dark text-white">
             <div class="d-flex justify-content-between align-items-center">
                 <h2 class="mb-0">Offer List</h2>
-                <a asp-action="Create" class="btn btn-light btn-sm">Create New</a>
+                <div class="search-create-container">
+                    <input type="text" id="searchInput" class="form-control form-control-sm search-input"
+                           placeholder="Search offers..." value="@Context.Request.Query["searchTerm"]">
+                    <a asp-action="Create" class="btn btn-light btn-sm">Create New</a>
+                </div>
             </div>
         </div>
         <div class="card-body">
@@ -158,16 +201,22 @@
                 <table class="table table-hover table-bordered">
                     <thead class="table-dark">
                         <tr>
-                            <th>Offer Name</th>
-                            <th>Discount %</th>
-                            <th>Membership Type</th>
+                            <th>
+                                Offer Name
+                            </th>
+                            <th>
+                                Discount %
+                            </th>
+                            <th>
+                                Membership Type
+                            </th>
                             <th>Created By</th>
                             <th>Created Date</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var item in Model)
+                        @foreach (var item in Model.Items)
                         {
                             <tr id="offer-row-@item.OffId">
                                 <td>@Html.DisplayFor(modelItem => item.OfferName)</td>
@@ -204,6 +253,49 @@
                         }
                     </tbody>
                 </table>
+
+                <!-- Pagination -->
+                <div class="pagination-container">
+                    <nav>
+                        <ul class="pagination">
+                            <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-pageNumber="@(Model.PageNumber - 1)"
+                                   asp-route-searchTerm="@Context.Request.Query["searchTerm"]"
+                                   asp-route-sortBy="@Context.Request.Query["sortBy"]"
+                                   asp-route-sortDescending="@Context.Request.Query["sortDescending"]">
+                                    &laquo; Previous
+                                </a>
+                            </li>
+
+                            @for (var i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                    <a class="page-link"
+                                       asp-action="Index"
+                                       asp-route-pageNumber="@i"
+                                       asp-route-searchTerm="@Context.Request.Query["searchTerm"]"
+                                       asp-route-sortBy="@Context.Request.Query["sortBy"]"
+                                       asp-route-sortDescending="@Context.Request.Query["sortDescending"]">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+
+                            <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-pageNumber="@(Model.PageNumber + 1)"
+                                   asp-route-searchTerm="@Context.Request.Query["searchTerm"]"
+                                   asp-route-sortBy="@Context.Request.Query["sortBy"]"
+                                   asp-route-sortDescending="@Context.Request.Query["sortDescending"]">
+                                    Next &raquo;
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
             </div>
         </div>
     </div>
@@ -229,6 +321,21 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Automatic search functionality
+            const searchInput = document.getElementById('searchInput');
+            let searchTimer;
+
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(function() {
+                    const searchTerm = searchInput.value;
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('searchTerm', searchTerm);
+                    url.searchParams.set('pageNumber', '1'); // Reset to first page when searching
+                    window.location.href = url.toString();
+                }, 500); // 500ms delay after typing stops
+            });
+
             const deleteModal = document.getElementById('deleteModal');
             const offerNameToDelete = document.getElementById('offerNameToDelete');
             const offerDiscountToDelete = document.getElementById('offerDiscountToDelete');

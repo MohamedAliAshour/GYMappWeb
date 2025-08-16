@@ -2,12 +2,28 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using GYMappWeb.Areas.Identity.Data;
 using GYMappWeb.Helper;
+using GYMappWeb.Services; // Add this namespace for your services
+using GYMappWeb.Interface;
+using GYMappWeb.Service; // Add this namespace for your interfaces
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("GYMappWebContextConnection") ?? throw new InvalidOperationException("Connection string 'GYMappWebContextConnection' not found.");
 
-builder.Services.AddDbContext<GYMappWebContext>(options => options.UseSqlServer(connectionString));
+// Add services to the container.
+builder.Services.AddDbContext<GYMappWebContext>(options =>
+    options.UseSqlServer(connectionString));
 
+// Add HttpContextAccessor
+builder.Services.AddHttpContextAccessor();
+
+// Register your services
+builder.Services.AddScoped<ITblUserMemberShip, TblUserMemberShipService>();
+builder.Services.AddScoped<ITblUser, TblUserService>();
+builder.Services.AddScoped<ITblOffer, TblOfferService>();
+builder.Services.AddScoped<ITblMembershipType, TblMembershipTypeService>();
+builder.Services.AddScoped<ITblMemberShipFreeze, TblMemberShipFreezeService>();
+// Add other services if needed
+// builder.Services.AddScoped<IMyOtherService, MyOtherService>();
 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
@@ -23,7 +39,7 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     .AddDefaultTokenProviders()
     .AddDefaultUI();
 
-// Configure cookie settings for login and access denied
+// Configure cookie settings
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Identity/Account/Login";
@@ -37,7 +53,6 @@ builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add<SessionCheckFilter>();
 });
-
 
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -55,10 +70,9 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();

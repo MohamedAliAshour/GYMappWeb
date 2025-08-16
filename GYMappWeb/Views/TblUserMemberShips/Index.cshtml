@@ -1,4 +1,4 @@
-﻿@model IEnumerable<GYMappWeb.ViewModels.TblUserMemberShip.TblUserMemberShipViewModel>
+﻿@model GYMappWeb.Helper.PagedResult<GYMappWeb.ViewModels.TblUserMemberShip.GetWithPaginationTblUserMemberShipViewModel>
 
 @{
     ViewData["Title"] = "Memberships";
@@ -163,15 +163,57 @@
         .btn-light:hover {
             color: #000 !important; /* Keep black text on hover */
         }
-</style>
 
+    /* Pagination styles */
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .search-create-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .search-input {
+        width: 250px;
+    }
+
+    /* Black pagination with white text */
+    .pagination .page-item .page-link {
+        background-color: #000;
+        color: #fff;
+        border-color: #333;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #333;
+        border-color: #444;
+    }
+
+    .pagination .page-item.disabled .page-link {
+        background-color: #555;
+        color: #ccc;
+    }
+
+    .pagination .page-item .page-link:hover {
+        background-color: #333;
+        color: #fff;
+    }
+</style>
 
 <div class="container py-4">
     <div class="card shadow-sm">
         <div class="card-header bg-dark text-white">
             <div class="d-flex justify-content-between align-items-center">
                 <h2 class="mb-0">Membership List</h2>
-                <a asp-action="Create" class="btn btn-light btn-sm">Create New</a>
+                <div class="search-create-container">
+                    <input type="text" id="searchInput" class="form-control form-control-sm search-input"
+                           placeholder="Search memberships..." value="@Context.Request.Query["searchTerm"]">
+                    <a asp-action="Create" class="btn btn-light btn-sm">Create New</a>
+                </div>
             </div>
         </div>
         <div class="card-body">
@@ -179,27 +221,33 @@
                 <table class="table table-hover table-bordered">
                     <thead class="table-dark">
                         <tr>
-                            <th>User Code</th>
-                            <th>User Name</th>
-                            <th>Membership</th>
+                            <th>
+                                User Code
+                            </th>
+                            <th>
+                                User Name
+                            </th>
+                            <th>
+                                Membership
+                            </th>
                             <th>Start Date</th>
-                            <th>End Date</th>
+                            <th>
+                                End Date
+                            </th>
                             <th>Freeze Days</th>
-                            @* <th>After Freeze</th> *@
                             <th>Invitations</th>
                             <th>Status</th>
                             <th>Created By</th>
                             <th>Created Date</th>
-
                             <th>Offer</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var item in Model)
+                        @foreach (var item in Model.Items)
                         {
                             var originalEndDate = item.EndDate;
-                            var freezeDays = item.TotalFreezedDays ?? 0; // Handle null case
+                            var freezeDays = item.TotalFreezedDays ?? 0;
                             var newEndDate = originalEndDate.AddDays(freezeDays);
 
                             <tr id="membership-row-@item.UserMemberShipId">
@@ -209,16 +257,6 @@
                                 <td>@item.StartDate.ToString("yyyy-MM-dd")</td>
                                 <td>@originalEndDate.ToString("yyyy-MM-dd")</td>
                                 <td>@freezeDays</td>
-                                @*  <td>
-                                    @if (freezeDays > 0)
-                                    {
-                                        <span class="text-success fw-bold">@newEndDate.ToString("yyyy-MM-dd")</span>
-                                    }
-                                    else
-                                    {
-                                        <span>@originalEndDate.ToString("yyyy-MM-dd")</span>
-                                    }
-                                </td> *@
                                 <td>@Html.DisplayFor(modelItem => item.invitationUsed)</td>
                                 <td>
                                     @if (item.IsActive)
@@ -232,7 +270,6 @@
                                 </td>
                                 <td>@Html.DisplayFor(modelItem => item.CreatedByUserName)</td>
                                 <td>@item.CreatedDate.ToString("yyyy-MM-dd")</td>
-
                                 <td>
                                     @if (item.Off != null)
                                     {
@@ -259,6 +296,49 @@
                         }
                     </tbody>
                 </table>
+
+                <!-- Pagination -->
+                <div class="pagination-container">
+                    <nav>
+                        <ul class="pagination">
+                            <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-pageNumber="@(Model.PageNumber - 1)"
+                                   asp-route-searchTerm="@Context.Request.Query["searchTerm"]"
+                                   asp-route-sortBy="@Context.Request.Query["sortBy"]"
+                                   asp-route-sortDescending="@Context.Request.Query["sortDescending"]">
+                                    &laquo; Previous
+                                </a>
+                            </li>
+
+                            @for (var i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                    <a class="page-link"
+                                       asp-action="Index"
+                                       asp-route-pageNumber="@i"
+                                       asp-route-searchTerm="@Context.Request.Query["searchTerm"]"
+                                       asp-route-sortBy="@Context.Request.Query["sortBy"]"
+                                       asp-route-sortDescending="@Context.Request.Query["sortDescending"]">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+
+                            <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-pageNumber="@(Model.PageNumber + 1)"
+                                   asp-route-searchTerm="@Context.Request.Query["searchTerm"]"
+                                   asp-route-sortBy="@Context.Request.Query["sortBy"]"
+                                   asp-route-sortDescending="@Context.Request.Query["sortDescending"]">
+                                    Next &raquo;
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
             </div>
         </div>
     </div>
@@ -284,6 +364,21 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Automatic search functionality
+            const searchInput = document.getElementById('searchInput');
+            let searchTimer;
+
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(function() {
+                    const searchTerm = searchInput.value;
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('searchTerm', searchTerm);
+                    url.searchParams.set('pageNumber', '1'); // Reset to first page when searching
+                    window.location.href = url.toString();
+                }, 500); // 500ms delay after typing stops
+            });
+
             const deleteModal = document.getElementById('deleteModal');
             const userNameToDelete = document.getElementById('userNameToDelete');
             const membershipNameToDelete = document.getElementById('membershipNameToDelete');

@@ -36,6 +36,8 @@ namespace GYMappWeb.Helpers
             CreateMap<TblUser, TblUserViewModel>()
                  .ForMember(dest => dest.TblUserMemberShips, opt => opt.MapFrom(src => src.TblUserMemberShips))
                 .ReverseMap();
+            CreateMap<TblUser, GetWithPaginationTblUserViewModel>().ReverseMap();
+            CreateMap<TblUser, SaveTblUserViewModel>().ReverseMap();
             #endregion
 
             #region TblUserMemberShip
@@ -45,6 +47,8 @@ namespace GYMappWeb.Helpers
                  .ForMember(dest => dest.MemberShipTypes, opt => opt.MapFrom(src => src.MemberShipTypes))
                  .ForMember(dest => dest.User, opt => opt.MapFrom(src => src.User))
                 .ReverseMap();
+            CreateMap<TblUserMemberShip, GetWithPaginationTblUserMemberShipViewModel>().ReverseMap();
+            CreateMap<TblUserMemberShip, SaveTblUserMemberShipViewModel>().ReverseMap();
             #endregion
 
 
@@ -52,6 +56,8 @@ namespace GYMappWeb.Helpers
             CreateMap<TblMemberShipFreeze, TblMemberShipFreezeViewModel>()
                  .ForMember(dest => dest.UserMemberShip, opt => opt.MapFrom(src => src.UserMemberShip))
                 .ReverseMap();
+            CreateMap<TblMemberShipFreeze, GetWithPaginationTblMemberShipFreezeViewModel>().ReverseMap();
+            CreateMap<TblMemberShipFreeze, SaveTblMemberShipFreezeViewModel>().ReverseMap();
             #endregion
 
             #region TblMembershipType
@@ -59,6 +65,8 @@ namespace GYMappWeb.Helpers
                  .ForMember(dest => dest.TblUserMemberShips, opt => opt.MapFrom(src => src.TblUserMemberShips))
                  .ForMember(dest => dest.TblOffers, opt => opt.MapFrom(src => src.TblOffers))
                 .ReverseMap();
+            CreateMap<TblMembershipType, GetWithPaginationTblMemberShipTypeViewModel>().ReverseMap();
+            CreateMap<TblMembershipType, SaveTblMemberShipTypeViewModel>().ReverseMap();
             #endregion
 
             #region TblOffer
@@ -66,14 +74,9 @@ namespace GYMappWeb.Helpers
                  .ForMember(dest => dest.TblUserMemberShips, opt => opt.MapFrom(src => src.TblUserMemberShips))
                  .ForMember(dest => dest.MemberShipTypes, opt => opt.MapFrom(src => src.MemberShipTypes))
                 .ReverseMap();
+            CreateMap<TblOffer, GetWithPaginationTblOfferViewModel>().ReverseMap();
+            CreateMap<TblOffer, SaveTblOfferViewModel>().ReverseMap();
             #endregion
-
-            #region TblUser
-            CreateMap<TblUser, TblUserViewModel>()
-                 .ForMember(dest => dest.TblUserMemberShips, opt => opt.MapFrom(src => src.TblUserMemberShips))
-                .ReverseMap();
-            #endregion
-
 
         }
     }

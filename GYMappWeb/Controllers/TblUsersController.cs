@@ -1,57 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using GYMappWeb.Areas.Identity.Data;
-using GYMappWeb.Models;
 using Microsoft.AspNetCore.Authorization;
 using GYMappWeb.ViewModels.TblUser;
 using GYMappWeb.Helpers;
+using GYMappWeb.Interface;
+using GYMappWeb.Models;
+using GYMappWeb.Helper;
 
 namespace GYMappWeb.Controllers
 {
     [Authorize(Roles = "Captain,Developer")]
     public class TblUsersController : Controller
     {
-        private readonly GYMappWebContext _context;
+        private readonly ITblUser _userService;
 
-        public TblUsersController(GYMappWebContext context)
+        public TblUsersController(ITblUser userService)
         {
-            _context = context;
+            _userService = userService;
         }
 
         // GET: TblUsers
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(UserParameters userParameters)
         {
-            var userNames = await _context.Users
-                .Select(u => new { u.Id, u.UserName })
-                .ToDictionaryAsync(u => u.Id, u => u.UserName);
-
-            var users = await _context.TblUsers
-                .OrderBy(u => u.UserCode) // Order by UserCode
-                .ThenBy(u => u.UserName)  // Then by UserName
-                .Select(u => new TblUserViewModel
-                {
-                    UserId = u.UserId,
-                    UserCode = u.UserCode,
-                    UserName = u.UserName,
-                    UserPhone = u.UserPhone,
-                    IsActive = u.IsActive,
-                    Notes = u.Notes,
-                    CreatedDate = u.CreatedDate,
-                    CreatedBy = u.CreatedBy,
-                    CreatedByUserName = u.CreatedBy != null && userNames.ContainsKey(u.CreatedBy)
-                        ? userNames[u.CreatedBy]
-                        : "Unknown"
-                })
-                .ToListAsync();
-
+            var users = await _userService.GetWithPaginations(userParameters);
             return View(users);
         }
-
 
         // GET: TblUsers/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -61,78 +35,39 @@ namespace GYMappWeb.Controllers
                 return NotFound();
             }
 
-            var tblUser = await _context.TblUsers
-                .FirstOrDefaultAsync(m => m.UserId == id);
-            if (tblUser == null)
+            var user = await _userService.GetUserDetailsAsync(id.Value);
+            if (user == null)
             {
                 return NotFound();
             }
 
-            return View(tblUser);
+            return View(user);
         }
 
         // GET: TblUsers/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-
-            var lastUser = _context.TblUsers
-               .OrderByDescending(u => u.UserCode)
-               .FirstOrDefault();
-
-            ViewData["UserCode"] = lastUser != null ? lastUser.UserCode + 1 : 1;
-
+            ViewData["UserCode"] = await _userService.GetNextUserCode();
             return View();
         }
 
         // POST: TblUsers/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("UserId,UserCode,UserName,UserPhone,IsActive,RolesId,Notes")] TblUserViewModel tblUser)
+        public async Task<IActionResult> Create([Bind("UserId,UserCode,UserName,UserPhone,IsActive,RolesId,Notes")] SaveTblUserViewModel tblUser)
         {
             if (ModelState.IsValid)
             {
-                // Check for duplicate username
-                bool usernameExists = await _context.TblUsers
-                    .AnyAsync(u => u.UserName.ToLower() == tblUser.UserName.ToLower());
-
-                if (usernameExists)
+                try
                 {
-                    ModelState.AddModelError("UserName", "A user with this name already exists.");
-                    ViewData["UserCode"] = tblUser.UserCode;
-                    return View(tblUser);
+                    var userSession = HttpContext.Session.GetUserSession();
+                    await _userService.Add(tblUser, userSession?.Id);
+                    return RedirectToAction(nameof(Index));
                 }
-
-                // Check for duplicate phone number
-                bool phoneExists = await _context.TblUsers
-                    .AnyAsync(u => u.UserPhone == tblUser.UserPhone);
-
-                if (phoneExists)
+                catch (Exception ex)
                 {
-                    ModelState.AddModelError("UserPhone", "This phone number is already registered.");
-                    ViewData["UserCode"] = tblUser.UserCode;
-                    return View(tblUser);
+                    ModelState.AddModelError(string.Empty, ex.Message);
                 }
-
-                // Ensure UserCode is set correctly
-                var lastUser = await _context.TblUsers
-                    .OrderByDescending(u => u.UserCode)
-                    .FirstOrDefaultAsync();
-
-                tblUser.UserCode = lastUser != null ? lastUser.UserCode + 1 : 1;
-
-                // Set CreatedBy to session Id and CreatedDate to today
-                var userSession = HttpContext.Session.GetUserSession();
-                tblUser.CreatedBy = userSession?.Id;
-                tblUser.CreatedDate = DateTime.Today;
-
-                var entity = ObjectMapper.Mapper.Map<TblUser>(tblUser);
-
-                _context.Add(entity);
-                await _context.SaveChangesAsync();
-
-                return RedirectToAction(nameof(Index));
             }
 
             ViewData["UserCode"] = tblUser.UserCode;
@@ -147,22 +82,19 @@ namespace GYMappWeb.Controllers
                 return NotFound();
             }
 
-            var tblUser = await _context.TblUsers.FindAsync(id);
-            if (tblUser == null)
+            var user = _userService.GetDetailsById(id.Value);
+            if (user == null)
             {
                 return NotFound();
             }
-            var viewModel = ObjectMapper.Mapper.Map<TblUserViewModel>(tblUser);
 
-            return View(viewModel);
+            return View(user);
         }
 
         // POST: TblUsers/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("UserId,UserCode,UserName,UserPhone,IsActive,Notes")] TblUserViewModel tblUserViewModel)
+        public async Task<IActionResult> Edit(int id, [Bind("UserId,UserCode,UserName,UserPhone,IsActive,Notes")] SaveTblUserViewModel tblUserViewModel)
         {
             if (id != tblUserViewModel.UserId)
             {
@@ -173,71 +105,29 @@ namespace GYMappWeb.Controllers
             {
                 try
                 {
-                    //Set CreatedBy to session Id and CreatedDate to today
                     var userSession = HttpContext.Session.GetUserSession();
-                    tblUserViewModel.CreatedBy = userSession?.Id;
-                    tblUserViewModel.CreatedDate = DateTime.Today;
-
-                    var updatedEntity = ObjectMapper.Mapper.Map<TblUser>(tblUserViewModel);
-
-                    _context.Update(updatedEntity);
-                    await _context.SaveChangesAsync();
+                    await _userService.Update(tblUserViewModel, id, userSession?.Id);
+                    return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (Exception ex)
                 {
-                    if (!TblUserExists(tblUserViewModel.UserId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    ModelState.AddModelError(string.Empty, ex.Message);
                 }
-                return RedirectToAction(nameof(Index));
             }
             return View(tblUserViewModel);
         }
-
-
-
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteRelatedRecords(int id)
         {
-            using var transaction = _context.Database.BeginTransaction();
-
             try
             {
-                // Delete all freezes related to this user's memberships
-                var memberships = await _context.TblUserMemberShips
-                    .Where(m => m.UserId == id)
-                    .ToListAsync();
-
-                foreach (var membership in memberships)
-                {
-                    var freezes = await _context.TblMemberShipFreezes
-                        .Where(f => f.UserMemberShipId == membership.UserMemberShipId)
-                        .ToListAsync();
-
-                    _context.TblMemberShipFreezes.RemoveRange(freezes);
-                }
-
-                // Delete all memberships for this user
-                _context.TblUserMemberShips.RemoveRange(memberships);
-
-                // Delete any other related records here
-                // Example: _context.OtherRelatedEntities.RemoveRange(...);
-
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-
+                await _userService.DeleteRelatedRecords(id);
                 return Ok();
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
                 return StatusCode(500, $"Error deleting related records: {ex.Message}");
             }
         }
@@ -248,15 +138,7 @@ namespace GYMappWeb.Controllers
         {
             try
             {
-                var user = await _context.TblUsers.FindAsync(id);
-                if (user == null)
-                {
-                    return NotFound();
-                }
-
-                _context.TblUsers.Remove(user);
-                await _context.SaveChangesAsync();
-
+                await _userService.Delete(id);
                 return Ok();
             }
             catch (Exception ex)
@@ -265,18 +147,10 @@ namespace GYMappWeb.Controllers
             }
         }
 
-        private bool TblUserExists(int id)
-        {
-            return _context.TblUsers.Any(e => e.UserId == id);
-        }
-
-
-
-
         [HttpGet]
         public async Task<IActionResult> ValidateUserName(string value)
         {
-            bool exists = await _context.TblUsers.AnyAsync(u => u.UserName.ToLower() == value.ToLower());
+            bool exists = await _userService.CheckNameExist(value);
             return Json(new
             {
                 isValid = !exists,
@@ -287,14 +161,12 @@ namespace GYMappWeb.Controllers
         [HttpGet]
         public async Task<IActionResult> ValidateUserPhone(string value)
         {
-            bool exists = await _context.TblUsers.AnyAsync(u => u.UserPhone == value);
+            bool exists = await _userService.CheckPhoneExist(value);
             return Json(new
             {
                 isValid = !exists,
                 errorMessage = exists ? "This phone number is already registered" : ""
             });
         }
-
-
     }
 }
