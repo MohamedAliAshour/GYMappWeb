@@ -1,0 +1,49 @@
+﻿@model IEnumerable<GYMappWeb.ViewModels.UserRoles.ManageUserRolesViewModel>
+
+@{
+    ViewData["Title"] = "User Roles";
+}
+
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">User Roles</h2>
+                <a asp-action="CreateRole" class="btn btn-light btn-sm">Create New Role</a>
+            </div>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>User Name</th>
+                        <th>Roles</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        <tr>
+                            <td>@user.UserName</td>
+                            <td>
+                                @if (user.UserRoles.Any(r => r.Selected))
+                                {
+                                    @string.Join(", ", user.UserRoles.Where(r => r.Selected).Select(r => r.RoleName))
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No roles assigned</span>
+                                }
+                            </td>
+                            <td>
+                                <a asp-action="ManageRoles" asp-route-userId="@user.UserId"
+                                   class="btn btn-primary btn-sm">Manage Roles</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

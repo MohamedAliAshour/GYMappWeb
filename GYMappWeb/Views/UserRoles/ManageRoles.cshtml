@@ -1,0 +1,45 @@
+﻿@model GYMappWeb.ViewModels.UserRoles.ManageUserRolesViewModel
+
+@{
+    ViewData["Title"] = "Manage Roles for " + Model.UserName;
+}
+
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <h2 class="mb-0">@ViewData["Title"]</h2>
+        </div>
+        <div class="card-body">
+            <form asp-action="ManageRoles">
+                <input type="hidden" asp-for="UserId" />
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Role</th>
+                            <th>Assigned</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (var i = 0; i < Model.UserRoles.Count; i++)
+                        {
+                            <tr>
+                                <td>
+                                    <input type="hidden" asp-for="@Model.UserRoles[i].RoleId" />
+                                    <input type="hidden" asp-for="@Model.UserRoles[i].RoleName" />
+                                    @Model.UserRoles[i].RoleName
+                                </td>
+                                <td>
+                                    <input type="checkbox" asp-for="@Model.UserRoles[i].Selected" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <div class="form-group mt-3">
+                    <input type="submit" value="Save" class="btn btn-primary" />
+                    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
