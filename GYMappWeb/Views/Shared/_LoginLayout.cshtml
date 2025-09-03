@@ -99,13 +99,68 @@
                 background: rgba(255, 255, 255, 0.3);
                 border-color: rgba(255, 255, 255, 0.5);
             }
+
+        /* Language Toggle Button Styles - MODIFIED TO MAKE AR FRONT */
+        .lang-toggle-container {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            margin-left: 20px;
+        }
+
+        .lang-btn {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 15px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.4s ease, z-index 0.4s ease;
+            backface-visibility: hidden;
+            border: none;
+            font-size: 0.9rem;
+        }
+
+        /* AR button is now in front */
+        .lang-btn-ar {
+            background: linear-gradient(45deg, #b21f1f, #fdbb2d);
+            transform: perspective(200px) rotateY(0deg);
+            z-index: 2;
+        }
+
+        /* EN button is now behind */
+        .lang-btn-en {
+            background: linear-gradient(45deg, #1a2a6c, #2a5298);
+            transform: perspective(200px) rotateY(180deg);
+            z-index: 1;
+        }
+
+        .lang-btn-flipped {
+            transform: perspective(200px) rotateY(180deg);
+            z-index: 1;
+        }
+
+        .lang-btn-unflipped {
+            transform: perspective(200px) rotateY(0deg);
+            z-index: 2;
+        }
+
+        .navbar-nav {
+            align-items: center;
+        }
+
+        /* Removed RTL/LTR specific styles */
     </style>
 </head>
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm border-bottom box-shadow">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">GYMappWeb</a>
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index" data-en="GYMappWeb" data-ar="GYMappWeb">GYMappWeb</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                         aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -113,8 +168,15 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item">
-                            <a class="nav-link" href="/Identity/Account/Login">Login</a>
+                            <div class="lang-toggle-container">
+                                <!-- AR button is now first in the stacking order -->
+                                <button class="lang-btn lang-btn-ar" id="lang-btn-ar">AR</button>
+                                <button class="lang-btn lang-btn-en" id="lang-btn-en">EN</button>
+                            </div>
                         </li>
+                      @*   <li class="nav-item">
+                            <a class="nav-link" href="/Identity/Account/Login" data-en="Login" data-ar="Login">Login</a>
+                        </li> *@
                     </ul>
                 </div>
             </div>
@@ -131,5 +193,86 @@
 
     @await RenderSectionAsync("Scripts", required: false)
     <partial name="_Animations" />
+
+    <script>
+        // Language toggle functionality
+        const langBtnEn = document.getElementById('lang-btn-en');
+        const langBtnAr = document.getElementById('lang-btn-ar');
+        let currentLanguage = 'ar'; // Start with Arabic as the front button
+
+        function toggleLanguage() {
+            langBtnEn.classList.toggle('lang-btn-flipped');
+            langBtnEn.classList.toggle('lang-btn-unflipped');
+            langBtnAr.classList.toggle('lang-btn-flipped');
+            langBtnAr.classList.toggle('lang-btn-unflipped');
+
+            // Toggle language
+            currentLanguage = currentLanguage === 'en' ? 'ar' : 'en';
+
+            // Update the UI language
+            setLanguage(currentLanguage);
+
+            // Set the language cookie or localStorage
+            document.cookie = `preferredLanguage=${currentLanguage};path=/;max-age=31536000`;
+            localStorage.setItem('preferredLanguage', currentLanguage);
+
+            // Here you would typically also change the actual language of your site
+            console.log('Language changed to: ' + currentLanguage);
+        }
+
+        function setLanguage(lang) {
+            // Removed text direction change
+
+            // Update page title if available
+            const titleElement = document.querySelector('title');
+            if (titleElement) {
+                const newTitle = titleElement.getAttribute(`data-${lang}`) || titleElement.textContent;
+                titleElement.textContent = newTitle;
+            }
+
+            // Update all elements with data attributes for translation
+            document.querySelectorAll('[data-en], [data-ar]').forEach(element => {
+                if (element.getAttribute(`data-${lang}`)) {
+                    element.textContent = element.getAttribute(`data-${lang}`);
+                }
+            });
+
+            // You would typically make an API call here to get the full resource file
+            // and update all text content on the page
+            updateContentFromResourceFile(lang);
+        }
+
+        function updateContentFromResourceFile(lang) {
+            // This is a placeholder for your actual resource file implementation
+            // In a real application, you would fetch the resource file for the selected language
+            // and update all text content on the page
+
+            console.log(`Loading resource file for language: ${lang}`);
+        }
+
+        // Check for saved language preference
+        function loadLanguagePreference() {
+            const savedLanguage = localStorage.getItem('preferredLanguage') ||
+                                 getCookie('preferredLanguage') ||
+                                 navigator.language.split('-')[0];
+
+            if (savedLanguage === 'ar' && currentLanguage !== 'ar') {
+                // If saved language is Arabic but UI is showing English, toggle
+                toggleLanguage();
+            }
+        }
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        langBtnEn.addEventListener('click', toggleLanguage);
+        langBtnAr.addEventListener('click', toggleLanguage);
+
+        // Load language preference when page loads
+        document.addEventListener('DOMContentLoaded', loadLanguagePreference);
+    </script>
 </body>
 </html>

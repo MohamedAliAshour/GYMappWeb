@@ -39,7 +39,7 @@
         <div class="col-lg-8">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-dark text-white">
-                    <h2 class="mb-0">Create New Offer</h2>
+                    <h2 class="mb-0" data-en="Create New Offer" data-ar="إنشاء عرض جديد">Create New Offer</h2>
                 </div>
                 <div class="card-body">
                     <form asp-action="Create" id="offerForm">
@@ -49,7 +49,7 @@
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input asp-for="OfferName" class="form-control" placeholder=" " maxlength="50" required />
-                                    <label asp-for="OfferName" class="form-label">Offer Name</label>
+                                    <label asp-for="OfferName" class="form-label" data-en="Offer Name" data-ar="اسم العرض">Offer Name</label>
                                     <span asp-validation-for="OfferName" class="text-danger"></span>
                                 </div>
                             </div>
@@ -57,7 +57,7 @@
                                 <div class="form-floating">
                                     <input asp-for="DiscountPrecentage" class="form-control" placeholder=" "
                                            type="number" min="1" max="100" step="0.01" required />
-                                    <label asp-for="DiscountPrecentage" class="form-label">Discount Percentage</label>
+                                    <label asp-for="DiscountPrecentage" class="form-label" data-en="Discount Percentage" data-ar="نسبة الخصم">Discount Percentage</label>
                                     <span asp-validation-for="DiscountPrecentage" class="text-danger"></span>
                                 </div>
                             </div>
@@ -67,17 +67,17 @@
                             <div class="col-md-12">
                                 <div class="form-floating">
                                     <select asp-for="MemberShipTypesId" class="form-select" asp-items="ViewBag.MemberShipTypesId" required>
-                                        <option value="">-- Select Membership Type --</option>
+                                        <option value="" data-en="-- Select Membership Type --" data-ar="-- اختر نوع الاشتراك --">-- Select Membership Type --</option>
                                     </select>
-                                    <label asp-for="MemberShipTypesId" class="form-label">Membership Type</label>
+                                    <label asp-for="MemberShipTypesId" class="form-label" data-en="Membership Type" data-ar="نوع الاشتراك">Membership Type</label>
                                     <span asp-validation-for="MemberShipTypesId" class="text-danger"></span>
                                 </div>
                             </div>
                         </div>
 
                         <div class="mt-4">
-                            <button type="submit" class="btn btn-dark btn-lg">Create Offer</button>
-                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2">Back to List</a>
+                            <button type="submit" class="btn btn-dark btn-lg" data-en="Create Offer" data-ar="إنشاء العرض">Create Offer</button>
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2" data-en="Back to List" data-ar="العودة إلى القائمة">Back to List</a>
                         </div>
                     </form>
                 </div>
@@ -92,11 +92,53 @@
     }
     <script>
         $(document).ready(function() {
+            // Update page content based on selected language
+            function updatePageLanguage() {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+
+                // Update all elements with data attributes
+                document.querySelectorAll('[data-en], [data-ar]').forEach(element => {
+                    const textAttr = `data-${currentLanguage}`;
+                    if (element.hasAttribute(textAttr)) {
+                        if (element.tagName === 'OPTION') {
+                            // For option elements, update both text and value if needed
+                            element.textContent = element.getAttribute(textAttr);
+                        } else {
+                            element.textContent = element.getAttribute(textAttr);
+                        }
+                    }
+                });
+
+                // Update placeholders
+                document.querySelectorAll('[data-en-placeholder], [data-ar-placeholder]').forEach(element => {
+                    const placeholderAttr = `data-${currentLanguage}-placeholder`;
+                    if (element.hasAttribute(placeholderAttr)) {
+                        element.placeholder = element.getAttribute(placeholderAttr);
+                    }
+                });
+
+                // Update titles
+                document.querySelectorAll('[data-en-title], [data-ar-title]').forEach(element => {
+                    const titleAttr = `data-${currentLanguage}-title`;
+                    if (element.hasAttribute(titleAttr)) {
+                        element.title = element.getAttribute(titleAttr);
+                    }
+                });
+            }
+
+            // Initialize language on page load
+            updatePageLanguage();
+
+            // Listen for language change events (if you have a language switcher)
+            document.addEventListener('languageChanged', updatePageLanguage);
+
             // Custom validation for DiscountPercentage
             $.validator.addMethod("percentageRange", function(value, element) {
                 var percentage = parseFloat(value);
                 return this.optional(element) || (percentage >= 1 && percentage <= 100);
             }, "Discount must be between 1% and 100%.");
+
+            
 
             // Initialize form validation
             $("#offerForm").validate({
@@ -114,20 +156,7 @@
                         required: true
                     }
                 },
-                messages: {
-                    OfferName: {
-                        required: "Please enter an offer name",
-                        maxlength: "Offer name cannot exceed 50 characters"
-                    },
-                    DiscountPrecentage: {
-                        required: "Please enter discount percentage",
-                        number: "Please enter a valid number",
-                        percentageRange: "Discount must be between 1% and 100%"
-                    },
-                    MemberShipTypesId: {
-                        required: "Please select a membership type"
-                    }
-                },
+                messages: getValidationMessages(),
                 errorElement: 'span',
                 errorPlacement: function (error, element) {
                     error.addClass('text-danger');
@@ -138,6 +167,41 @@
                 },
                 unhighlight: function (element, errorClass, validClass) {
                     $(element).removeClass('is-invalid').addClass('is-valid');
+                }
+            });
+
+            // Reinitialize validation with correct messages when language changes
+            document.addEventListener('languageChanged', function() {
+                if ($("#offerForm").validate()) {
+                    $("#offerForm").validate().destroy();
+                    $("#offerForm").validate({
+                        rules: {
+                            OfferName: {
+                                required: true,
+                                maxlength: 50
+                            },
+                            DiscountPrecentage: {
+                                required: true,
+                                number: true,
+                                percentageRange: true
+                            },
+                            MemberShipTypesId: {
+                                required: true
+                            }
+                        },
+                        messages: getValidationMessages(),
+                        errorElement: 'span',
+                        errorPlacement: function (error, element) {
+                            error.addClass('text-danger');
+                            element.closest('.form-floating').append(error);
+                        },
+                        highlight: function (element, errorClass, validClass) {
+                            $(element).addClass('is-invalid').removeClass('is-valid');
+                        },
+                        unhighlight: function (element, errorClass, validClass) {
+                            $(element).removeClass('is-invalid').addClass('is-valid');
+                        }
+                    });
                 }
             });
         });

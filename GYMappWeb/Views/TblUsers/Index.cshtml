@@ -205,11 +205,12 @@
     <div class="card shadow-sm">
         <div class="card-header bg-dark text-white">
             <div class="d-flex justify-content-between align-items-center">
-                <h2 class="mb-0">User List</h2>
+                <h2 class="mb-0" data-en="User List" data-ar="قائمة المستخدمين">User List</h2>
                 <div class="search-create-container">
                     <input type="text" id="searchInput" class="form-control form-control-sm search-input"
-                           placeholder="Search users..." value="@Context.Request.Query["searchTerm"]">
-                    <a asp-action="Create" class="btn btn-light btn-sm">Create New</a>
+                           placeholder="Search users..." value="@Context.Request.Query["searchTerm"]"
+                           data-en-placeholder="Search users..." data-ar-placeholder="ابحث عن المستخدمين...">
+                    <a asp-action="Create" class="btn btn-light btn-sm" data-en="Create New" data-ar="إنشاء جديد">Create New</a>
                 </div>
             </div>
         </div>
@@ -218,14 +219,14 @@
                 <table class="table table-hover table-bordered">
                     <thead class="table-dark">
                         <tr>
-                            <th>User Code</th>
-                            <th>User Name</th>
-                            <th>Phone</th>
-                            <th>Status</th>
-                            <th>Notes</th>
-                            <th>Created Date</th>
-                            <th>Created By</th>
-                            <th>Actions</th>
+                            <th data-en="User Code" data-ar="كود المستخدم">User Code</th>
+                            <th data-en="User Name" data-ar="اسم المستخدم">User Name</th>
+                            <th data-en="Phone" data-ar="الهاتف">Phone</th>
+                            <th data-en="Status" data-ar="الحالة">Status</th>
+                            <th data-en="Notes" data-ar="ملاحظات">Notes</th>
+                            <th data-en="Created Date" data-ar="تاريخ الإنشاء">Created Date</th>
+                            <th data-en="Created By" data-ar="تم الإنشاء بواسطة">Created By</th>
+                            <th data-en="Actions" data-ar="الإجراءات">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -250,14 +251,16 @@
                                 <td>@Html.DisplayFor(modelItem => item.CreatedByUserName)</td>
                                 <td>
                                     <div class="action-buttons">
-                                        <a asp-action="Edit" asp-route-id="@item.UserId" class="edit-btn icon-btn" title="Edit">
+                                        <a asp-action="Edit" asp-route-id="@item.UserId" class="edit-btn icon-btn" title="Edit"
+                                           data-en-title="Edit" data-ar-title="تعديل">
                                             <img src="~/images/edit-blue.png" alt="Edit" class="icon-default" />
                                             <img src="~/images/edit-black.png" alt="Edit" class="icon-hover" />
                                         </a>
                                         <button class="delete-btn icon-btn delete-user-btn"
                                                 title="Delete"
                                                 data-userid="@item.UserId"
-                                                data-username="@item.UserName">
+                                                data-username="@item.UserName"
+                                                data-en-title="Delete" data-ar-title="حذف">
                                             <img src="~/images/delete-red.png" alt="Delete" class="icon-default" />
                                             <img src="~/images/delete-white.png" alt="Delete" class="icon-hover" />
                                         </button>
@@ -276,7 +279,8 @@
                                 <a class="page-link"
                                    asp-action="Index"
                                    asp-route-pageNumber="@(Model.PageNumber - 1)"
-                                   asp-route-searchTerm="@Context.Request.Query["searchTerm"]">
+                                   asp-route-searchTerm="@Context.Request.Query["searchTerm"]"
+                                   data-en="&laquo; Previous" data-ar="&laquo; السابق">
                                     &laquo; Previous
                                 </a>
                             </li>
@@ -297,7 +301,8 @@
                                 <a class="page-link"
                                    asp-action="Index"
                                    asp-route-pageNumber="@(Model.PageNumber + 1)"
-                                   asp-route-searchTerm="@Context.Request.Query["searchTerm"]">
+                                   asp-route-searchTerm="@Context.Request.Query["searchTerm"]"
+                                   data-en="Next &raquo;" data-ar="التالي &raquo;">
                                     Next &raquo;
                                 </a>
                             </li>
@@ -313,15 +318,15 @@
 <div class="modal-overlay" id="deleteModal">
     <div class="modal-content">
         <div class="modal-header">
-            <h4 class="mb-0">Confirm Delete</h4>
+            <h4 class="mb-0" data-en="Confirm Delete" data-ar="تأكيد الحذف">Confirm Delete</h4>
         </div>
         <div class="modal-body">
-            <p>Are you sure you want to delete user <strong id="userNameToDelete"></strong>?</p>
-            <p class="text-danger">This action cannot be undone.</p>
+            <p data-en="Are you sure you want to delete user" data-ar="هل أنت متأكد أنك تريد حذف المستخدم">Are you sure you want to delete user <strong id="userNameToDelete"></strong>?</p>
+            <p class="text-danger" data-en="This action cannot be undone." data-ar="هذا الإجراء لا يمكن التراجع عنه.">This action cannot be undone.</p>
         </div>
         <div class="modal-footer">
-            <button class="btn-modal btn-modal-cancel" id="cancelDelete">Cancel</button>
-            <button class="btn-modal btn-modal-confirm" id="confirmDelete">Delete</button>
+            <button class="btn-modal btn-modal-cancel" id="cancelDelete" data-en="Cancel" data-ar="إلغاء">Cancel</button>
+            <button class="btn-modal btn-modal-confirm" id="confirmDelete" data-en="Delete" data-ar="حذف">Delete</button>
         </div>
     </div>
 </div>
@@ -329,6 +334,27 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Update search input placeholder based on language
+            function updateSearchPlaceholder() {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                const searchInput = document.getElementById('searchInput');
+                const placeholderAttr = `data-${currentLanguage}-placeholder`;
+                if (searchInput && searchInput.hasAttribute(placeholderAttr)) {
+                    searchInput.placeholder = searchInput.getAttribute(placeholderAttr);
+                }
+            }
+
+            // Update button titles based on language
+            function updateButtonTitles() {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                document.querySelectorAll('[data-en-title], [data-ar-title]').forEach(element => {
+                    const titleAttr = `data-${currentLanguage}-title`;
+                    if (element.hasAttribute(titleAttr)) {
+                        element.title = element.getAttribute(titleAttr);
+                    }
+                });
+            }
+
             // Automatic search functionality
             const searchInput = document.getElementById('searchInput');
             let searchTimer;
@@ -430,6 +456,10 @@
                     userRowElement = null;
                 }
             });
+
+            // Initialize language-specific elements
+            updateSearchPlaceholder();
+            updateButtonTitles();
         });
     </script>
 }

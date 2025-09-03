@@ -188,11 +188,12 @@
     <div class="card shadow-sm">
         <div class="card-header bg-dark text-white">
             <div class="d-flex justify-content-between align-items-center">
-                <h2 class="mb-0">Membership Types</h2>
+                <h2 class="mb-0" data-en="Membership Types" data-ar="أنواع الاشتراكات">Membership Types</h2>
                 <div class="search-create-container">
                     <input type="text" id="searchInput" class="form-control form-control-sm search-input"
-                           placeholder="Search types..." value="@Context.Request.Query["searchTerm"]">
-                    <a asp-action="Create" class="btn btn-light btn-sm">Create New</a>
+                           placeholder="Search types..." value="@Context.Request.Query["searchTerm"]"
+                           data-en-placeholder="Search types..." data-ar-placeholder="ابحث في الأنواع...">
+                    <a asp-action="Create" class="btn btn-light btn-sm" data-en="Create New" data-ar="إنشاء جديد">Create New</a>
                 </div>
             </div>
         </div>
@@ -201,22 +202,16 @@
                 <table class="table table-hover table-bordered">
                     <thead class="table-dark">
                         <tr>
-                            <th>
-                                Name
-                            </th>
-                            <th>
-                                Duration
-                            </th>
-                            <th>
-                                Price
-                            </th>
-                            <th>Invitations</th>
-                            <th>Description</th>
-                            <th>Freeze Count</th>
-                            <th>Freeze Days</th>
-                            <th>Created By</th>
-                            <th>Created Date</th>
-                            <th>Actions</th>
+                            <th data-en="Name" data-ar="الاسم">Name</th>
+                            <th data-en="Duration" data-ar="المدة">Duration</th>
+                            <th data-en="Price" data-ar="السعر">Price</th>
+                            <th data-en="Invitations" data-ar="الدعوات">Invitations</th>
+                            <th data-en="Description" data-ar="الوصف">Description</th>
+                            <th data-en="Freeze Count" data-ar="عدد مرات التجميد">Freeze Count</th>
+                            <th data-en="Freeze Days" data-ar="أيام التجميد">Freeze Days</th>
+                            <th data-en="Created By" data-ar="تم الإنشاء بواسطة">Created By</th>
+                            <th data-en="Created Date" data-ar="تاريخ الإنشاء">Created Date</th>
+                            <th data-en="Actions" data-ar="الإجراءات">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -234,14 +229,16 @@
                                 <td>@item.CreatedDate.ToString("yyyy-MM-dd")</td>
                                 <td>
                                     <div class="action-buttons">
-                                        <a asp-action="Edit" asp-route-id="@item.MemberShipTypesId" class="edit-btn icon-btn" title="Edit">
+                                        <a asp-action="Edit" asp-route-id="@item.MemberShipTypesId" class="edit-btn icon-btn" title="Edit"
+                                           data-en-title="Edit" data-ar-title="تعديل">
                                             <img src="~/images/edit-blue.png" alt="Edit" class="icon-default" />
                                             <img src="~/images/edit-black.png" alt="Edit" class="icon-hover" />
                                         </a>
                                         <button class="delete-btn icon-btn delete-membershiptype-btn"
                                                 title="Delete"
                                                 data-membershiptypeid="@item.MemberShipTypesId"
-                                                data-membershipname="@item.Name">
+                                                data-membershipname="@item.Name"
+                                                data-en-title="Delete" data-ar-title="حذف">
                                             <img src="~/images/delete-red.png" alt="Delete" class="icon-default" />
                                             <img src="~/images/delete-white.png" alt="Delete" class="icon-hover" />
                                         </button>
@@ -262,7 +259,8 @@
                                    asp-route-pageNumber="@(Model.PageNumber - 1)"
                                    asp-route-searchTerm="@Context.Request.Query["searchTerm"]"
                                    asp-route-sortBy="@Context.Request.Query["sortBy"]"
-                                   asp-route-sortDescending="@Context.Request.Query["sortDescending"]">
+                                   asp-route-sortDescending="@Context.Request.Query["sortDescending"]"
+                                   data-en="&laquo; Previous" data-ar="&laquo; السابق">
                                     &laquo; Previous
                                 </a>
                             </li>
@@ -287,7 +285,8 @@
                                    asp-route-pageNumber="@(Model.PageNumber + 1)"
                                    asp-route-searchTerm="@Context.Request.Query["searchTerm"]"
                                    asp-route-sortBy="@Context.Request.Query["sortBy"]"
-                                   asp-route-sortDescending="@Context.Request.Query["sortDescending"]">
+                                   asp-route-sortDescending="@Context.Request.Query["sortDescending"]"
+                                   data-en="Next &raquo;" data-ar="التالي &raquo;">
                                     Next &raquo;
                                 </a>
                             </li>
@@ -303,15 +302,19 @@
 <div class="modal-overlay" id="deleteModal">
     <div class="modal-content">
         <div class="modal-header">
-            <h4 class="mb-0">Confirm Delete</h4>
+            <h4 class="mb-0" data-en="Confirm Delete" data-ar="تأكيد الحذف">Confirm Delete</h4>
         </div>
         <div class="modal-body">
-            <p>Are you sure you want to delete the membership type <strong id="membershipTypeNameToDelete"></strong>?</p>
-            <p class="text-danger">This will permanently remove this membership type and cannot be undone.</p>
+            <p data-en="Are you sure you want to delete the membership type" data-ar="هل أنت متأكد أنك تريد حذف نوع الاشتراك">
+                Are you sure you want to delete the membership type <strong id="membershipTypeNameToDelete"></strong>?
+            </p>
+            <p class="text-danger" data-en="This will permanently remove this membership type and cannot be undone." data-ar="سيؤدي هذا إلى إزالة نوع الاشتراك هذا بشكل دائم ولا يمكن التراجع عنه.">
+                This will permanently remove this membership type and cannot be undone.
+            </p>
         </div>
         <div class="modal-footer">
-            <button class="btn-modal btn-modal-cancel" id="cancelDelete">Cancel</button>
-            <button class="btn-modal btn-modal-confirm" id="confirmDelete">Delete</button>
+            <button class="btn-modal btn-modal-cancel" id="cancelDelete" data-en="Cancel" data-ar="إلغاء">Cancel</button>
+            <button class="btn-modal btn-modal-confirm" id="confirmDelete" data-en="Delete" data-ar="حذف">Delete</button>
         </div>
     </div>
 </div>
@@ -319,6 +322,27 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Update search input placeholder based on language
+            function updateSearchPlaceholder() {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                const searchInput = document.getElementById('searchInput');
+                const placeholderAttr = `data-${currentLanguage}-placeholder`;
+                if (searchInput && searchInput.hasAttribute(placeholderAttr)) {
+                    searchInput.placeholder = searchInput.getAttribute(placeholderAttr);
+                }
+            }
+
+            // Update button titles based on language
+            function updateButtonTitles() {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                document.querySelectorAll('[data-en-title], [data-ar-title]').forEach(element => {
+                    const titleAttr = `data-${currentLanguage}-title`;
+                    if (element.hasAttribute(titleAttr)) {
+                        element.title = element.getAttribute(titleAttr);
+                    }
+                });
+            }
+
             // Automatic search functionality
             const searchInput = document.getElementById('searchInput');
             let searchTimer;
@@ -415,6 +439,10 @@
                     membershipTypeRowElement = null;
                 }
             });
+
+            // Initialize language-specific elements
+            updateSearchPlaceholder();
+            updateButtonTitles();
         });
     </script>
 }

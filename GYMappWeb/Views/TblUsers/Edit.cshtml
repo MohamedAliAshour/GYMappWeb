@@ -16,7 +16,7 @@
         <div class="col-lg-8">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-dark text-white">
-                    <h2 class="mb-0">Edit User</h2>
+                    <h2 class="mb-0" data-en="Edit User" data-ar="تعديل المستخدم">Edit User</h2>
                 </div>
                 <div class="card-body">
                     <form asp-action="Edit">
@@ -27,14 +27,14 @@
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input asp-for="UserCode" class="form-control" readonly />
-                                    <label asp-for="UserCode" class="form-label">User Code</label>
+                                    <label asp-for="UserCode" class="form-label" data-en="User Code" data-ar="كود المستخدم">User Code</label>
                                     <span asp-validation-for="UserCode" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input asp-for="UserName" class="form-control" maxlength="50" />
-                                    <label asp-for="UserName" class="form-label">User Name</label>
+                                    <label asp-for="UserName" class="form-label" data-en="User Name" data-ar="اسم المستخدم">User Name</label>
                                     <span asp-validation-for="UserName" class="text-danger"></span>
                                 </div>
                             </div>
@@ -47,23 +47,25 @@
                                            maxlength="11"
                                            pattern="[0-9]*"
                                            inputmode="numeric"
-                                           title="Please enter only numbers (max 11 digits)" />
-                                    <label asp-for="UserPhone" class="form-label">Phone Number</label>
+                                           title="Please enter only numbers (max 11 digits)"
+                                           data-en-title="Please enter only numbers (max 11 digits)"
+                                           data-ar-title="يرجى إدخال أرقام فقط (بحد أقصى 11 رقمًا)" />
+                                    <label asp-for="UserPhone" class="form-label" data-en="Phone Number" data-ar="رقم الهاتف">Phone Number</label>
                                     <span asp-validation-for="UserPhone" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-floating">
-                                    <input asp-for="Notes" class="form-control"  maxlength="50"/>
-                                    <label asp-for="Notes" class="form-label">Notes</label>
+                                    <input asp-for="Notes" class="form-control" maxlength="50" />
+                                    <label asp-for="Notes" class="form-label" data-en="Notes" data-ar="ملاحظات">Notes</label>
                                     <span asp-validation-for="Notes" class="text-danger"></span>
                                 </div>
                             </div>
                         </div>
 
                         <div class="mt-4" id="buttonContainer">
-                            <button type="submit" class="btn btn-dark btn-lg">Save Changes</button>
-                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2">Back to List</a>
+                            <button type="submit" class="btn btn-dark btn-lg" data-en="Save Changes" data-ar="حفظ التغييرات">Save Changes</button>
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2" data-en="Back to List" data-ar="العودة إلى القائمة">Back to List</a>
                         </div>
                     </form>
                 </div>
@@ -78,6 +80,17 @@
     }
     <script>
         $(document).ready(function() {
+            // Update input titles based on language
+            function updateInputTitles() {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                document.querySelectorAll('[data-en-title], [data-ar-title]').forEach(element => {
+                    const titleAttr = `data-${currentLanguage}-title`;
+                    if (element.hasAttribute(titleAttr)) {
+                        element.title = element.getAttribute(titleAttr);
+                    }
+                });
+            }
+
             // Restrict phone input to numbers only
             $('#UserPhone').on('input', function() {
                 this.value = this.value.replace(/[^0-9]/g, '');
@@ -95,6 +108,9 @@
                     e.preventDefault();
                 }
             });
+
+            // Initialize language-specific elements
+            updateInputTitles();
         });
     </script>
 }

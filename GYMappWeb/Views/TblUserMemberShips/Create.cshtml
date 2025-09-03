@@ -31,7 +31,7 @@
         <div class="col-lg-8">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-dark text-white">
-                    <h2 class="mb-0">Create New Membership</h2>
+                    <h2 class="mb-0" data-en="Create New Membership" data-ar="إنشاء اشتراك جديد">Create New Membership</h2>
                 </div>
                 <div class="card-body">
                     <form asp-action="Create">
@@ -41,14 +41,14 @@
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input asp-for="StartDate" class="form-control" id="startDateInput" type="text" readonly value="@DateTime.Today.ToString("yyyy-MM-dd")" />
-                                    <label asp-for="StartDate" class="form-label">Start Date</label>
+                                    <label asp-for="StartDate" class="form-label" data-en="Start Date" data-ar="تاريخ البداية">Start Date</label>
                                     <span asp-validation-for="StartDate" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input asp-for="EndDate" class="form-control" id="endDateInput" autocomplete="off" readonly />
-                                    <label asp-for="EndDate" class="form-label">End Date</label>
+                                    <label asp-for="EndDate" class="form-label" data-en="End Date" data-ar="تاريخ النهاية">End Date</label>
                                     <span asp-validation-for="EndDate" class="text-danger"></span>
                                 </div>
                             </div>
@@ -58,34 +58,34 @@
                             <div class="col-md-4">
                                 <div class="form-floating">
                                     <select asp-for="OffId" class="form-select" id="offIdSelect">
-                                        <option value="">--Select--</option>
+                                        <option value="" data-en="--Select--" data-ar="--اختر--">--Select--</option>
                                         <!-- Options will be populated dynamically -->
                                     </select>
-                                    <label asp-for="OffId" class="form-label">Offer</label>
+                                    <label asp-for="OffId" class="form-label" data-en="Offer" data-ar="العرض">Offer</label>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-floating">
                                     <select asp-for="UserId" class="form-select" id="userIdSelect">
-                                        <option value="">--Select--</option>
+                                        <option value="" data-en="--Select--" data-ar="--اختر--">--Select--</option>
                                         @foreach (var item in ViewBag.UserId)
                                         {
                                             <option value="@item.Value">@item.Text</option>
                                         }
                                     </select>
-                                    <label asp-for="UserId" class="form-label">User</label>
+                                    <label asp-for="UserId" class="form-label" data-en="User" data-ar="المستخدم">User</label>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-floating">
                                     <select asp-for="MemberShipTypesId" class="form-select" id="membershipTypeDropdown">
-                                        <option value="">--Select--</option>
+                                        <option value="" data-en="--Select--" data-ar="--اختر--">--Select--</option>
                                         @foreach (var item in ViewBag.MemberShipTypesId)
                                         {
                                             <option value="@item.Value">@item.Text</option>
                                         }
                                     </select>
-                                    <label asp-for="MemberShipTypesId" class="form-label">Membership Type</label>
+                                    <label asp-for="MemberShipTypesId" class="form-label" data-en="Membership Type" data-ar="نوع الاشتراك">Membership Type</label>
                                     <span asp-validation-for="MemberShipTypesId" class="text-danger"></span>
                                 </div>
                             </div>
@@ -96,22 +96,22 @@
                             <table class="table table-bordered table-hover">
                                 <thead class="table-dark">
                                     <tr>
-                                        <th>Username</th>
-                                        <th>Membership</th>
-                                        <th>Price</th>
-                                        <th>Discount%</th>
-                                        <th>Price</th>
-                                        <th>Invitation</th>
-                                        <th>Freeze Days</th>
-                                        <th>Freeze Count</th>
+                                        <th data-en="Username" data-ar="اسم المستخدم">Username</th>
+                                        <th data-en="Membership" data-ar="الاشتراك">Membership</th>
+                                        <th data-en="Price" data-ar="السعر">Price</th>
+                                        <th data-en="Discount%" data-ar="نسبة الخصم">Discount%</th>
+                                        <th data-en="Price" data-ar="السعر">Price</th>
+                                        <th data-en="Invitation" data-ar="الدعوة">Invitation</th>
+                                        <th data-en="Freeze Days" data-ar="أيام التجميد">Freeze Days</th>
+                                        <th data-en="Freeze Count" data-ar="عدد مرات التجميد">Freeze Count</th>
                                     </tr>
                                 </thead>
                                 <tbody id="membershipGridBody"></tbody>
                             </table>
                         </div>
                         <div class="mt-4" id="buttonContainer">
-                            <button type="submit" class="btn btn-dark btn-lg">Create Membership</button>
-                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2">Back to List</a>
+                            <button type="submit" class="btn btn-dark btn-lg" data-en="Create Membership" data-ar="إنشاء الاشتراك">Create Membership</button>
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2" data-en="Back to List" data-ar="العودة إلى القائمة">Back to List</a>
                         </div>
                     </form>
                 </div>
@@ -141,11 +141,22 @@
             $grid.hide().removeClass('visible');
             let isInitialLoad = true;
 
+            // Function to update option text based on language
+            function updateSelectOptions() {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                $('option[data-en], option[data-ar]').each(function() {
+                    const textAttr = `data-${currentLanguage}`;
+                    if ($(this).attr(textAttr)) {
+                        $(this).text($(this).attr(textAttr));
+                    }
+                });
+            }
+
             // Function to filter offers based on membership type
             function filterOffers(membershipTypeId) {
                 const $offIdSelect = $('#offIdSelect');
                 $offIdSelect.empty();
-                $offIdSelect.append('<option value="">--Select--</option>');
+                $offIdSelect.append('<option value="" data-en="--Select--" data-ar="--اختر--">--Select--</option>');
 
                 if (!membershipTypeId) {
                     // If no membership type selected, show all offers
@@ -170,6 +181,8 @@
                     $offIdSelect.append(`<option value="${offer.value}">${offer.text}</option>`);
                 });
 
+                // Update option texts based on language
+                updateSelectOptions();
                 updateGrid(); // Update grid after filtering
             }
 
@@ -267,6 +280,9 @@
             filterOffers(null);
             isInitialLoad = false;
 
+            // Update select options based on language
+            updateSelectOptions();
+
             // Event handlers
             $('#membershipTypeDropdown').on('change', function() {
                 const membershipTypeId = $(this).val();
@@ -346,7 +362,3 @@
         });
     </script>
 }
-
-
-
-

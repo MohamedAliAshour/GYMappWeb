@@ -53,7 +53,7 @@
         <div class="col-lg-8">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-dark text-white">
-                    <h2 class="mb-0">Create New Membership Freeze</h2>
+                    <h2 class="mb-0" data-en="Create New Membership Freeze" data-ar="إنشاء تجميد اشتراك جديد">Create New Membership Freeze</h2>
                 </div>
                 <div class="card-body">
                     <form asp-action="Create" id="freezeForm">
@@ -63,13 +63,13 @@
                             <div class="col-md-12">
                                 <div class="form-floating">
                                     <select asp-for="UserMemberShipId" class="form-select" id="userMembershipSelect">
-                                        <option value="">-- Select Membership --</option>
+                                        <option value="" data-en="-- Select Membership --" data-ar="-- اختر الاشتراك --">-- Select Membership --</option>
                                         @foreach (var item in ViewBag.UserMemberShipId)
                                         {
                                             <option value="@item.Value">@item.Text</option>
                                         }
                                     </select>
-                                    <label asp-for="UserMemberShipId" class="form-label">Membership</label>
+                                    <label asp-for="UserMemberShipId" class="form-label" data-en="Membership" data-ar="الاشتراك">Membership</label>
                                     <span asp-validation-for="UserMemberShipId" class="text-danger"></span>
                                 </div>
                             </div>
@@ -80,10 +80,10 @@
                             <table class="table table-bordered table-hover">
                                 <thead class="table-dark">
                                     <tr>
-                                        <th>Freeze Count</th>
-                                        <th>Remaining Freeze Count</th>
-                                        <th>Total Freeze Days</th>
-                                        <th>Remaining Freeze Days</th>
+                                        <th data-en="Freeze Count" data-ar="عدد مرات التجميد">Freeze Count</th>
+                                        <th data-en="Remaining Freeze Count" data-ar="عدد مرات التجميد المتبقية">Remaining Freeze Count</th>
+                                        <th data-en="Total Freeze Days" data-ar="إجمالي أيام التجميد">Total Freeze Days</th>
+                                        <th data-en="Remaining Freeze Days" data-ar="أيام التجميد المتبقية">Remaining Freeze Days</th>
                                     </tr>
                                 </thead>
                                 <tbody id="freezeDetailsGridBody"></tbody>
@@ -94,14 +94,14 @@
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input asp-for="FreezeStartDate" class="form-control flatpickr-input" placeholder=" " id="freezeStartDate" />
-                                    <label asp-for="FreezeStartDate" class="form-label">Start Date</label>
+                                    <label asp-for="FreezeStartDate" class="form-label" data-en="Start Date" data-ar="تاريخ البداية">Start Date</label>
                                     <span asp-validation-for="FreezeStartDate" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input asp-for="FreezeEndDate" class="form-control flatpickr-input" placeholder=" " id="freezeEndDate" />
-                                    <label asp-for="FreezeEndDate" class="form-label">End Date</label>
+                                    <label asp-for="FreezeEndDate" class="form-label" data-en="End Date" data-ar="تاريخ النهاية">End Date</label>
                                     <span asp-validation-for="FreezeEndDate" class="text-danger"></span>
                                 </div>
                             </div>
@@ -111,7 +111,7 @@
                             <div class="col-md-12">
                                 <div class="form-floating">
                                     <input asp-for="Reason" class="form-control" placeholder=" " />
-                                    <label asp-for="Reason" class="form-label">Reason</label>
+                                    <label asp-for="Reason" class="form-label" data-en="Reason" data-ar="السبب">Reason</label>
                                     <span asp-validation-for="Reason" class="text-danger"></span>
                                 </div>
                             </div>
@@ -119,14 +119,14 @@
 
                         <!-- Freeze Records Grid -->
                         <div class="mt-4 freeze-table" id="freezeRecordsGrid">
-                            <h5>Previous Freeze Records</h5>
+                            <h5 data-en="Previous Freeze Records" data-ar="سجلات التجميد السابقة">Previous Freeze Records</h5>
                             <table class="table table-bordered table-hover">
                                 <thead class="table-dark">
                                     <tr>
-                                        <th>Start Date</th>
-                                        <th>End Date</th>
-                                        <th>Duration (Days)</th>
-                                        <th>Reason</th>
+                                        <th data-en="Start Date" data-ar="تاريخ البداية">Start Date</th>
+                                        <th data-en="End Date" data-ar="تاريخ النهاية">End Date</th>
+                                        <th data-en="Duration (Days)" data-ar="المدة (أيام)">Duration (Days)</th>
+                                        <th data-en="Reason" data-ar="السبب">Reason</th>
                                     </tr>
                                 </thead>
                                 <tbody id="freezeRecordsGridBody"></tbody>
@@ -134,8 +134,8 @@
                         </div>
 
                         <div class="mt-4">
-                            <button type="submit" class="btn btn-dark btn-lg" id="submitButton">Create Freeze</button>
-                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2">Back to List</a>
+                            <button type="submit" class="btn btn-dark btn-lg" id="submitButton" data-en="Create Freeze" data-ar="إنشاء التجميد">Create Freeze</button>
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2" data-en="Back to List" data-ar="العودة إلى القائمة">Back to List</a>
                         </div>
                     </form>
                 </div>
@@ -150,6 +150,17 @@
     }
     <script>
         $(document).ready(function() {
+            // Update select options based on language
+            function updateSelectOptions() {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                $('option[data-en], option[data-ar]').each(function() {
+                    const textAttr = `data-${currentLanguage}`;
+                    if ($(this).attr(textAttr)) {
+                        $(this).text($(this).attr(textAttr));
+                    }
+                });
+            }
+
             // Variables to store freeze periods and date pickers
             let freezePeriods = [];
             let startDatePicker, endDatePicker;
@@ -381,6 +392,9 @@
                     showAlert('End date must be after start date');
                 }
             });
+
+            // Update select options based on language
+            updateSelectOptions();
 
             // Trigger change if there's a preselected value
             if ($('#userMembershipSelect').val()) {

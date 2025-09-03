@@ -138,6 +138,7 @@
         background: rgba(220, 53, 69, 0.7);
         border: 1px solid rgba(220, 53, 69, 0.9);
         color: white;
+        data-en ="Delete" data-ar="حذف"
     }
 
         .btn-modal-confirm:hover {
@@ -197,11 +198,12 @@
     <div class="card shadow-sm">
         <div class="card-header bg-dark text-white">
             <div class="d-flex justify-content-between align-items-center">
-                <h2 class="mb-0">Membership Freezes</h2>
+                <h2 class="mb-0" data-en="Membership Freezes" data-ar="تجميدات الاشتراكات">Membership Freezes</h2>
                 <div class="search-create-container">
                     <input type="text" id="searchInput" class="form-control form-control-sm search-input"
-                           placeholder="Search freezes..." value="@Context.Request.Query["searchTerm"]">
-                    <a asp-action="Create" class="btn btn-light btn-sm">Create New Freeze</a>
+                           placeholder="Search freezes..." value="@Context.Request.Query["searchTerm"]"
+                           data-en-placeholder="Search freezes..." data-ar-placeholder="ابحث في التجميدات...">
+                    <a asp-action="Create" class="btn btn-light btn-sm" data-en="Create New Freeze" data-ar="إنشاء تجميد جديد">Create New Freeze</a>
                 </div>
             </div>
         </div>
@@ -210,20 +212,14 @@
                 <table class="table table-hover table-bordered">
                     <thead class="table-dark">
                         <tr>
-                            <th>
-                                User
-                            </th>
-                            <th>
-                                Start Date
-                            </th>
-                            <th>
-                                End Date
-                            </th>
-                            <th>Duration (Days)</th>
-                            <th>Reason</th>
-                            <th>Created By</th>
-                            <th>Created Date</th>
-                            <th>Actions</th>
+                            <th data-en="User" data-ar="المستخدم">User</th>
+                            <th data-en="Start Date" data-ar="تاريخ البداية">Start Date</th>
+                            <th data-en="End Date" data-ar="تاريخ النهاية">End Date</th>
+                            <th data-en="Duration (Days)" data-ar="المدة (أيام)">Duration (Days)</th>
+                            <th data-en="Reason" data-ar="السبب">Reason</th>
+                            <th data-en="Created By" data-ar="تم الإنشاء بواسطة">Created By</th>
+                            <th data-en="Created Date" data-ar="تاريخ الإنشاء">Created Date</th>
+                            <th data-en="Actions" data-ar="الإجراءات">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -248,7 +244,8 @@
                                                 data-freezeid="@item.MemberShipFreezeId"
                                                 data-username="@item.UserMemberShip.User.UserName"
                                                 data-startdate="@item.FreezeStartDate.ToString("yyyy-MM-dd")"
-                                                data-enddate="@item.FreezeEndDate.ToString("yyyy-MM-dd")">
+                                                data-enddate="@item.FreezeEndDate.ToString("yyyy-MM-dd")"
+                                                data-en-title="Delete" data-ar-title="حذف">
                                             <img src="~/images/delete-red.png" alt="Delete" class="icon-default" />
                                             <img src="~/images/delete-white.png" alt="Delete" class="icon-hover" />
                                         </button>
@@ -269,7 +266,8 @@
                                    asp-route-pageNumber="@(Model.PageNumber - 1)"
                                    asp-route-searchTerm="@Context.Request.Query["searchTerm"]"
                                    asp-route-sortBy="@Context.Request.Query["sortBy"]"
-                                   asp-route-sortDescending="@Context.Request.Query["sortDescending"]">
+                                   asp-route-sortDescending="@Context.Request.Query["sortDescending"]"
+                                   data-en="&laquo; Previous" data-ar="&laquo; السابق">
                                     &laquo; Previous
                                 </a>
                             </li>
@@ -294,7 +292,8 @@
                                    asp-route-pageNumber="@(Model.PageNumber + 1)"
                                    asp-route-searchTerm="@Context.Request.Query["searchTerm"]"
                                    asp-route-sortBy="@Context.Request.Query["sortBy"]"
-                                   asp-route-sortDescending="@Context.Request.Query["sortDescending"]">
+                                   asp-route-sortDescending="@Context.Request.Query["sortDescending"]"
+                                   data-en="Next &raquo;" data-ar="التالي &raquo;">
                                     Next &raquo;
                                 </a>
                             </li>
@@ -310,16 +309,20 @@
 <div class="modal-overlay" id="deleteModal">
     <div class="modal-content">
         <div class="modal-header">
-            <h4 class="mb-0">Confirm Freeze Deletion</h4>
+            <h4 class="mb-0" data-en="Confirm Freeze Deletion" data-ar="تأكيد حذف التجميد">Confirm Freeze Deletion</h4>
         </div>
         <div class="modal-body">
-            <p>Are you sure you want to delete the freeze period for <strong id="userNameToDelete"></strong>?</p>
-            <p>Freeze Period: <strong id="freezePeriodToDelete"></strong></p>
-            <p class="text-danger">This action cannot be undone.</p>
+            <p data-en="Are you sure you want to delete the freeze period for" data-ar="هل أنت متأكد أنك تريد حذف فترة التجميد لـ">
+                Are you sure you want to delete the freeze period for <strong id="userNameToDelete"></strong>?
+            </p>
+            <p data-en="Freeze Period:" data-ar="فترة التجميد:">
+                Freeze Period: <strong id="freezePeriodToDelete"></strong>
+            </p>
+            <p class="text-danger" data-en="This action cannot be undone." data-ar="هذا الإجراء لا يمكن التراجع عنه.">This action cannot be undone.</p>
         </div>
         <div class="modal-footer">
-            <button class="btn-modal btn-modal-cancel" id="cancelDelete">Cancel</button>
-            <button class="btn-modal btn-modal-confirm" id="confirmDelete">Delete</button>
+            <button class="btn-modal btn-modal-cancel" id="cancelDelete" data-en="Cancel" data-ar="إلغاء">Cancel</button>
+            <button class="btn-modal btn-modal-confirm" id="confirmDelete" data-en="Delete" data-ar="حذف">Delete</button>
         </div>
     </div>
 </div>
@@ -327,6 +330,38 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Update search input placeholder based on language
+            function updateSearchPlaceholder() {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                const searchInput = document.getElementById('searchInput');
+                const placeholderAttr = `data-${currentLanguage}-placeholder`;
+                if (searchInput && searchInput.hasAttribute(placeholderAttr)) {
+                    searchInput.placeholder = searchInput.getAttribute(placeholderAttr);
+                }
+            }
+
+            // Update button titles based on language
+            function updateButtonTitles() {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                document.querySelectorAll('[data-en-title], [data-ar-title]').forEach(element => {
+                    const titleAttr = `data-${currentLanguage}-title`;
+                    if (element.hasAttribute(titleAttr)) {
+                        element.title = element.getAttribute(titleAttr);
+                    }
+                });
+            }
+
+            // Update modal content based on language
+            function updateModalContent() {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                document.querySelectorAll('[data-en], [data-ar]').forEach(element => {
+                    const textAttr = `data-${currentLanguage}`;
+                    if (element.hasAttribute(textAttr)) {
+                        element.textContent = element.getAttribute(textAttr);
+                    }
+                });
+            }
+
             // Automatic search functionality
             const searchInput = document.getElementById('searchInput');
             let searchTimer;
@@ -418,6 +453,11 @@
                     freezeRowElement = null;
                 }
             });
+
+            // Initialize language-specific elements
+            updateSearchPlaceholder();
+            updateButtonTitles();
+            updateModalContent();
         });
     </script>
 }

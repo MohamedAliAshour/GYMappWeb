@@ -68,7 +68,8 @@
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="stat-label text-xs text-primary text-uppercase mb-1">
+                            <div class="stat-label text-xs text-primary text-uppercase mb-1"
+                                 data-en="TOTAL MEMBERS" data-ar="إجمالي الأعضاء">
                                 TOTAL MEMBERS
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalMembers</div>
@@ -87,7 +88,8 @@
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="stat-label text-xs text-success text-uppercase mb-1">
+                            <div class="stat-label text-xs text-success text-uppercase mb-1"
+                                 data-en="ACTIVE MEMBERSHIPS" data-ar="الاشتراكات النشطة">
                                 ACTIVE MEMBERSHIPS
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.ActiveMemberships</div>
@@ -106,7 +108,8 @@
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="stat-label text-xs text-warning text-uppercase mb-1">
+                            <div class="stat-label text-xs text-warning text-uppercase mb-1"
+                                 data-en="EXPIRING THIS WEEK" data-ar="تنتهي هذا الأسبوع">
                                 EXPIRING THIS WEEK
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.ExpiringMemberships</div>
@@ -120,24 +123,26 @@
         </div>
     </div>
 
-    <!-- Rest of your content remains exactly the same -->
     <!-- Content Row -->
     <div class="row">
         <!-- Recent Freezes -->
         <div class="col-xl-6 col-lg-6 animate-card delay-2">
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-light">RECENT MEMBERSHIP FREEZES</h6>
+                    <h6 class="m-0 font-weight-bold text-light"
+                        data-en="RECENT MEMBERSHIP FREEZES" data-ar="التجميدات الحديثة للاشتراكات">
+                        RECENT MEMBERSHIP FREEZES
+                    </h6>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered" width="100%" cellspacing="0">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>MEMBER</th>
-                                    <th>START DATE</th>
-                                    <th>END DATE</th>
-                                    <th>REASON</th>
+                                    <th data-en="MEMBER" data-ar="العضو">MEMBER</th>
+                                    <th data-en="START DATE" data-ar="تاريخ البداية">START DATE</th>
+                                    <th data-en="END DATE" data-ar="تاريخ النهاية">END DATE</th>
+                                    <th data-en="REASON" data-ar="السبب">REASON</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -157,32 +162,39 @@
             </div>
         </div>
 
-       @*  <!-- Quick Actions -->
-        <div class="col-xl-6 col-lg-6 animate-card delay-3">
+        <!-- Quick Actions (commented out but adding data attributes for future use) -->
+        @* <div class="col-xl-6 col-lg-6 animate-card delay-3">
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-light">QUICK ACTIONS</h6>
+                    <h6 class="m-0 font-weight-bold text-light" 
+                        data-en="QUICK ACTIONS" data-ar="إجراءات سريعة">
+                        QUICK ACTIONS
+                    </h6>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-4">
                             <a asp-controller="TblUsers" asp-action="Create" class="btn btn-success btn-block">
-                                <i class="fas fa-user-plus"></i> Add New Member
+                                <i class="fas fa-user-plus"></i> 
+                                <span data-en="Add New Member" data-ar="إضافة عضو جديد">Add New Member</span>
                             </a>
                         </div>
                         <div class="col-md-6 mb-4">
                             <a asp-controller="TblUserMemberShips" asp-action="Create" class="btn btn-info btn-block">
-                                <i class="fas fa-id-card"></i> Create Membership
+                                <i class="fas fa-id-card"></i> 
+                                <span data-en="Create Membership" data-ar="إنشاء اشتراك">Create Membership</span>
                             </a>
                         </div>
                         <div class="col-md-6 mb-4">
                             <a asp-controller="TblMemberShipFreezes" asp-action="Create" class="btn btn-warning btn-block">
-                                <i class="fas fa-pause"></i> Freeze Membership
+                                <i class="fas fa-pause"></i> 
+                                <span data-en="Freeze Membership" data-ar="تجميد الاشتراك">Freeze Membership</span>
                             </a>
                         </div>
                         <div class="col-md-6 mb-4">
                             <a asp-controller="Reports" asp-action="Index" class="btn btn-primary btn-block">
-                                <i class="fas fa-chart-bar"></i> View Reports
+                                <i class="fas fa-chart-bar"></i> 
+                                <span data-en="View Reports" data-ar="عرض التقارير">View Reports</span>
                             </a>
                         </div>
                     </div>
@@ -197,4 +209,10 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Language toggle functionality
+        // This will be handled by the layout page's JavaScript
+        // The data attributes will be processed by the setLanguage() function
+    </script>
 }

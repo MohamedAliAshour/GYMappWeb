@@ -4,7 +4,8 @@ using GYMappWeb.Areas.Identity.Data;
 using GYMappWeb.Helper;
 using GYMappWeb.Services; // Add this namespace for your services
 using GYMappWeb.Interface;
-using GYMappWeb.Service; // Add this namespace for your interfaces
+using GYMappWeb.Service;
+using Microsoft.AspNetCore.Mvc.Razor; // Add this namespace for your interfaces
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("GYMappWebContextConnection") ?? throw new InvalidOperationException("Connection string 'GYMappWebContextConnection' not found.");
@@ -54,6 +55,8 @@ builder.Services.AddControllersWithViews(options =>
     options.Filters.Add<SessionCheckFilter>();
 });
 
+
+
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -63,6 +66,8 @@ builder.Services.AddSession(options =>
 });
 
 var app = builder.Build();
+
+app.UseRequestLocalization();
 
 // Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())

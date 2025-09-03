@@ -1,4 +1,5 @@
 ﻿using GYMappWeb.ViewModels.TblMemberShipFreeze;
+using GYMappWeb.ViewModels.TblUser;
 
 namespace GYMappWeb.ViewModels.Dashboard
 {
@@ -8,5 +9,7 @@ namespace GYMappWeb.ViewModels.Dashboard
         public int ActiveMemberships { get; set; }
         public int ExpiringMemberships { get; set; }
         public List<TblMemberShipFreezeViewModel> RecentFreezes { get; set; }
+
+        public List<TblUserViewModel> AllUsers { get; set; }
     }
 }

@@ -28,7 +28,7 @@ namespace GYMappWeb.Controllers
 
             var dashboardStats = new DashboardViewModel
             {
-                TotalMembers = await _context.Users.CountAsync(),
+                TotalMembers = await _context.TblUsers.CountAsync(),
                 ActiveMemberships = await _context.TblUserMemberShips
                     .CountAsync(um => um.EndDate >= today),
                 ExpiringMemberships = await _context.TblUserMemberShips

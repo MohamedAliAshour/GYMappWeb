@@ -25,7 +25,10 @@
         .btn-provider:hover {
             background: rgba(255, 255, 255, 0.3);
         }
+
+   
 </style>
+
 
 <div class="animate-container">
     <div class="row justify-content-center">
@@ -33,27 +36,27 @@
         <div class="col-md-5 animate-card delay-1">
             <div class="card glass-card mb-4">
                 <div class="card-header">
-                    <h1 class="text-center">@ViewData["Title"]</h1>
+                    <h1 class="text-center" data-en="Login" data-ar="تسجيل الدخول">@ViewData["Title"]</h1>
                 </div>
                 <div class="card-body">
                     <form id="account" method="post">
-                        <h2 class="text-center">TWINZ GYM</h2>
+                        <h2 class="text-center" data-en="TWINZ GYM" data-ar="نادي توينز">TWINZ GYM</h2>
                         <hr />
                         <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
 
                         <div class="form-floating mb-3">
-                            <input asp-for="Input.UserName" class="form-control" autocomplete="username" aria-required="true" placeholder="Username" />
-                            <label asp-for="Input.UserName">Username</label>
+                            <input asp-for="Input.UserName" class="form-control" autocomplete="username" aria-required="true" />
+                            <label asp-for="Input.UserName" data-en="Username" data-ar="اسم المستخدم">Username</label>
                             <span asp-validation-for="Input.UserName" class="text-danger"></span>
                         </div>
 
                         <div class="form-floating mb-3">
-                            <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Password" />
-                            <label asp-for="Input.Password">Password</label>
+                            <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" />
+                            <label asp-for="Input.Password" data-en="Password" data-ar="كلمة المرور">Password</label>
                             <span asp-validation-for="Input.Password" class="text-danger"></span>
                         </div>
 
-                        <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary mb-3">Log in</button>
+                        <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary mb-3" data-en="Log in" data-ar="دخول">Log in</button>
                     </form>
                 </div>
             </div>
@@ -65,7 +68,7 @@
             <div class="col-md-5 animate-card delay-2">
                 <div class="card glass-card">
                     <div class="card-header">
-                        <h3 class="text-center">External Login</h3>
+                        <h3 class="text-center" data-en="External Login" data-ar="تسجيل خارجي">External Login</h3>
                     </div>
                     <div class="card-body">
                         <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post">
@@ -73,7 +76,8 @@
                                 @foreach (var provider in Model.ExternalLogins!)
                                 {
                                     <button type="submit" class="btn btn-provider" name="provider" value="@provider.Name" title="Log in using @provider.DisplayName">
-                                        <i class="fab fa-@provider.DisplayName.ToLower() me-2"></i> @provider.DisplayName
+                                        <i class="fab fa-@provider.DisplayName.ToLower() me-2"></i>
+                                        <span data-en="@provider.DisplayName" data-ar="@provider.DisplayName">@provider.DisplayName</span>
                                     </button>
                                 }
                             </div>
@@ -88,4 +92,81 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
+    <script>
+        // Language toggle functionality
+        const langBtnEn = document.getElementById('lang-btn-en');
+        const langBtnAr = document.getElementById('lang-btn-ar');
+
+        // Get initial language from cookie or default to 'ar'
+        let currentLanguage = localStorage.getItem('preferredLanguage') ||
+                             (document.cookie.match(/preferredLanguage=([^;]+)/) ?
+                              document.cookie.match(/preferredLanguage=([^;]+)/)[1] : 'ar');
+
+        // Initialize button states based on current language
+        function initializeButtonStates() {
+            if (currentLanguage === 'en') {
+                langBtnEn.classList.add('lang-btn-unflipped');
+                langBtnEn.classList.remove('lang-btn-flipped');
+                langBtnAr.classList.add('lang-btn-flipped');
+                langBtnAr.classList.remove('lang-btn-unflipped');
+            } else {
+                langBtnAr.classList.add('lang-btn-unflipped');
+                langBtnAr.classList.remove('lang-btn-flipped');
+                langBtnEn.classList.add('lang-btn-flipped');
+                langBtnEn.classList.remove('lang-btn-unflipped');
+            }
+        }
+
+        function toggleLanguage() {
+            // Toggle language
+            currentLanguage = currentLanguage === 'en' ? 'ar' : 'en';
+
+            // Update button states
+            langBtnEn.classList.toggle('lang-btn-flipped');
+            langBtnEn.classList.toggle('lang-btn-unflipped');
+            langBtnAr.classList.toggle('lang-btn-flipped');
+            langBtnAr.classList.toggle('lang-btn-unflipped');
+
+            // Update the UI language
+            setLanguage(currentLanguage);
+
+            // Set the language cookie or localStorage
+            document.cookie = `preferredLanguage=${currentLanguage};path=/;max-age=31536000`;
+            localStorage.setItem('preferredLanguage', currentLanguage);
+
+            console.log('Language changed to: ' + currentLanguage);
+        }
+
+        function setLanguage(lang) {
+            // Update all elements with data attributes for translation
+            document.querySelectorAll('[data-en], [data-ar]').forEach(element => {
+                if (element.getAttribute(`data-${lang}`)) {
+                    element.textContent = element.getAttribute(`data-${lang}`);
+                }
+            });
+
+            // Update input placeholders
+            const usernameInput = document.querySelector('input[asp-for="Input.UserName"]');
+            const passwordInput = document.querySelector('input[asp-for="Input.Password"]');
+
+            if (usernameInput) {
+                usernameInput.placeholder = lang === 'ar' ? 'اسم المستخدم' : 'Username';
+            }
+            if (passwordInput) {
+                passwordInput.placeholder = lang === 'ar' ? 'كلمة المرور' : 'Password';
+            }
+        }
+
+        // Initialize the page with the correct language
+        function initializeLanguage() {
+            initializeButtonStates();
+            setLanguage(currentLanguage);
+        }
+
+        langBtnEn.addEventListener('click', toggleLanguage);
+        langBtnAr.addEventListener('click', toggleLanguage);
+
+        // Initialize language when page loads
+        document.addEventListener('DOMContentLoaded', initializeLanguage);
+    </script>
 }

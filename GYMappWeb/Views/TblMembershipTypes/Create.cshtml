@@ -34,7 +34,7 @@
         <div class="col-lg-8">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-dark text-white">
-                    <h2 class="mb-0">Create New Membership Type</h2>
+                    <h2 class="mb-0" data-en="Create New Membership Type" data-ar="إنشاء نوع اشتراك جديد">Create New Membership Type</h2>
                 </div>
                 <div class="card-body">
                     <form asp-action="Create" id="membershipForm">
@@ -44,7 +44,7 @@
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input asp-for="Name" class="form-control" placeholder=" " maxlength="50" required />
-                                    <label asp-for="Name" class="form-label">Membership Name</label>
+                                    <label asp-for="Name" class="form-label" data-en="Membership Name" data-ar="اسم الاشتراك">Membership Name</label>
                                     <span asp-validation-for="Name" class="text-danger"></span>
                                 </div>
                             </div>
@@ -52,7 +52,7 @@
                                 <div class="form-floating">
                                     <input asp-for="MembershipDuration" class="form-control" placeholder=" "
                                            type="number" min="1" max="12" required />
-                                    <label asp-for="MembershipDuration" class="form-label">Duration (months)</label>
+                                    <label asp-for="MembershipDuration" class="form-label" data-en="Duration (months)" data-ar="المدة (أشهر)">Duration (months)</label>
                                     <span asp-validation-for="MembershipDuration" class="text-danger"></span>
                                 </div>
                             </div>
@@ -62,21 +62,21 @@
                             <div class="col-md-4">
                                 <div class="form-floating">
                                     <input asp-for="Price" class="form-control" placeholder=" " type="number" step="0.01" min="0" required />
-                                    <label asp-for="Price" class="form-label">Price</label>
+                                    <label asp-for="Price" class="form-label" data-en="Price" data-ar="السعر">Price</label>
                                     <span asp-validation-for="Price" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-floating">
                                     <input asp-for="invitationCount" class="form-control" placeholder=" " type="number" min="0" required />
-                                    <label asp-for="invitationCount" class="form-label">Invitation Count</label>
+                                    <label asp-for="invitationCount" class="form-label" data-en="Invitation Count" data-ar="عدد الدعوات">Invitation Count</label>
                                     <span asp-validation-for="invitationCount" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-floating">
                                     <input asp-for="FreezeCount" class="form-control" placeholder=" " type="number" min="0" required />
-                                    <label asp-for="FreezeCount" class="form-label">Freeze Count</label>
+                                    <label asp-for="FreezeCount" class="form-label" data-en="Freeze Count" data-ar="عدد مرات التجميد">Freeze Count</label>
                                     <span asp-validation-for="FreezeCount" class="text-danger"></span>
                                 </div>
                             </div>
@@ -86,22 +86,22 @@
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input asp-for="TotalFreezeDays" class="form-control" placeholder=" " type="number" min="0" required />
-                                    <label asp-for="TotalFreezeDays" class="form-label">Total Freeze Days</label>
+                                    <label asp-for="TotalFreezeDays" class="form-label" data-en="Total Freeze Days" data-ar="إجمالي أيام التجميد">Total Freeze Days</label>
                                     <span asp-validation-for="TotalFreezeDays" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input asp-for="Description" class="form-control" maxlength="50" placeholder=" " />
-                                    <label asp-for="Description" class="form-label">Description</label>
+                                    <label asp-for="Description" class="form-label" data-en="Description" data-ar="الوصف">Description</label>
                                     <span asp-validation-for="Description" class="text-danger"></span>
                                 </div>
                             </div>
                         </div>
 
                         <div class="mt-4">
-                            <button type="submit" class="btn btn-dark btn-lg">Create Membership Type</button>
-                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2">Back to List</a>
+                            <button type="submit" class="btn btn-dark btn-lg" data-en="Create Membership Type" data-ar="إنشاء نوع الاشتراك">Create Membership Type</button>
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2" data-en="Back to List" data-ar="العودة إلى القائمة">Back to List</a>
                         </div>
                     </form>
                 </div>
@@ -116,6 +116,44 @@
     }
     <script>
         $(document).ready(function() {
+            // Update validation messages based on language
+            function updateValidationMessages() {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+
+                if (currentLanguage === 'ar') {
+                    // Update validation messages for Arabic
+                    $.validator.messages = {
+                        required: "هذا الحقل مطلوب",
+                        number: "يرجى إدخال رقم صحيح",
+                        digits: "يرجى إدخال أرقام فقط",
+                        min: $.validator.format("يرجى إدخال قيمة أكبر من أو تساوي {0}"),
+                        maxlength: $.validator.format("يرجى إدخال ما لا يزيد عن {0} حرف")
+                    };
+
+                    // Custom messages for specific fields
+                    const customMessages = {
+                        MembershipDuration: {
+                            durationRange: "يجب أن تكون المدة بين 1 و 12 شهرًا"
+                        },
+                        Name: {
+                            maxlength: "لا يمكن أن يتجاوز الاسم 50 حرفًا"
+                        },
+                        Description: {
+                            maxlength: "لا يمكن أن يتجاوز الوصف 50 حرفًا"
+                        }
+                    };
+
+                    // Apply custom messages
+                    if ($("#membershipForm").data("validator")) {
+                        const validator = $("#membershipForm").data("validator");
+                        validator.settings.messages = {
+                            ...validator.settings.messages,
+                            ...customMessages
+                        };
+                    }
+                }
+            }
+
             // Custom validation for MembershipDuration
             $.validator.addMethod("durationRange", function(value, element) {
                 var duration = parseInt(value);
@@ -204,6 +242,9 @@
                     $(element).removeClass('is-invalid').addClass('is-valid');
                 }
             });
+
+            // Initialize language-specific elements
+            updateValidationMessages();
         });
     </script>
 }
