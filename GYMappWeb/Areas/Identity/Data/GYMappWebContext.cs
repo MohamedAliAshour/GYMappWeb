@@ -87,6 +87,7 @@ public class GYMappWebContext : IdentityDbContext<IdentityUser>
             entity.Property(e => e.OffId).HasColumnName("Off_ID").ValueGeneratedOnAdd();
             entity.Property(e => e.OfferName).IsRequired().HasMaxLength(50);
             entity.Property(e => e.DiscountPrecentage).IsRequired();
+            entity.Property(e => e.IsActive).IsRequired();
             entity.Property(e => e.MemberShipTypesId).HasColumnName("MemberShipTypes_ID");
             entity.Property(e => e.CreatedBy).HasColumnType("nvarchar(100)").IsRequired(true);
             entity.Property(e => e.CreatedDate)
@@ -110,6 +111,7 @@ public class GYMappWebContext : IdentityDbContext<IdentityUser>
             entity.Property(e => e.Price).IsRequired();
             entity.Property(e => e.Description).HasMaxLength(50);
             entity.Property(e => e.FreezeCount).IsRequired();
+            entity.Property(e => e.IsActive).IsRequired();
             entity.Property(e => e.TotalFreezeDays).IsRequired();
             entity.Property(e => e.CreatedBy).HasColumnType("nvarchar(100)").IsRequired(true);
             entity.Property(e => e.CreatedDate)

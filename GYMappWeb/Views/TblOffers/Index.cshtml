@@ -6,6 +6,23 @@
 }
 
 <style>
+    /* Status icons */
+    .status-icon {
+        width: 24px;
+        height: 24px;
+        display: inline-block;
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+
+    .status-active {
+        background-image: url('/images/Active.png');
+    }
+
+    .status-inactive {
+        background-image: url('/images/Inactive.png');
+    }
+
     /* Action buttons container */
     .action-buttons {
         display: flex;
@@ -49,6 +66,15 @@
             background-color: #42A5F5;
         }
 
+    /* Toggle Active button styles */
+    .toggle-active-btn {
+        border: 1px solid #28a745;
+    }
+
+        .toggle-active-btn:hover {
+            background-color: #28a745;
+        }
+
     /* Icon visibility control */
     .icon-default {
         display: block;
@@ -86,7 +112,7 @@
         -webkit-backdrop-filter: blur(10px);
         border-radius: 12px;
         border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px,32px 0 rgba(31, 38, 135, 0.15);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
         padding: 25px;
         width: 400px;
         max-width: 90%;
@@ -133,6 +159,16 @@
 
         .btn-modal-confirm:hover {
             background: rgba(220, 53, 69, 0.9);
+        }
+
+    .btn-modal-toggle {
+        background: rgba(40, 167, 69, 0.7);
+        border: 1px solid rgba(40, 167, 69, 0.9);
+        color: white;
+    }
+
+        .btn-modal-toggle:hover {
+            background: rgba(40, 167, 69, 0.9);
         }
 
     /* Add this to your site.css */
@@ -205,6 +241,7 @@
                             <th data-en="Offer Name" data-ar="اسم العرض">Offer Name</th>
                             <th data-en="Discount %" data-ar="نسبة الخصم %">Discount %</th>
                             <th data-en="Membership Type" data-ar="نوع الاشتراك">Membership Type</th>
+                            <th data-en="Status" data-ar="الحالة">Status</th>
                             <th data-en="Created By" data-ar="تم الإنشاء بواسطة">Created By</th>
                             <th data-en="Created Date" data-ar="تاريخ الإنشاء">Created Date</th>
                             <th data-en="Actions" data-ar="الإجراءات">Actions</th>
@@ -226,6 +263,16 @@
                                         <span class="text-muted" data-en="None" data-ar="لا يوجد">None</span>
                                     }
                                 </td>
+                                <td>
+                                    @if (item.IsActive)
+                                    {
+                                        <img src="~/images/Active.png" alt="Active" title="Active" style="width:24px; height:24px;" />
+                                    }
+                                    else
+                                    {
+                                        <img src="~/images/Inactive.png" alt="Inactive" title="Inactive" style="width:24px; height:24px;" />
+                                    }
+                                </td>
                                 <td>@Html.DisplayFor(modelItem => item.CreatedByUserName)</td>
                                 <td>@item.CreatedDate.ToString("yyyy-MM-dd")</td>
                                 <td>
@@ -235,6 +282,24 @@
                                             <img src="~/images/edit-blue.png" alt="Edit" class="icon-default" />
                                             <img src="~/images/edit-black.png" alt="Edit" class="icon-hover" />
                                         </a>
+                                        <button class="toggle-active-btn icon-btn toggle-offer-btn"
+                                                title="@(item.IsActive ? "Deactivate" : "Activate")"
+                                                data-offerid="@item.OffId"
+                                                data-isactive="@item.IsActive.ToString().ToLower()"
+                                                data-offername="@item.OfferName"
+                                                data-en-title="@(item.IsActive ? "Deactivate" : "Activate")"
+                                                data-ar-title="@(item.IsActive ? "تعطيل" : "تفعيل")">
+                                            @if (item.IsActive)
+                                            {
+                                                <img src="~/images/switch.png" alt="Deactivate" class="icon-default" />
+                                                <img src="~/images/switch.png" alt="Deactivate" class="icon-hover" />
+                                            }
+                                            else
+                                            {
+                                                <img src="~/images/switch.png" alt="Activate" class="icon-default" />
+                                                <img src="~/images/switch.png" alt="Activate" class="icon-hover" />
+                                            }
+                                        </button>
                                         <button class="delete-btn icon-btn delete-offer-btn"
                                                 title="Delete"
                                                 data-offerid="@item.OffId"
@@ -321,6 +386,24 @@
     </div>
 </div>
 
+<!-- Toggle Active Confirmation Modal -->
+<div class="modal-overlay" id="toggleActiveModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4 class="mb-0" id="toggleModalTitle" data-en="Confirm Action" data-ar="تأكيد الإجراء">Confirm Action</h4>
+        </div>
+        <div class="modal-body">
+            <p id="toggleModalMessage" data-en="Are you sure you want to" data-ar="هل أنت متأكد أنك تريد">
+                Are you sure you want to <strong id="actionType"></strong> the offer <strong id="offerNameToToggle"></strong>?
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal-cancel" id="cancelToggle" data-en="Cancel" data-ar="إلغاء">Cancel</button>
+            <button class="btn-modal btn-modal-toggle" id="confirmToggle" data-en="Confirm" data-ar="تأكيد">Confirm</button>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -371,14 +454,24 @@
                 }, 500); // 500ms delay after typing stops
             });
 
+            // Modal elements
             const deleteModal = document.getElementById('deleteModal');
+            const toggleActiveModal = document.getElementById('toggleActiveModal');
             const offerNameToDelete = document.getElementById('offerNameToDelete');
             const offerDiscountToDelete = document.getElementById('offerDiscountToDelete');
+            const offerNameToToggle = document.getElementById('offerNameToToggle');
+            const actionType = document.getElementById('actionType');
             const cancelDelete = document.getElementById('cancelDelete');
             const confirmDelete = document.getElementById('confirmDelete');
+            const cancelToggle = document.getElementById('cancelToggle');
+            const confirmToggle = document.getElementById('confirmToggle');
+            const toggleModalTitle = document.getElementById('toggleModalTitle');
+            const toggleModalMessage = document.getElementById('toggleModalMessage');
 
             let offerIdToDelete = null;
             let offerRowElement = null;
+            let offerIdToToggle = null;
+            let isCurrentlyActive = null;
 
             // Set up delete buttons
             document.querySelectorAll('.delete-offer-btn').forEach(button => {
@@ -395,14 +488,105 @@
                 });
             });
 
-            // Cancel button
+            // Set up toggle active buttons
+            document.querySelectorAll('.toggle-offer-btn').forEach(button => {
+                button.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    offerIdToToggle = this.getAttribute('data-offerid');
+                    isCurrentlyActive = this.getAttribute('data-isactive') === 'true';
+                    const offerName = this.getAttribute('data-offername');
+
+                    // Update modal content based on action
+                    const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                    const action = isCurrentlyActive ? 'deactivate' : 'activate';
+
+                    if (currentLanguage === 'ar') {
+                        toggleModalTitle.textContent = isCurrentlyActive ? 'تأكيد التعطيل' : 'تأكيد التفعيل';
+                        actionType.textContent = isCurrentlyActive ? 'تعطيل' : 'تفعيل';
+                        toggleModalMessage.innerHTML = `هل أنت متأكد أنك تريد <strong>${isCurrentlyActive ? 'تعطيل' : 'تفعيل'}</strong> العرض <strong>${offerName}</strong>؟`;
+                    } else {
+                        toggleModalTitle.textContent = isCurrentlyActive ? 'Confirm Deactivation' : 'Confirm Activation';
+                        actionType.textContent = isCurrentlyActive ? 'deactivate' : 'activate';
+                        toggleModalMessage.innerHTML = `Are you sure you want to <strong>${isCurrentlyActive ? 'deactivate' : 'activate'}</strong> the offer <strong>${offerName}</strong>?`;
+                    }
+
+                    offerNameToToggle.textContent = offerName;
+                    toggleActiveModal.style.display = 'flex';
+                });
+            });
+
+            // Cancel buttons
             cancelDelete.addEventListener('click', function () {
                 deleteModal.style.display = 'none';
                 offerIdToDelete = null;
                 offerRowElement = null;
             });
 
-            // Confirm button - AJAX delete
+            cancelToggle.addEventListener('click', function () {
+                toggleActiveModal.style.display = 'none';
+                offerIdToToggle = null;
+                isCurrentlyActive = null;
+            });
+
+            // Confirm toggle action
+            confirmToggle.addEventListener('click', async function () {
+                if (!offerIdToToggle) return;
+
+                // Show loading state
+                const originalText = confirmToggle.textContent;
+                confirmToggle.disabled = true;
+                confirmToggle.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+
+                try {
+                    // Get the anti-forgery token
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                    const response = await fetch(`/TblOffers/ToggleActive/${offerIdToToggle}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': token,
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    if (response.ok) {
+                        // Show success message
+                        const successMessage = isCurrentlyActive ?
+                            (localStorage.getItem('preferredLanguage') === 'ar' ?
+                                'تم تعطيل العرض بنجاح' :
+                                'Offer deactivated successfully') :
+                            (localStorage.getItem('preferredLanguage') === 'ar' ?
+                                'تم تفعيل العرض بنجاح' :
+                                'Offer activated successfully');
+
+                        // Show toast notification
+                        showToast(successMessage, 'success');
+
+                        // Wait a bit before reloading to show the toast
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        const errorData = await response.text();
+                        throw new Error(errorData || 'Failed to toggle status');
+                    }
+                } catch (error) {
+                    console.error('Toggle error:', error);
+                    const errorMessage = localStorage.getItem('preferredLanguage') === 'ar' ?
+                        'حدث خطأ أثناء تغيير الحالة' :
+                        'Error changing status';
+                    showToast(`${errorMessage}: ${error.message}`, 'error');
+                } finally {
+                    toggleActiveModal.style.display = 'none';
+                    confirmToggle.disabled = false;
+                    confirmToggle.textContent = originalText;
+                    offerIdToToggle = null;
+                    isCurrentlyActive = null;
+                }
+            });
+
+            // Confirm delete action
             confirmDelete.addEventListener('click', async function () {
                 if (!offerIdToDelete) return;
 
@@ -414,30 +598,50 @@
                 try {
                     // First check if there are any related memberships
                     const checkResponse = await fetch(`/TblOffers/HasRelatedMemberships/${offerIdToDelete}`);
+
+                    if (!checkResponse.ok) {
+                        throw new Error('Failed to check related memberships');
+                    }
+
                     const hasRelated = await checkResponse.json();
 
                     if (hasRelated) {
-                        throw new Error('This offer has related memberships and cannot be deleted.');
+                        const errorMessage = localStorage.getItem('preferredLanguage') === 'ar' ?
+                            'هذا العرض له اشتراكات مرتبطة به ولا يمكن حذفه' :
+                            'This offer has related memberships and cannot be deleted.';
+                        throw new Error(errorMessage);
                     }
+
+                    // Get the anti-forgery token
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
 
                     // Then delete the offer
                     const deleteResponse = await fetch(`/TblOffers/Delete/${offerIdToDelete}`, {
                         method: 'POST',
                         headers: {
-                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value,
-                            'Content-Type': 'application/json'
+                            'RequestVerificationToken': token,
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
                         }
                     });
 
                     if (!deleteResponse.ok) {
-                        throw new Error('Failed to delete offer');
+                        const errorData = await deleteResponse.text();
+                        throw new Error(errorData || 'Failed to delete offer');
                     }
+
+                    // Show success message
+                    const successMessage = localStorage.getItem('preferredLanguage') === 'ar' ?
+                        'تم حذف العرض بنجاح' :
+                        'Offer deleted successfully';
+                    showToast(successMessage, 'success');
 
                     // Remove the row from the table
                     offerRowElement.remove();
 
                 } catch (error) {
-                    alert('Error deleting offer: ' + error.message);
+                    console.error('Delete error:', error);
+                    showToast(error.message, 'error');
                 } finally {
                     deleteModal.style.display = 'none';
                     confirmDelete.disabled = false;
@@ -447,14 +651,50 @@
                 }
             });
 
-            // Close modal when clicking outside
-            deleteModal.addEventListener('click', function (e) {
-                if (e.target === deleteModal) {
-                    deleteModal.style.display = 'none';
-                    offerIdToDelete = null;
-                    offerRowElement = null;
-                }
+            // Close modals when clicking outside
+            [deleteModal, toggleActiveModal].forEach(modal => {
+                modal.addEventListener('click', function (e) {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                        offerIdToDelete = null;
+                        offerRowElement = null;
+                        offerIdToToggle = null;
+                        isCurrentlyActive = null;
+                    }
+                });
             });
+
+            // Toast notification function
+            function showToast(message, type = 'info') {
+                // Remove any existing toasts
+                const existingToasts = document.querySelectorAll('.custom-toast');
+                existingToasts.forEach(toast => toast.remove());
+
+                const toast = document.createElement('div');
+                toast.className = `custom-toast alert alert-${type} alert-dismissible fade show`;
+                toast.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 9999;
+                    min-width: 300px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                `;
+
+                toast.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+
+                document.body.appendChild(toast);
+
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 5000);
+            }
 
             // Initialize language-specific elements
             updateSearchPlaceholder();

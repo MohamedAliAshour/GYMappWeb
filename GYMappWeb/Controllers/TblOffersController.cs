@@ -140,5 +140,20 @@ namespace GYMappWeb.Controllers
                 selectedMembershipTypeId
             );
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleActive(int id)
+        {
+            try
+            {
+                await _offerService.ToggleOfferStatusAsync(id);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error toggling offer status: {ex.Message}");
+            }
+        }
     }
 }

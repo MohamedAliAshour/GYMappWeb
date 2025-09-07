@@ -16,6 +16,7 @@ public partial class TblOffer
     public string OfferName { get; set; } = null!;
     public int DiscountPrecentage { get; set; }
     public int MemberShipTypesId { get; set; }
+    public bool IsActive { get; set; }
     public string CreatedBy { get; set; }
     public DateTime CreatedDate { get; set; }
     public virtual TblMembershipType MemberShipTypes { get; set; } = null!;

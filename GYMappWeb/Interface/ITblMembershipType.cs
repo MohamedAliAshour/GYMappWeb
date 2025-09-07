@@ -11,6 +11,7 @@ namespace GYMappWeb.Interface
         Task<bool> AddMembershipTypeAsync(SaveTblMemberShipTypeViewModel model, string createdById);
         Task<bool> UpdateMembershipTypeAsync(SaveTblMemberShipTypeViewModel model, int id, string updatedById);
         Task<bool> DeleteMembershipTypeAsync(int id);
+        Task<bool> ToggleMembershipTypeStatusAsync(int id);
         Task<bool> HasRelatedMembershipsAsync(int membershipTypeId);
         Task<SaveTblMemberShipTypeViewModel> GetMembershipTypeDetailsAsync(int id);
     }

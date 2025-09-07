@@ -81,7 +81,8 @@ namespace GYMappWeb.Service
                     CreatedByUserName = o.CreatedBy != null && userNames.ContainsKey(o.CreatedBy)
                         ? userNames[o.CreatedBy]
                         : "Unknown",
-                    MemberShipTypes = o.MemberShipTypes
+                    MemberShipTypes = o.MemberShipTypes,
+                    IsActive = o.IsActive
                 })
                 .ToListAsync();
 
@@ -96,6 +97,7 @@ namespace GYMappWeb.Service
         {
             model.CreatedBy = createdById;
             model.CreatedDate = DateTime.Today;
+            model.IsActive = true;
 
             var entity = ObjectMapper.Mapper.Map<TblOffer>(model);
             _context.Add(entity);
@@ -121,6 +123,7 @@ namespace GYMappWeb.Service
             existingOffer.MemberShipTypesId = model.MemberShipTypesId;
             existingOffer.CreatedBy = updatedById;
             existingOffer.CreatedDate = DateTime.Today;
+            existingOffer.IsActive = model.IsActive;
 
             _context.Update(existingOffer);
             await _context.SaveChangesAsync();
@@ -155,6 +158,22 @@ namespace GYMappWeb.Service
         {
             var offer = await _context.TblOffers.FindAsync(id);
             return ObjectMapper.Mapper.Map<SaveTblOfferViewModel>(offer);
+        }
+
+        public async Task<bool> ToggleOfferStatusAsync(int id)
+        {
+            var offer = await _context.TblOffers.FindAsync(id);
+            if (offer == null)
+            {
+                throw new Exception("Offer not found");
+            }
+
+            // Toggle the IsActive status
+            offer.IsActive = !offer.IsActive;
+
+            _context.Update(offer);
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

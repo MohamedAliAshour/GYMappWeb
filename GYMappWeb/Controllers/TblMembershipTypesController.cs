@@ -120,5 +120,22 @@ namespace GYMappWeb.Controllers
                 return StatusCode(500, $"Error deleting membership type: {ex.Message}");
             }
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleActive(int id)
+        {
+            try
+            {
+                await _membershipTypeService.ToggleMembershipTypeStatusAsync(id);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error toggling membership type status: {ex.Message}");
+            }
+        }
+
+
     }
 }

@@ -106,20 +106,25 @@ namespace GYMappWeb.Controllers
 
             // Modified to include membership type
             var offerDetails = _context.TblOffers
-                .Select(o => new {
+                .Where(o => o.IsActive == true)
+                .Select(o => new
+                {
                     Id = o.OffId,
                     Percentage = o.DiscountPrecentage,
                     MembershipTypeId = o.MemberShipTypesId
                 }).ToList();
 
             var membershipDetails = _context.TblMembershipTypes
+                .Where(m => m.IsActive == true)
                 .Select(m => new { Id = m.MemberShipTypesId, Name = m.Name, Price = m.Price })
                 .ToList();
 
             var membershipDurations = _context.TblMembershipTypes
+                .Where(m => m.IsActive == true)
                 .ToDictionary(m => m.MemberShipTypesId.ToString(), m => m.MembershipDuration);
 
             var membershipFeatures = _context.TblMembershipTypes
+                .Where(m => m.IsActive == true)
                 .ToDictionary(m => m.MemberShipTypesId.ToString(), m => new {
                     invitationCount = m.invitationCount,
                     totalFreezeDays = m.TotalFreezeDays,
@@ -129,8 +134,10 @@ namespace GYMappWeb.Controllers
 
             // Use the filtered activeUsers for the SelectList
             ViewBag.UserId = new SelectList(activeUsers, "UserId", "UserName");
-            ViewBag.AllOffers = new SelectList(_context.TblOffers, "OffId", "OfferName");
-            ViewBag.MemberShipTypesId = new SelectList(_context.TblMembershipTypes, "MemberShipTypesId", "Name");
+            ViewBag.AllOffers = new SelectList(_context.TblOffers.Where(o => o.IsActive == true), "OffId", "OfferName");
+
+            // Modified to show only ACTIVE membership types in the dropdown
+            ViewBag.MemberShipTypesId = new SelectList(_context.TblMembershipTypes.Where(m => m.IsActive == true), "MemberShipTypesId", "Name");
 
             ViewBag.MembershipDurations = membershipDurations;
             ViewBag.UserDetails = userDetails;

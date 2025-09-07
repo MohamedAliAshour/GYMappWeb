@@ -82,7 +82,8 @@ namespace GYMappWeb.Service
                     CreatedBy = m.CreatedBy,
                     CreatedByUserName = m.CreatedBy != null && userNames.ContainsKey(m.CreatedBy)
                         ? userNames[m.CreatedBy]
-                        : "Unknown"
+                        : "Unknown",
+                    IsActive = m.IsActive
                 })
                 .ToListAsync();
 
@@ -97,6 +98,7 @@ namespace GYMappWeb.Service
         {
             model.CreatedBy = createdById;
             model.CreatedDate = DateTime.Today;
+            model.IsActive = true;
 
             var entity = ObjectMapper.Mapper.Map<TblMembershipType>(model);
             _context.Add(entity);
@@ -126,6 +128,7 @@ namespace GYMappWeb.Service
             existingMembershipType.TotalFreezeDays = model.TotalFreezeDays;
             existingMembershipType.CreatedBy = updatedById;
             existingMembershipType.CreatedDate = DateTime.Today;
+            existingMembershipType.IsActive = model.IsActive;
 
             _context.Update(existingMembershipType);
             await _context.SaveChangesAsync();
@@ -155,6 +158,22 @@ namespace GYMappWeb.Service
         {
             var membershipType = await _context.TblMembershipTypes.FindAsync(id);
             return ObjectMapper.Mapper.Map<SaveTblMemberShipTypeViewModel>(membershipType);
+        }
+
+        public async Task<bool> ToggleMembershipTypeStatusAsync(int id)
+        {
+            var membershipType = await _context.TblMembershipTypes.FindAsync(id);
+            if (membershipType == null)
+            {
+                throw new Exception("Membership Type not found");
+            }
+
+            // Toggle the IsActive status
+            membershipType.IsActive = !membershipType.IsActive;
+
+            _context.Update(membershipType);
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

@@ -9,6 +9,7 @@ namespace GYMappWeb.Interface
         Task<PagedResult<GetWithPaginationTblOfferViewModel>> GetAllOffersAsync(UserParameters userParameters);
         Task<bool> AddOfferAsync(SaveTblOfferViewModel model, string createdById);
         Task<bool> UpdateOfferAsync(SaveTblOfferViewModel model, int id, string updatedById);
+        Task<bool> ToggleOfferStatusAsync(int id);
         Task<bool> DeleteOfferAsync(int id);
         Task<bool> HasRelatedMembershipsAsync(int offerId);
         Task<TblOffer> GetOfferByIdAsync(int id);
