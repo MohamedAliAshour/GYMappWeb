@@ -9,6 +9,7 @@ namespace GYMappWeb.Interface
         Task<PagedResult<GetWithPaginationTblMemberShipFreezeViewModel>> GetAllFreezesAsync(UserParameters userParameters);
         Task<List<object>> GetFreezeRecordsAsync(int userMembershipId);
         Task<object> GetMembershipFreezeDetailsAsync(int userMembershipId);
+        Task<bool> HasDateOverlapAsync(int userMembershipId, DateTime startDate, DateTime endDate);
         Task<bool> AddFreezeAsync(SaveTblMemberShipFreezeViewModel model, string createdById);
         Task<bool> DeleteFreezeAsync(int id);
         Task<List<object>> GetActiveMembershipsForDropdownAsync();

@@ -63,9 +63,32 @@ namespace GYMappWeb.Controllers
             {
                 try
                 {
-                    var userSession = HttpContext.Session.GetUserSession();
-                    await _freezeService.AddFreezeAsync(model, userSession?.Id);
-                    return RedirectToAction(nameof(Index));
+                    // Convert DateOnly to DateTime for the service method
+                    DateTime startDateTime = model.FreezeStartDate.ToDateTime(TimeOnly.MinValue);
+                    DateTime endDateTime = model.FreezeEndDate.ToDateTime(TimeOnly.MinValue);
+
+                    // Check for date overlaps
+                    bool hasOverlap = await _freezeService.HasDateOverlapAsync(
+                        model.UserMemberShipId,
+                        startDateTime,
+                        endDateTime);
+
+                    if (hasOverlap)
+                    {
+                        // Get language preference from cookie or default to 'en'
+                        string language = Request.Cookies["preferredLanguage"] ?? "en";
+                        string errorMessage = language == "ar"
+                            ? "هناك تداخل في تواريخ التجميد مع فترات تجميد موجودة مسبقاً"
+                            : "There is an overlap with existing freeze periods";
+
+                        ModelState.AddModelError("", errorMessage);
+                    }
+                    else
+                    {
+                        var userSession = HttpContext.Session.GetUserSession();
+                        await _freezeService.AddFreezeAsync(model, userSession?.Id);
+                        return RedirectToAction(nameof(Index));
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -91,6 +114,24 @@ namespace GYMappWeb.Controllers
             {
                 return StatusCode(500, $"Error deleting freeze: {ex.Message}");
             }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ValidateFreezeDates(int userMembershipId, DateTime freezeStartDate, DateTime freezeEndDate)
+        {
+            bool hasOverlap = await _freezeService.HasDateOverlapAsync(userMembershipId, freezeStartDate, freezeEndDate);
+
+            // Get language preference from cookie or default to 'en'
+            string language = Request.Cookies["preferredLanguage"] ?? "en";
+            string errorMessage = language == "ar"
+                ? "هناك تداخل في تواريخ التجميد مع فترات تجميد موجودة مسبقاً"
+                : "There is an overlap with existing freeze periods";
+
+            return Json(new
+            {
+                isValid = !hasOverlap,
+                errorMessage = hasOverlap ? errorMessage : ""
+            });
         }
     }
 }

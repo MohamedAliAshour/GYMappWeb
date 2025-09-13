@@ -192,6 +192,39 @@
                 }, 5000);
             }
 
+            // Function to get localized message
+            function getLocalizedMessage(key) {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                const messages = {
+                    'overlap': {
+                        'en': 'There is an overlap with existing freeze periods',
+                        'ar': 'هناك تداخل في تواريخ التجميد مع فترات تجميد موجودة مسبقاً'
+                    },
+                    'selectMembership': {
+                        'en': 'Please select a membership first',
+                        'ar': 'يرجى اختيار الاشتراك أولاً'
+                    },
+                    'selectDates': {
+                        'en': 'Please select both start and end dates',
+                        'ar': 'يرجى اختيار تاريخ البداية والنهاية'
+                    },
+                    'noFreezeCounts': {
+                        'en': 'No remaining freeze counts available for this membership',
+                        'ar': 'لا توجد مرات تجميد متبقية لهذا الاشتراك'
+                    },
+                    'noFreezeDays': {
+                        'en': 'No remaining freeze days available for this membership',
+                        'ar': 'لا توجد أيام تجميد متبقية لهذا الاشتراك'
+                    },
+                    'endDateAfterStart': {
+                        'en': 'End date must be after start date',
+                        'ar': 'يجب أن يكون تاريخ النهاية بعد تاريخ البداية'
+                    }
+                };
+
+                return messages[key]?.[currentLanguage] || messages[key]?.['en'] || key;
+            }
+
             // Function to format date as YYYY-MM-DD
             function formatDate(date) {
                 return date.toISOString().split('T')[0];
@@ -336,9 +369,11 @@
 
             // Form submission handler
             $('#freezeForm').on('submit', function(e) {
+                e.preventDefault(); // Prevent default submission
+
                 // Check if we have freeze details
                 if (!freezeDetails || Object.keys(freezeDetails).length === 0) {
-                    showAlert('Please select a membership first');
+                    showAlert(getLocalizedMessage('selectMembership'));
                     return false;
                 }
 
@@ -348,7 +383,7 @@
 
                 // Check if dates are selected
                 if (!startDate || !endDate) {
-                    showAlert('Please select both start and end dates');
+                    showAlert(getLocalizedMessage('selectDates'));
                     return false;
                 }
 
@@ -357,24 +392,46 @@
 
                 // Check remaining freeze count
                 if (freezeDetails.remainingFreezeCount <= 0) {
-                    showAlert('No remaining freeze counts available for this membership');
+                    showAlert(getLocalizedMessage('noFreezeCounts'));
                     return false;
                 }
 
                 // Check remaining freeze days
                 if (freezeDetails.remainingFreezeDays <= 0) {
-                    showAlert('No remaining freeze days available for this membership');
+                    showAlert(getLocalizedMessage('noFreezeDays'));
                     return false;
                 }
 
                 // Check if requested days exceed remaining days
                 if (requestedDays > freezeDetails.remainingFreezeDays) {
-                    showAlert(`You only have ${freezeDetails.remainingFreezeDays} remaining freeze days, but requested ${requestedDays} days`);
+                    const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                    const message = currentLanguage === 'ar'
+                        ? `لديك فقط ${freezeDetails.remainingFreezeDays} يوم تجميد متبقي، لكنك طلبت ${requestedDays} يوم`
+                        : `You only have ${freezeDetails.remainingFreezeDays} remaining freeze days, but requested ${requestedDays} days`;
+
+                    showAlert(message);
                     return false;
                 }
 
-                // If all checks pass, allow form submission
-                return true;
+                // Check for date overlaps on the client side as well
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+
+                let hasOverlap = false;
+                for (const period of freezePeriods) {
+                    if (start <= period.to && end >= period.from) {
+                        hasOverlap = true;
+                        break;
+                    }
+                }
+
+                if (hasOverlap) {
+                    showAlert(getLocalizedMessage('overlap'));
+                    return false;
+                }
+
+                // If all checks pass, submit the form
+                this.submit();
             });
 
             // Initialize
@@ -389,7 +446,7 @@
 
                 if (startDate && endDate && endDate <= startDate) {
                     endDatePicker.clear();
-                    showAlert('End date must be after start date');
+                    showAlert(getLocalizedMessage('endDateAfterStart'));
                 }
             });
 

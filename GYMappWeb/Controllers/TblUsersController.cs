@@ -148,24 +148,34 @@ namespace GYMappWeb.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ValidateUserName(string value)
+        public async Task<IActionResult> ValidateUserName(string value, string lang = "en")
         {
             bool exists = await _userService.CheckNameExist(value);
+
+            string errorMessage = lang == "ar"
+                ? "اسم المستخدم هذا مستخدم بالفعل"
+                : "This username is already taken";
+
             return Json(new
             {
                 isValid = !exists,
-                errorMessage = exists ? "This username is already taken" : ""
+                errorMessage = exists ? errorMessage : ""
             });
         }
 
         [HttpGet]
-        public async Task<IActionResult> ValidateUserPhone(string value)
+        public async Task<IActionResult> ValidateUserPhone(string value, string lang = "en")
         {
             bool exists = await _userService.CheckPhoneExist(value);
+
+            string errorMessage = lang == "ar"
+                ? "رقم الهاتف هذا مسجل بالفعل"
+                : "This phone number is already registered";
+
             return Json(new
             {
                 isValid = !exists,
-                errorMessage = exists ? "This phone number is already registered" : ""
+                errorMessage = exists ? errorMessage : ""
             });
         }
     }

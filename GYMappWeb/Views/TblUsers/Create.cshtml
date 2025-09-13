@@ -129,19 +129,22 @@
                 validateField('UserPhone', $(this).val());
             });
 
-            function validateField(fieldName, value) {
-                if (!value) return;
+                   function validateField(fieldName, value) {
+            if (!value) return;
 
-                $.get(`/Users/Validate${fieldName}?value=${encodeURIComponent(value)}`, function(response) {
-                    if (!response.isValid) {
-                        $(`#${fieldName}`).addClass('is-invalid');
-                        $(`span[data-valmsg-for="${fieldName}"]`).text(response.errorMessage);
-                    } else {
-                        $(`#${fieldName}`).removeClass('is-invalid');
-                        $(`span[data-valmsg-for="${fieldName}"]`).text('');
-                    }
-                });
-            }
+            // Get current language from localStorage
+            const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+
+            $.get(`/TblUsers/Validate${fieldName}?value=${encodeURIComponent(value)}&lang=${currentLanguage}`, function(response) {
+                if (!response.isValid) {
+                    $(`#${fieldName}`).addClass('is-invalid');
+                    $(`span[data-valmsg-for="${fieldName}"]`).text(response.errorMessage);
+                } else {
+                    $(`#${fieldName}`).removeClass('is-invalid');
+                    $(`span[data-valmsg-for="${fieldName}"]`).text('');
+                }
+            });
+        }
 
             // Initialize language-specific elements
             updateInputTitles();

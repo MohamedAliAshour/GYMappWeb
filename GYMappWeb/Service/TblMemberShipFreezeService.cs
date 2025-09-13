@@ -192,12 +192,32 @@ namespace GYMappWeb.Service
 
         public async Task<bool> DeleteFreezeAsync(int id)
         {
-            var freeze = await _context.TblMemberShipFreezes.FindAsync(id);
+            var freeze = await _context.TblMemberShipFreezes
+                .Include(f => f.UserMemberShip)
+                .FirstOrDefaultAsync(f => f.MemberShipFreezeId == id);
+
             if (freeze == null)
             {
                 throw new Exception("Freeze record not found");
             }
 
+            // Calculate the freeze duration in days
+            var freezeDuration = (freeze.FreezeEndDate.DayNumber - freeze.FreezeStartDate.DayNumber) + 1;
+
+            // Get the associated membership
+            var membership = freeze.UserMemberShip;
+            if (membership != null)
+            {
+                // Reduce the total freeze days
+                membership.TotalFreezedDays = Math.Max(0, (membership.TotalFreezedDays ?? 0) - freezeDuration);
+
+                // Reduce the membership end date by the freeze duration
+                membership.EndDate = membership.EndDate.AddDays(-freezeDuration);
+
+                _context.Update(membership);
+            }
+
+            // Remove the freeze record
             _context.TblMemberShipFreezes.Remove(freeze);
             await _context.SaveChangesAsync();
             return true;
@@ -214,6 +234,29 @@ namespace GYMappWeb.Service
                     UserName = $"{um.User.UserName} ({um.MemberShipTypes.Name})"
                 })
                 .ToListAsync<object>();
+        }
+
+        public async Task<bool> HasDateOverlapAsync(int userMembershipId, DateTime startDate, DateTime endDate)
+        {
+            // Get all existing freezes for this membership
+            var existingFreezes = await _context.TblMemberShipFreezes
+                .Where(f => f.UserMemberShipId == userMembershipId)
+                .ToListAsync();
+
+            foreach (var freeze in existingFreezes)
+            {
+                // Convert DateOnly to DateTime for comparison
+                DateTime freezeStart = freeze.FreezeStartDate.ToDateTime(TimeOnly.MinValue);
+                DateTime freezeEnd = freeze.FreezeEndDate.ToDateTime(TimeOnly.MinValue);
+
+                // Check if the new period overlaps with any existing period
+                if (startDate <= freezeEnd && endDate >= freezeStart)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
