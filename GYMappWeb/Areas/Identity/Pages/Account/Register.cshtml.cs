@@ -18,23 +18,24 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using GYMappWeb.Areas.Identity.Data; // Add this using directive
 
 namespace GYMappWeb.Areas.Identity.Pages.Account
 {
     [AllowAnonymous]
     public class RegisterModel : PageModel
     {
-        private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly IUserStore<IdentityUser> _userStore;
-        private readonly IUserEmailStore<IdentityUser> _emailStore;
+        private readonly SignInManager<ApplicationUser> _signInManager; // Changed to ApplicationUser
+        private readonly UserManager<ApplicationUser> _userManager;     // Changed to ApplicationUser
+        private readonly IUserStore<ApplicationUser> _userStore;        // Changed to ApplicationUser
+        private readonly IUserEmailStore<ApplicationUser> _emailStore;  // Changed to ApplicationUser
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
 
         public RegisterModel(
-            UserManager<IdentityUser> userManager,
-            IUserStore<IdentityUser> userStore,
-            SignInManager<IdentityUser> signInManager,
+            UserManager<ApplicationUser> userManager,                   // Changed to ApplicationUser
+            IUserStore<ApplicationUser> userStore,                      // Changed to ApplicationUser
+            SignInManager<ApplicationUser> signInManager,               // Changed to ApplicationUser
             ILogger<RegisterModel> logger,
             IEmailSender emailSender)
         {
@@ -117,8 +118,6 @@ namespace GYMappWeb.Areas.Identity.Pages.Account
 
                 if (result.Succeeded)
                 {
-                
-
                     // Assign User role
                     await _userManager.AddToRoleAsync(user, "User");
 
@@ -137,29 +136,27 @@ namespace GYMappWeb.Areas.Identity.Pages.Account
             return RedirectToPage("Home");
         }
 
-
-
-        private IdentityUser CreateUser()
+        private ApplicationUser CreateUser() // Changed return type to ApplicationUser
         {
             try
             {
-                return Activator.CreateInstance<IdentityUser>();
+                return Activator.CreateInstance<ApplicationUser>(); // Changed to ApplicationUser
             }
             catch
             {
-                throw new InvalidOperationException($"Can't create an instance of '{nameof(IdentityUser)}'. " +
-                    $"Ensure that '{nameof(IdentityUser)}' is not an abstract class and has a parameterless constructor, or alternatively " +
+                throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " + // Changed to ApplicationUser
+                    $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor, or alternatively " + // Changed to ApplicationUser
                     $"override the register page in /Areas/Identity/Pages/Account/Register.cshtml");
             }
         }
 
-        private IUserEmailStore<IdentityUser> GetEmailStore()
+        private IUserEmailStore<ApplicationUser> GetEmailStore() // Changed return type to ApplicationUser
         {
             if (!_userManager.SupportsUserEmail)
             {
                 throw new NotSupportedException("The default UI requires a user store with email support.");
             }
-            return (IUserEmailStore<IdentityUser>)_userStore;
+            return (IUserEmailStore<ApplicationUser>)_userStore; // Changed to ApplicationUser
         }
     }
 }

@@ -13,181 +13,181 @@
     <style>
         /* Animation Styles */
         .animate-container {
-            opacity: 0;
-            animation: fadeIn 0.5s ease-out forwards;
+        opacity: 0;
+        animation: fadeIn 0.5s ease-out forwards;
         }
 
         .animate-card {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
-            .animate-card.animated {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .animate-card.animated {
+        opacity: 1;
+        transform: translateY(0);
+        }
 
         .delay-1 {
-            transition-delay: 0.1s;
+        transition-delay: 0.1s;
         }
 
         .delay-2 {
-            transition-delay: 0.2s;
+        transition-delay: 0.2s;
         }
 
         .delay-3 {
-            transition-delay: 0.3s;
+        transition-delay: 0.3s;
         }
 
         .delay-4 {
-            transition-delay: 0.4s;
+        transition-delay: 0.4s;
         }
 
         .delay-5 {
-            transition-delay: 0.5s;
+        transition-delay: 0.5s;
         }
 
         @@keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
+        from {
+        opacity: 0;
+        }
 
-            to {
-                opacity: 1;
-            }
+        to {
+        opacity: 1;
+        }
         }
 
         /* Language Toggle Button Styles */
         .lang-toggle-container {
-            position: relative;
-            width: 60px;
-            height: 30px;
-            margin-right: 15px;
+        position: relative;
+        width: 60px;
+        height: 30px;
+        margin-right: 15px;
         }
 
         .lang-btn {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 15px;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.4s ease, z-index 0.4s ease;
-            backface-visibility: hidden;
-            border: none;
-            font-size: 0.9rem;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 15px;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.4s ease, z-index 0.4s ease;
+        backface-visibility: hidden;
+        border: none;
+        font-size: 0.9rem;
         }
 
         /* AR button is in front */
         .lang-btn-ar {
-            background: linear-gradient(45deg, #b21f1f, #fdbb2d);
-            transform: perspective(200px) rotateY(0deg);
-            z-index: 2;
+        background: linear-gradient(45deg, #b21f1f, #fdbb2d);
+        transform: perspective(200px) rotateY(0deg);
+        z-index: 2;
         }
 
         /* EN button is behind */
         .lang-btn-en {
-            background: linear-gradient(45deg, #1a2a6c, #2a5298);
-            transform: perspective(200px) rotateY(180deg);
-            z-index: 1;
+        background: linear-gradient(45deg, #1a2a6c, #2a5298);
+        transform: perspective(200px) rotateY(180deg);
+        z-index: 1;
         }
 
         .lang-btn-flipped {
-            transform: perspective(200px) rotateY(180deg);
-            z-index: 1;
+        transform: perspective(200px) rotateY(180deg);
+        z-index: 1;
         }
 
         .lang-btn-unflipped {
-            transform: perspective(200px) rotateY(0deg);
-            z-index: 2;
+        transform: perspective(200px) rotateY(0deg);
+        z-index: 2;
         }
 
         /* Center the navigation items */
         .navbar-nav.flex-grow-1 {
-            display: flex;
-            justify-content: center;
-            width: 100%;
+        display: flex;
+        justify-content: center;
+        width: 100%;
         }
 
         /* Gold hover effects for nav items */
         .navbar-nav.flex-grow-1 .nav-link {
-            position: relative;
-            transition: all 0.3s ease;
-            color: white !important;
+        position: relative;
+        transition: all 0.3s ease;
+        color: white !important;
         }
 
         /* Ensure navbar maintains normal height */
         nav.navbar {
-            min-height: 56px !important;
-            padding-top: 0 !important;
-            padding-bottom: 0 !important;
+        min-height: 56px !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
         }
 
         .navbar-nav.flex-grow-1 .nav-link:hover {
-            color: #FFD700 !important;
-            transform: translateY(-1px);
+        color: #FFD700 !important;
+        transform: translateY(-1px);
         }
 
         .navbar-nav.flex-grow-1 .nav-link::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: 0;
-            left: 50%;
-            background: linear-gradient(90deg, transparent, #FFD700, transparent);
-            transition: all 0.3s ease;
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 2px;
+        bottom: 0;
+        left: 50%;
+        background: linear-gradient(90deg, transparent, #FFD700, transparent);
+        transition: all 0.3s ease;
         }
 
         .navbar-nav.flex-grow-1 .nav-link:hover::after {
-            width: 100%;
-            left: 0;
+        width: 100%;
+        left: 0;
         }
 
         /* Style for the login partial to display Hello and username side by side */
         .navbar-nav.align-items-center .nav-item:last-child .nav-link {
-            display: flex;
-            align-items: center;
-            flex-direction: row;
-            padding: 0.5rem 0.8rem;
+        display: flex;
+        align-items: center;
+        flex-direction: row;
+        padding: 0.5rem 0.8rem;
         }
 
         .hello-text {
-            margin-right: 0.5rem;
-            color: white;
+        margin-right: 0.5rem;
+        color: white;
         }
 
         .username-text {
-            color: #FFD700;
-            font-weight: bold;
+        color: #FFD700;
+        font-weight: bold;
         }
 
         /* Language toggle hover effects */
         .lang-btn:hover {
-            transform: perspective(200px) rotateY(0deg) scale(1.08) !important;
-            box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+        transform: perspective(200px) rotateY(0deg) scale(1.08) !important;
+        box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
         }
 
         /* Responsive adjustments */
         @@media (max-width: 991.98px) {
-            .navbar-nav.flex-grow-1 {
-                text-align: center;
-            }
-            
-            .navbar-nav.align-items-center .nav-item:last-child .nav-link {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .hello-text {
-                margin-right: 0;
-                margin-bottom: 0.3rem;
-            }
+        .navbar-nav.flex-grow-1 {
+        text-align: center;
+        }
+
+        .navbar-nav.align-items-center .nav-item:last-child .nav-link {
+        flex-direction: column;
+        text-align: center;
+        }
+
+        .hello-text {
+        margin-right: 0;
+        margin-bottom: 0.3rem;
+        }
         }
     </style>
 </head>
@@ -202,7 +202,7 @@
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
-                        @if (User.IsInRole("Captain") || User.IsInRole("Developer"))
+                        @if (User.IsInRole("Captain") || User.IsInRole("Developer") || User.IsInRole("User"))
                         {
                             <li class="nav-item">
                                 <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index" data-en="Home" data-ar="الرئيسية">Home</a>
@@ -222,6 +222,9 @@
                             <li class="nav-item">
                                 <a class="nav-link" asp-area="" asp-controller="TblOffers" asp-action="Index" data-en="Offers" data-ar="العروض">Offers</a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Checkins" asp-action="Index" data-en="Checkins" data-ar="الدخول">Checkins</a>
+                            </li>
                         }
                         @if (User.IsInRole("Developer"))
                         {
@@ -231,6 +234,12 @@
                             <li class="nav-item">
                                 <a class="nav-link" asp-area="" asp-controller="UserRoles" asp-action="Index">UserRoles</a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="GymBranches" asp-action="Index" data-en="Offers" data-ar="فروع">GymBranche</a>
+                            </li>
+                        }
+                        @if (User.IsInRole("Developer") || User.IsInRole("Captain"))
+                        {
                             <li class="nav-item">
                                 <a class="nav-link text-dark" id="register" asp-area="Identity" asp-page="/Account/Register">Register</a>
                             </li>

@@ -13,6 +13,7 @@ namespace GYMappWeb.Interface
         Task<bool> Update(SaveTblUserViewModel model, int id, string updatedById);
         Task<bool> Delete(int id);
         Task<bool> DeleteRelatedRecords(int id);
+
         Task<bool> CheckNameExist(string name);
         Task<bool> CheckPhoneExist(string phone);
         Task<int> GetNextUserCode();

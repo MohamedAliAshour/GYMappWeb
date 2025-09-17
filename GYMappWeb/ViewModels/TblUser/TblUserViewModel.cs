@@ -13,6 +13,7 @@ namespace GYMappWeb.ViewModels.TblUser
         public bool IsActive { get; set; }
         public string? Notes { get; set; }
         public DateTime CreatedDate { get; set; }
+        public string MembershipName { get; set; } // Add this
         public string? CreatedBy { get; set; }
         public string? CreatedByUserName { get; set; }
         public virtual ICollection<TblUserMemberShipViewModel> TblUserMemberShips { get; set; } = new List<TblUserMemberShipViewModel>();

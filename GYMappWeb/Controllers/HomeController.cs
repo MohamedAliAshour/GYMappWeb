@@ -3,12 +3,14 @@ using GYMappWeb.Models;
 using GYMappWeb.ViewModels.Dashboard;
 using GYMappWeb.ViewModels.TblMemberShipFreeze;
 using GYMappWeb.ViewModels.TblUserMemberShip;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 
 namespace GYMappWeb.Controllers
 {
+    [Authorize(Roles = "Captain,Developer,User")]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;

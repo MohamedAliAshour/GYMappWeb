@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using GYMappWeb.Models;
+using GYMappWeb.ViewModels.Checkin;
+using GYMappWeb.ViewModels.GymBranch;
 using GYMappWeb.ViewModels.TblMemberShipFreeze;
 using GYMappWeb.ViewModels.TblMemberShipType;
 using GYMappWeb.ViewModels.TblOffer;
@@ -78,6 +80,15 @@ namespace GYMappWeb.Helpers
             CreateMap<TblOffer, SaveTblOfferViewModel>().ReverseMap();
             #endregion
 
+            #region GymBranch
+            CreateMap<GymBranch, GetGymBranchViewModel>().ReverseMap();
+            CreateMap<GymBranch, SaveGymBranchViewModel>().ReverseMap();
+            #endregion
+
+            #region Checkin
+            CreateMap<Checkin, SaveCheckinViewModel>().ReverseMap();
+            CreateMap<Checkin, GetCheckinViewModel>().ReverseMap();
+            #endregion
         }
     }
 }

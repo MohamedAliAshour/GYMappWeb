@@ -15,17 +15,18 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using GYMappWeb.Models;
+using GYMappWeb.Areas.Identity.Data; // Add this using directive
 
 namespace GYMappWeb.Areas.Identity.Pages.Account
 {
     [AllowAnonymous]
     public class LoginModel : PageModel
     {
-        private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager; // Changed to ApplicationUser
+        private readonly UserManager<ApplicationUser> _userManager;     // Changed to ApplicationUser
         private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(SignInManager<IdentityUser> signInManager, ILogger<LoginModel> logger, UserManager<IdentityUser> userManager)
+        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger, UserManager<ApplicationUser> userManager) // Changed to ApplicationUser
         {
             _signInManager = signInManager;
             _logger = logger;
@@ -118,13 +119,12 @@ namespace GYMappWeb.Areas.Identity.Pages.Account
                 var result = await _signInManager.PasswordSignInAsync(Input.UserName, Input.Password, Input.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
-
                     // Retrieve the user to get their Id
                     var user = await _userManager.FindByNameAsync(Input.UserName);
                     if (user != null)
                     {
                         // Set user session
-                        HttpContext.Session.SetUserSession(user.Id, Input.UserName);
+                        HttpContext.Session.SetUserSession(user.Id, Input.UserName, user.GymBranchId?? 1);
                     }
 
                     return LocalRedirect(returnUrl);

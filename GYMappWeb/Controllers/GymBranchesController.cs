@@ -2,32 +2,32 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using GYMappWeb.ViewModels.TblUser;
 using GYMappWeb.Helpers;
 using GYMappWeb.Interface;
-using GYMappWeb.Models;
+using GYMappWeb.ViewModels.GymBranch;
 using GYMappWeb.Helper;
+using GYMappWeb.Models;
 
 namespace GYMappWeb.Controllers
 {
     [Authorize(Roles = "Captain,Developer,User")]
-    public class TblUsersController : Controller
+    public class GymBranchesController : Controller
     {
-        private readonly ITblUser _userService;
+        private readonly IGymBranch _gymBranchService;
 
-        public TblUsersController(ITblUser userService)
+        public GymBranchesController(IGymBranch gymBranchService)
         {
-            _userService = userService;
+            _gymBranchService = gymBranchService;
         }
 
-        // GET: TblUsers
+        // GET: GymBranches
         public async Task<IActionResult> Index(UserParameters userParameters)
         {
-            var users = await _userService.GetWithPaginations(userParameters);
-            return View(users);
+            var gymBranches = await _gymBranchService.GetWithPaginations(userParameters);
+            return View(gymBranches);
         }
 
-        // GET: TblUsers/Details/5
+        // GET: GymBranches/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -35,33 +35,32 @@ namespace GYMappWeb.Controllers
                 return NotFound();
             }
 
-            var user = await _userService.GetUserDetailsAsync(id.Value);
-            if (user == null)
+            var gymBranch = await _gymBranchService.GetGymBranchDetailsAsync(id.Value);
+            if (gymBranch == null)
             {
                 return NotFound();
             }
 
-            return View(user);
+            return View(gymBranch);
         }
 
-        // GET: TblUsers/Create
-        public async Task<IActionResult> Create()
+        // GET: GymBranches/Create
+        public IActionResult Create()
         {
-            ViewData["UserCode"] = await _userService.GetNextUserCode();
             return View();
         }
 
-        // POST: TblUsers/Create
+        // POST: GymBranches/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("UserId,UserCode,UserName,UserPhone,IsActive,RolesId,Notes")] SaveTblUserViewModel tblUser)
+        public async Task<IActionResult> Create([Bind("GymBranchId,GymName,Location,CreateDate,CreatedBy")] SaveGymBranchViewModel gymBranch)
         {
             if (ModelState.IsValid)
             {
                 try
                 {
                     var userSession = HttpContext.Session.GetUserSession();
-                    await _userService.Add(tblUser, userSession?.Id);
+                    await _gymBranchService.Add(gymBranch, userSession?.Id);
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
@@ -69,12 +68,10 @@ namespace GYMappWeb.Controllers
                     ModelState.AddModelError(string.Empty, ex.Message);
                 }
             }
-
-            ViewData["UserCode"] = tblUser.UserCode;
-            return View(tblUser);
+            return View(gymBranch);
         }
 
-        // GET: TblUsers/Edit/5
+        // GET: GymBranches/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -82,21 +79,21 @@ namespace GYMappWeb.Controllers
                 return NotFound();
             }
 
-            var user = _userService.GetDetailsById(id.Value);
-            if (user == null)
+            var gymBranch = _gymBranchService.GetDetailsById(id.Value);
+            if (gymBranch == null)
             {
                 return NotFound();
             }
 
-            return View(user);
+            return View(gymBranch);
         }
 
-        // POST: TblUsers/Edit/5
+        // POST: GymBranches/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("UserId,UserCode,UserName,UserPhone,IsActive,Notes")] SaveTblUserViewModel tblUserViewModel)
+        public async Task<IActionResult> Edit(int id, [Bind("GymBranchId,GymName,Location,CreateDate,CreatedBy")] SaveGymBranchViewModel gymBranchViewModel)
         {
-            if (id != tblUserViewModel.UserId)
+            if (id != gymBranchViewModel.GymBranchId)
             {
                 return NotFound();
             }
@@ -106,7 +103,7 @@ namespace GYMappWeb.Controllers
                 try
                 {
                     var userSession = HttpContext.Session.GetUserSession();
-                    await _userService.Update(tblUserViewModel, id, userSession?.Id);
+                    await _gymBranchService.Update(gymBranchViewModel, id, userSession?.Id);
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
@@ -114,22 +111,7 @@ namespace GYMappWeb.Controllers
                     ModelState.AddModelError(string.Empty, ex.Message);
                 }
             }
-            return View(tblUserViewModel);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteRelatedRecords(int id)
-        {
-            try
-            {
-                await _userService.DeleteRelatedRecords(id);
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error deleting related records: {ex.Message}");
-            }
+            return View(gymBranchViewModel);
         }
 
         [HttpPost, ActionName("Delete")]
@@ -138,23 +120,23 @@ namespace GYMappWeb.Controllers
         {
             try
             {
-                await _userService.Delete(id);
+                await _gymBranchService.Delete(id);
                 return Ok();
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error deleting user: {ex.Message}");
+                return StatusCode(500, $"Error deleting gym branch: {ex.Message}");
             }
         }
 
         [HttpGet]
-        public async Task<IActionResult> ValidateUserName(string value, string lang = "en")
+        public async Task<IActionResult> ValidateGymName(string value, string lang = "en")
         {
-            bool exists = await _userService.CheckNameExist(value);
+            bool exists = await _gymBranchService.CheckNameExist(value);
 
             string errorMessage = lang == "ar"
-                ? "اسم المستخدم هذا مستخدم بالفعل"
-                : "This username is already taken";
+                ? "اسم الصالة الرياضية هذا مستخدم بالفعل"
+                : "This gym name is already taken";
 
             return Json(new
             {
@@ -164,13 +146,13 @@ namespace GYMappWeb.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ValidateUserPhone(string value, string lang = "en")
+        public async Task<IActionResult> ValidateLocation(string value, string lang = "en")
         {
-            bool exists = await _userService.CheckPhoneExist(value);
+            bool exists = await _gymBranchService.CheckLocationExist(value);
 
             string errorMessage = lang == "ar"
-                ? "رقم الهاتف هذا مسجل بالفعل"
-                : "This phone number is already registered";
+                ? "هذا الموقع مسجل بالفعل"
+                : "This location is already registered";
 
             return Json(new
             {
@@ -178,6 +160,5 @@ namespace GYMappWeb.Controllers
                 errorMessage = exists ? errorMessage : ""
             });
         }
-
     }
 }

@@ -166,6 +166,7 @@ namespace GYMappWeb.Service
             entity.CreatedDate = DateTime.Today;
             entity.IsActive = true;
 
+
             _context.Add(entity);
             await _context.SaveChangesAsync();
             return true;

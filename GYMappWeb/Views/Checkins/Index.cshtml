@@ -1,0 +1,1528 @@
+﻿@model GYMappWeb.Helper.PagedResult<GYMappWeb.ViewModels.Checkin.GetCheckinViewModel>
+
+@{
+    ViewData["Title"] = "Checkins";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@* <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ *@
+<style>
+    /* Action buttons container */
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    /* Base button styles */
+    .icon-btn {
+        display: inline-block;
+        width: 33px;
+        height: 33px;
+        background-color: transparent;
+        border-radius: 4px;
+        padding: 3px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+        .icon-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+    /* Delete button styles */
+    .delete-btn {
+        border: 1px solid #dc3545;
+    }
+
+        .delete-btn:hover {
+            background-color: #dc3545;
+        }
+
+    /* Edit button styles */
+    .edit-btn {
+        border: 1px solid #42A5F5;
+    }
+
+        .edit-btn:hover {
+            background-color: #42A5F5;
+        }
+
+    /* Details button styles */
+    .details-btn {
+        border: 1px solid #28a745;
+    }
+
+        .details-btn:hover {
+            background-color: #28a745;
+        }
+
+    /* Icon visibility control */
+    .icon-default {
+        display: block;
+    }
+
+    .icon-hover {
+        display: none;
+    }
+
+    .icon-btn:hover .icon-default {
+        display: none;
+    }
+
+    .icon-btn:hover .icon-hover {
+        display: block;
+    }
+
+    /* Modal styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+        display: none;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        padding: 25px;
+        width: 400px;
+        max-width: 90%;
+        color: white;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+        padding-bottom: 15px;
+        margin-bottom: 15px;
+    }
+
+    .modal-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.4);
+        padding-top: 15px;
+        margin-top: 15px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .btn-modal {
+        padding: 8px 20px;
+        border-radius: 4px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-modal-cancel {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+
+        .btn-modal-cancel:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+    .btn-modal-confirm {
+        background: rgba(220, 53, 69, 0.7);
+        border: 1px solid rgba(220, 53, 69, 0.9);
+        color: white;
+    }
+
+        .btn-modal-confirm:hover {
+            background: rgba(220, 53, 69, 0.9);
+        }
+
+    /* Button styles */
+    .btn-light {
+        color: #000 !important;
+    }
+
+        .btn-light:hover {
+            color: #000 !important;
+        }
+
+    /* Pagination styles */
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .search-create-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .search-input {
+        width: 250px;
+    }
+
+    /* Black pagination with white text */
+    .pagination .page-item .page-link {
+        background-color: #000;
+        color: #fff;
+        border-color: #333;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #333;
+        border-color: #444;
+    }
+
+    .pagination .page-item.disabled .page-link {
+        background-color: #555;
+        color: #ccc;
+    }
+
+    .pagination .page-item .page-link:hover {
+        background-color: #333;
+        color: #fff;
+    }
+
+    /* Table row hover effect */
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.075);
+    }
+
+    /* Date formatting */
+    .date-cell {
+        white-space: nowrap;
+    }
+
+    /* Status indicators */
+    .status-badge {
+        padding: 0.25em 0.6em;
+        border-radius: 0.25rem;
+        font-size: 0.875em;
+        font-weight: 600;
+    }
+
+    .status-recent {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .status-old {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    /* Create Modal Styles */
+    .create-modal-content {
+        width: 800px;
+        max-width: 95%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .search-tabs {
+        display: flex;
+        margin-bottom: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .search-tab {
+        padding: 10px 20px;
+        cursor: pointer;
+        opacity: 0.7;
+        transition: opacity 0.3s;
+    }
+
+        .search-tab.active {
+            opacity: 1;
+            border-bottom: 2px solid #42A5F5;
+        }
+
+    .search-form {
+        margin-bottom: 20px;
+    }
+
+    .search-results {
+        margin-top: 20px;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .user-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .user-table th, .user-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .user-table th {
+            font-weight: bold;
+        }
+
+    .select-user-btn {
+        padding: 5px 10px;
+        background: rgba(66, 165, 245, 0.7);
+        border: none;
+        border-radius: 4px;
+        color: white;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+        .select-user-btn:hover {
+            background: rgba(66, 165, 245, 1);
+        }
+
+    .no-results {
+        text-align: center;
+        padding: 20px;
+        opacity: 0.7;
+    }
+
+    .checkin-form {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .selected-user-info {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+
+    /* Arabic text fix styles - Added to fix RTL issues */
+   /*  .arabic-text {
+        font-family: Arial, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    } */
+
+    .modal-content input,
+    .modal-content select,
+    .modal-content .user-table td,
+    .modal-content .user-table th {
+        direction: ltr !important;
+        text-align: left !important;
+    }
+
+    .modal-content label,
+    .modal-content h4,
+    .modal-content h5,
+    .modal-content strong {
+        direction: ltr;
+        text-align: left;
+    }
+
+    .selected-user-info p {
+        direction: ltr;
+        text-align: left;
+    }
+
+    .selected-user-info strong {
+        display: inline-block;
+        min-width: 60px;
+    }
+
+    .timer-cell {
+        font-family: monospace;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .timer-warning {
+        color: #ffc107; /* Yellow for warning */
+    }
+
+    .timer-danger {
+        color: #dc3545; /* Red for danger */
+        animation: blink 1s infinite;
+    }
+
+    /* Add to your existing CSS */
+    .selected-user-info .badge {
+        font-size: 0.85em;
+        padding: 0.35em 0.65em;
+    }
+
+    .membership-status {
+        display: inline-block;
+        padding: 0.25em 0.6em;
+        border-radius: 0.25rem;
+        font-size: 0.875em;
+        font-weight: 600;
+    }
+
+    .status-active {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .status-inactive {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    #invitationModal .modal-content {
+        width: 500px;
+    }
+
+    .invited-user-card {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+        border-left: 4px solid #42A5F5;
+    }
+
+    .alert-warning {
+        background-color: rgba(255, 193, 7, 0.2);
+        border: 1px solid rgba(255, 193, 7, 0.5);
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+    }
+
+        .alert-warning i {
+            color: #ffc107;
+        }
+</style>
+
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0" data-en="Checkins List" data-ar="قائمة الحضور">Checkins List</h2>
+                <div class="search-create-container">
+                    <input type="text" id="searchInput" class="form-control form-control-sm search-input"
+                           placeholder="Search checkins..." value="@Context.Request.Query["searchTerm"]"
+                           data-en-placeholder="Search checkins..." data-ar-placeholder="ابحث عن الحضور...">
+                    <button type="button" class="btn btn-light btn-sm" id="openCreateModal"
+                            data-en="Create New" data-ar="إنشاء جديد">
+                        Create New
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th data-en="Checkin Time" data-ar="وقت الحضور">Checkin Time</th>
+                            <th data-en="Time Remaining" data-ar="الوقت المتبقي">Time Remaining</th>
+                            <th data-en="User" data-ar="المستخدم">User</th>
+                            <th data-en="Gym Branch" data-ar="الفرع الرياضي">Gym Branch</th>
+                            <th data-en="Created By" data-ar="تم التسجيل بواسطة">Created By</th>
+                            <th data-en="Actions" data-ar="الإجراءات">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            // Calculate initial time remaining in seconds (3 hours = 10800 seconds)
+                            var checkinTime = item.CheckinDate;
+                            var timeRemaining = 10800 - (int)(DateTime.Now - checkinTime).TotalSeconds;
+
+                            <tr data-checkin-id="@item.CheckinId" data-checkin-time="@checkinTime.ToString("yyyy-MM-ddTHH:mm:ss")">
+                                <td class="date-cell">
+                                    @item.CheckinDate.ToString("hh:mm tt")
+                                </td>
+                                <td class="timer-cell" id="timer-@item.CheckinId">
+                                    @if (timeRemaining > 0)
+                                    {
+                                        <span>@TimeSpan.FromSeconds(timeRemaining).ToString(@"hh\:mm\:ss")</span>
+                                    }
+                                    else
+                                    {
+                                        <span data-en="Expired" data-ar="منتهي">Expired</span>
+                                    }
+                                </td>
+                                <td>@Html.DisplayFor(modelItem => item.UserName)</td>
+                                <td>@Html.DisplayFor(modelItem => item.GymBranchName)</td>
+                                <td>@Html.DisplayFor(modelItem => item.CreatedByUserName)</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="delete-btn icon-btn delete-checkin-btn"
+                                                title="Delete"
+                                                data-checkinid="@item.CheckinId"
+                                                data-checkindate="@item.CheckinDate.ToString("yyyy-MM-dd HH:mm")"
+                                                data-username="@item.UserName"
+                                                data-en-title="Delete" data-ar-title="حذف">
+                                            <img src="~/images/delete-red.png" alt="Delete" class="icon-default" />
+                                            <img src="~/images/delete-white.png" alt="Delete" class="icon-hover" />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <!-- Pagination -->
+                <div class="pagination-container">
+                    <nav>
+                        <ul class="pagination">
+                            <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-pageNumber="@(Model.PageNumber - 1)"
+                                   asp-route-searchTerm="@Context.Request.Query["searchTerm"]"
+                                   data-en="&laquo; Previous" data-ar="&laquo; السابق">
+                                    &laquo; Previous
+                                </a>
+                            </li>
+
+                            @for (var i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                    <a class="page-link"
+                                       asp-action="Index"
+                                       asp-route-pageNumber="@i"
+                                       asp-route-searchTerm="@Context.Request.Query["searchTerm"]">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+
+                            <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-pageNumber="@(Model.PageNumber + 1)"
+                                   asp-route-searchTerm="@Context.Request.Query["searchTerm"]"
+                                   data-en="Next &raquo;" data-ar="التالي &raquo;">
+                                    Next &raquo;
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4 class="mb-0" data-en="Confirm Delete" data-ar="تأكيد الحذف">Confirm Delete</h4>
+        </div>
+        <div class="modal-body">
+            <p data-en="Are you sure you want to delete checkin for" data-ar="هل أنت متأكد أنك تريد حذف حضور">Are you sure you want to delete checkin for <strong id="userNameToDelete"></strong> on <strong id="checkinDateToDelete"></strong>?</p>
+            <p class="text-danger" data-en="This action cannot be undone." data-ar="هذا الإجراء لا يمكن التراجع عنه.">This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal-cancel" id="cancelDelete" data-en="Cancel" data-ar="إلغاء">Cancel</button>
+            <button class="btn-modal btn-modal-confirm" id="confirmDelete" data-en="Delete" data-ar="حذف">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- Create Checkin Modal -->
+<div class="modal-overlay" id="createModal">
+    <div class="modal-content create-modal-content">
+        <div class="modal-header">
+            <h4 class="mb-0" data-en="Create Checkin" data-ar="تسجيل حضور جديد">Create Checkin</h4>
+        </div>
+        <div class="modal-body">
+            <div class="search-tabs">
+                <div class="search-tab active" data-tab="code" data-en="Search by Code" data-ar="بحث بالكود">Search by Code</div>
+                <div class="search-tab" data-tab="phone" data-en="Search by Phone" data-ar="بحث بالهاتف">Search by Phone</div>
+            </div>
+
+            <div class="search-form" id="codeSearchForm">
+                <div class="input-group">
+                    <input type="number" id="codeInput" class="form-control"
+                           placeholder="Enter user code..." data-en-placeholder="Enter user code..." data-ar-placeholder="أدخل كود المستخدم...">
+                    <button class="btn btn-primary" id="searchByCode" data-en="Search" data-ar="بحث">Search</button>
+                </div>
+            </div>
+
+            <div class="search-form" id="phoneSearchForm" style="display: none;">
+                <div class="input-group">
+                    <input type="text" id="phoneInput" class="form-control"
+                           placeholder="Enter user phone..." data-en-placeholder="Enter user phone..." data-ar-placeholder="أدخل هاتف المستخدم...">
+                    <button class="btn btn-primary" id="searchByPhone" data-en="Search" data-ar="بحث">Search</button>
+                </div>
+            </div>
+
+            <div class="search-results" id="searchResults">
+                <div class="no-results" data-en="Search for a user to see results" data-ar="ابحث عن مستخدم لرؤية النتائج">
+                    Search for a user to see results
+                </div>
+            </div>
+
+            <div class="checkin-form" id="checkinForm" style="display: none;">
+                <div class="selected-user-info">
+                    <h5 data-en="Selected User" data-ar="المستخدم المحدد">Selected User</h5>
+                    <p><strong data-en="Name:" data-ar="الاسم:">Name:</strong> <span id="selectedUserName"></span></p>
+                    <p><strong data-en="Code:" data-ar="الكود:">Code:</strong> <span id="selectedUserCode"></span></p>
+                    <p><strong data-en="Phone:" data-ar="الهاتف:">Phone:</strong> <span id="selectedUserPhone"></span></p>
+                    <p><strong data-en="Membership:" data-ar="العضوية:">Membership:</strong> <span id="selectedUserMembership"></span></p>
+                    <p><strong data-en="Invitation:" data-ar="الدعوة:">Invitation:</strong> <span id="selectedUserInvitation"></span></p>
+                    <p><strong data-en="Status:" data-ar="الحالة:">Status:</strong> <span id="selectedUserStatus"></span></p>
+                   
+                </div>
+
+                <!-- Invited users section -->
+                <div id="invitedUsersSection" class="mt-4" style="display: none;">
+                    <h5 data-en="Invited Users" data-ar="المستخدمون المدعوون">Invited Users</h5>
+                    <div id="invitedUsersList">
+                        <!-- Invited users will be added here -->
+                    </div>
+                </div>
+
+                <!-- Add the Invitations button -->
+                <div class="mt-3">
+                    <button class="btn btn-primary" id="openInvitationModal"
+                            data-en="Add Invitation" data-ar="إضافة دعوة">
+                        Add Invitation
+                    </button>
+                </div>
+
+                <!-- Membership validation message -->
+                <div id="membershipValidation" class="alert alert-danger mt-3" style="display: none;">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span data-en="This user's membership is not active. Cannot check in." data-ar="عضوية هذا المستخدم غير نشطة. لا يمكن تسجيل الحضور.">
+                        This user's membership is not active. Cannot check in.
+                    </span>
+                </div>
+
+                <form id="createCheckinForm">
+                    <input type="hidden" id="selectedUserId" name="UserId" />
+                    <!-- Removed GymBranchId and CheckinDate fields since they're handled in code -->
+                </form>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal-cancel" id="cancelCreate" data-en="Cancel" data-ar="إلغاء">Cancel</button>
+            <button class="btn-modal btn-modal-confirm" id="confirmCreate" style="display: none;" data-en="Create Checkin" data-ar="تسجيل الحضور">Create Checkin</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add this modal for creating invited users -->
+<div class="modal-overlay" id="invitationModal">
+    <div class="modal-content create-modal-content">
+        <div class="modal-header">
+            <h4 class="mb-0" data-en="Create Invited User" data-ar="إنشاء مستخدم مدعو">Create Invited User</h4>
+        </div>
+        <div class="modal-body">
+            <form id="createInvitedUserForm">
+                <input type="hidden" id="invitingUserId" name="InvitingUserId" />
+
+                <div class="mb-3">
+                    <label for="invitedUserName" class="form-label" data-en="Name" data-ar="الاسم">Name</label>
+                    <input type="text" class="form-control" id="invitedUserName" name="UserName"
+                           maxlength="50"
+                           oninput="this.value = this.value.slice(0, 50)"
+                           required>
+                </div>
+                <small class="form-text text-muted" data-en="Maximum 50 characters" data-ar="الحد الأقصى 50 حرف">
+                    Maximum 50 characters
+                </small>
+                <div class="mb-3">
+                    <label for="invitedUserPhone" class="form-label" data-en="Phone" data-ar="الهاتف">Phone</label>
+                    <input type="text" class="form-control" id="invitedUserPhone" name="UserPhone"
+                           maxlength="12"
+                           oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 12)"
+                           pattern="[0-9]{1,12}"
+                           required>
+                    <small class="form-text text-muted" data-en="Numbers only, maximum 12 digits" data-ar="أرقام فقط، الحد الأقصى 12 رقم">
+                        Numbers only, maximum 12 digits
+                    </small>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal-cancel" id="cancelInvitation" data-en="Cancel" data-ar="إلغاء">Cancel</button>
+            <button class="btn-modal btn-modal-confirm" id="confirmInvitation" data-en="Create & Check In" data-ar="إنشاء وتسجيل">Create & Check In</button>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+               document.addEventListener('DOMContentLoaded', function () {
+            // Global variables
+            const deleteModal = document.getElementById('deleteModal');
+            const createModal = document.getElementById('createModal');
+            const invitationModal = document.getElementById('invitationModal');
+            let checkinIdToDelete = null;
+            let selectedUserData = null;
+            let invitedUsers = [];
+            let maxInvitations = 0;
+            let searchTimer;
+
+            // Initialize the page
+            function initializePage() {
+                setupEventListeners();
+                updateLanguageElements();
+                startTimers();
+            }
+
+            // Set up all event listeners
+            function setupEventListeners() {
+                // Search functionality
+                const searchInput = document.getElementById('searchInput');
+                searchInput.addEventListener('input', handleSearchInput);
+
+                // Delete functionality
+                setupDeleteFunctionality();
+
+                // Create modal functionality
+                setupCreateModal();
+
+                // Invitation modal functionality
+                setupInvitationModal();
+            }
+
+            // Handle search input with debouncing
+            function handleSearchInput() {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(() => {
+                    const searchTerm = this.value;
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('searchTerm', searchTerm);
+                    url.searchParams.set('pageNumber', '1');
+                    window.location.href = url.toString();
+                }, 500);
+            }
+
+            // Setup delete functionality
+            function setupDeleteFunctionality() {
+                const userNameToDelete = document.getElementById('userNameToDelete');
+                const checkinDateToDelete = document.getElementById('checkinDateToDelete');
+                const cancelDelete = document.getElementById('cancelDelete');
+                const confirmDelete = document.getElementById('confirmDelete');
+
+                // Set up delete buttons
+                document.querySelectorAll('.delete-checkin-btn').forEach(button => {
+                    button.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        checkinIdToDelete = this.getAttribute('data-checkinid');
+                        const userName = this.getAttribute('data-username');
+                        const checkinDate = this.getAttribute('data-checkindate');
+
+                        userNameToDelete.textContent = userName;
+                        checkinDateToDelete.textContent = checkinDate;
+                        deleteModal.style.display = 'flex';
+                    });
+                });
+
+                // Cancel button
+                cancelDelete.addEventListener('click', () => {
+                    deleteModal.style.display = 'none';
+                    checkinIdToDelete = null;
+                });
+
+                // Confirm button - AJAX delete
+                confirmDelete.addEventListener('click', handleDeleteConfirmation);
+
+                // Close modal when clicking outside
+                deleteModal.addEventListener('click', (e) => {
+                    if (e.target === deleteModal) {
+                        deleteModal.style.display = 'none';
+                        checkinIdToDelete = null;
+                    }
+                });
+            }
+
+            // Handle delete confirmation
+            async function handleDeleteConfirmation() {
+                if (!checkinIdToDelete) return;
+
+                // Show loading state
+                const originalText = this.textContent;
+                this.disabled = true;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
+
+                try {
+                    const response = await fetch(`/Checkins/Delete/${checkinIdToDelete}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData || 'Failed to delete checkin');
+                    }
+
+                    // Show success message and reload the page
+                    window.location.reload();
+                } catch (error) {
+                    alert('Error deleting: ' + error.message);
+                } finally {
+                    deleteModal.style.display = 'none';
+                    this.disabled = false;
+                    this.textContent = originalText;
+                    checkinIdToDelete = null;
+                }
+            }
+
+            // Setup create modal functionality
+            function setupCreateModal() {
+                const openCreateModalBtn = document.getElementById('openCreateModal');
+                const cancelCreateBtn = document.getElementById('cancelCreate');
+                const confirmCreateBtn = document.getElementById('confirmCreate');
+                const searchTabs = document.querySelectorAll('.search-tab');
+                const codeSearchForm = document.getElementById('codeSearchForm');
+                const phoneSearchForm = document.getElementById('phoneSearchForm');
+                const searchByCodeBtn = document.getElementById('searchByCode');
+                const searchByPhoneBtn = document.getElementById('searchByPhone');
+                const searchResults = document.getElementById('searchResults');
+                const checkinForm = document.getElementById('checkinForm');
+
+                // Open create modal
+                openCreateModalBtn.addEventListener('click', () => {
+                    createModal.style.display = 'flex';
+                    resetCreateModal();
+                });
+
+                // Close create modal
+                cancelCreateBtn.addEventListener('click', () => {
+                    createModal.style.display = 'none';
+                });
+
+                // Close modal when clicking outside
+                createModal.addEventListener('click', (e) => {
+                    if (e.target === createModal) {
+                        createModal.style.display = 'none';
+                    }
+                });
+
+                // Tab switching
+                searchTabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        // Remove active class from all tabs
+                        searchTabs.forEach(t => t.classList.remove('active'));
+
+                        // Add active class to clicked tab
+                        tab.classList.add('active');
+
+                        // Show appropriate form
+                        const tabName = tab.getAttribute('data-tab');
+                        codeSearchForm.style.display = tabName === 'code' ? 'block' : 'none';
+                        phoneSearchForm.style.display = tabName === 'phone' ? 'block' : 'none';
+
+                        // Clear results
+                        searchResults.innerHTML = '<div class="no-results" data-en="Search for a user to see results" data-ar="ابحث عن مستخدم لرؤية النتائج">Search for a user to see results</div>';
+                        updateLanguageElements();
+                    });
+                });
+
+                // Search by code
+                searchByCodeBtn.addEventListener('click', async () => {
+                    const code = document.getElementById('codeInput').value.trim();
+                    if (!code) {
+                        alert('Please enter a code');
+                        return;
+                    }
+                    await searchUser('/Checkins/SearchUserByCode', { code: code });
+                });
+
+                // Search by phone
+                searchByPhoneBtn.addEventListener('click', async () => {
+                    const phone = document.getElementById('phoneInput').value.trim();
+                    if (!phone) {
+                        alert('Please enter a phone number');
+                        return;
+                    }
+                    await searchUser('/Checkins/SearchUserByPhone', { phone: phone });
+                });
+
+                // Create checkin
+                confirmCreateBtn.addEventListener('click', handleCreateCheckin);
+            }
+
+            // Reset create modal to initial state
+            function resetCreateModal() {
+                document.getElementById('codeInput').value = '';
+                document.getElementById('phoneInput').value = '';
+                document.getElementById('searchResults').innerHTML = '<div class="no-results" data-en="Search for a user to see results" data-ar="ابحث عن مستخدم لرؤية النتائج">Search for a user to see results</div>';
+                document.getElementById('checkinForm').style.display = 'none';
+                document.getElementById('confirmCreate').style.display = 'none';
+                document.getElementById('openInvitationModal').style.display = 'none';
+                updateLanguageElements();
+
+                // Reset user data
+                selectedUserData = null;
+                invitedUsers = [];
+                maxInvitations = 0;
+
+                // Clear invited users
+                document.getElementById('invitedUsersList').innerHTML = '';
+                document.getElementById('invitedUsersSection').style.display = 'none';
+            }
+
+            // Setup invitation modal functionality
+            function setupInvitationModal() {
+                const openInvitationModalBtn = document.getElementById('openInvitationModal');
+                const cancelInvitationBtn = document.getElementById('cancelInvitation');
+                const confirmInvitationBtn = document.getElementById('confirmInvitation');
+                const invitingUserIdInput = document.getElementById('invitingUserId');
+
+                // Make sure the invitation button is visible by default
+                if (openInvitationModalBtn) {
+                    openInvitationModalBtn.style.display = 'block';
+                }
+
+                // Open invitation modal
+                openInvitationModalBtn.addEventListener('click', () => {
+                    const selectedUserId = document.getElementById('selectedUserId').value;
+
+                    if (!selectedUserId) {
+                        alert('Please select a user first');
+                        return;
+                    }
+
+                    if (!selectedUserData) {
+                        alert('User data not loaded. Please search for a user first.');
+                        return;
+                    }
+
+                    // Calculate remaining invitations
+                    const remainingInvitationsCount = selectedUserData.maxInvitations - selectedUserData.invitationNumber - invitedUsers.length;
+
+                    // Check if user has reached invitation limit
+                    if (remainingInvitationsCount <= 0) {
+                        alert(`You can only invite ${selectedUserData.maxInvitations} users total. You've already used ${selectedUserData.invitationNumber + invitedUsers.length} invitations.`);
+                        return;
+                    }
+
+                    // Set the inviting user ID
+                    invitingUserIdInput.value = selectedUserId;
+
+                    // Clear the form
+                    document.getElementById('invitedUserName').value = '';
+                    document.getElementById('invitedUserPhone').value = '';
+
+                    // Show the invitation modal
+                    invitationModal.style.display = 'flex';
+
+                    // Adjust the position of the create modal if it's open
+                    if (createModal.style.display === 'flex') {
+                        createModal.style.transform = 'translateX(-50%)';
+                    }
+                });
+
+                // Close invitation modal
+                cancelInvitationBtn.addEventListener('click', () => {
+                    invitationModal.style.display = 'none';
+                    resetCreateModalPosition();
+                });
+
+                // Close invitation modal when clicking outside
+                invitationModal.addEventListener('click', (e) => {
+                    if (e.target === invitationModal) {
+                        invitationModal.style.display = 'none';
+                        resetCreateModalPosition();
+                    }
+                });
+
+                // Create invited user
+                confirmInvitationBtn.addEventListener('click', handleCreateInvitedUser);
+            }
+
+            // Reset create modal position
+            function resetCreateModalPosition() {
+                if (createModal.style.display === 'flex') {
+                    createModal.style.transform = '';
+                }
+            }
+
+            // Handle create invited user
+            async function handleCreateInvitedUser() {
+                const userName = document.getElementById('invitedUserName').value.trim();
+                const userPhone = document.getElementById('invitedUserPhone').value.trim();
+
+                if (!userName || !userPhone) {
+                    alert('Please fill in all fields');
+                    return;
+                }
+
+                // Validate phone format
+                if (!isValidPhone(userPhone)) {
+                    alert('Please enter a valid phone number');
+                    return;
+                }
+
+                // Check if phone already exists in invited users
+                if (isPhoneAlreadyInvited(userPhone)) {
+                    alert('This phone number has already been invited');
+                    return;
+                }
+
+                // Check if phone already exists in system
+                try {
+                    const phoneCheckResponse = await fetch(`/Checkins/CheckPhoneExists?phone=${encodeURIComponent(userPhone)}`);
+                    if (phoneCheckResponse.ok) {
+                        const phoneExists = await phoneCheckResponse.json();
+                        if (phoneExists) {
+                            alert('This phone number is already registered in the system');
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking phone:', error);
+                    // Continue anyway if we can't check
+                }
+
+                // Show loading state
+                const originalText = this.textContent;
+                this.disabled = true;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
+
+                try {
+                    // Add to invited users list
+                    const invitedUser = {
+                        userName: userName,
+                        userPhone: userPhone,
+                        tempId: Date.now() // Unique temporary ID
+                    };
+
+                    invitedUsers.push(invitedUser);
+                    addInvitedUserCard(invitedUser);
+
+                    // Update remaining invitations count
+                    updateInvitationsCount();
+
+                    // Close the modal
+                    invitationModal.style.display = 'none';
+                    resetCreateModalPosition();
+
+                    // Show the invited users section
+                    document.getElementById('invitedUsersSection').style.display = 'block';
+
+                    // Clear the form
+                    document.getElementById('invitedUserName').value = '';
+                    document.getElementById('invitedUserPhone').value = '';
+                } catch (error) {
+                    alert('Error adding invited user: ' + error.message);
+                } finally {
+                    this.disabled = false;
+                    this.textContent = originalText;
+                }
+            }
+
+            // Generic search function
+            async function searchUser(url, params) {
+                try {
+                    // Show loading
+                    document.getElementById('searchResults').innerHTML = '<div class="no-results">Searching...</div>';
+
+                    // Build query string
+                    const queryString = new URLSearchParams(params).toString();
+                    const response = await fetch(`${url}?${queryString}`);
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Search failed');
+                    }
+
+                    const user = await response.json();
+
+                    // Check if user has any membership
+                    if (!user || !user.tblUserMemberShips || user.tblUserMemberShips.length === 0) {
+                        document.getElementById('searchResults').innerHTML = '<div class="no-results" data-en="No active membership found for this user" data-ar="لم يتم العثور على عضوية نشطة لهذا المستخدم">No active membership found for this user</div>';
+                        updateLanguageElements();
+                        return;
+                    }
+
+                    // Check if user is already checked in
+                    const checkinCheckResponse = await fetch(`/Checkins/IsUserCheckedIn?userId=${user.userId}`);
+
+                    if (checkinCheckResponse.ok) {
+                        const isCheckedIn = await checkinCheckResponse.json();
+
+                        if (isCheckedIn) {
+                            // User is already checked in
+                            document.getElementById('searchResults').innerHTML = `
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <span data-en="This user is already checked in" data-ar="هذا المستخدم مسجل حضور بالفعل">
+                                        This user is already checked in
+                                    </span>
+                                </div>
+                            `;
+                            updateLanguageElements();
+                            return;
+                        }
+                    }
+
+                    // Process user with membership
+                    processUserWithMembership(user);
+                } catch (error) {
+                    document.getElementById('searchResults').innerHTML = `<div class="no-results">Error: ${error.message}</div>`;
+                }
+            }
+
+            // Process user with membership data
+            function processUserWithMembership(user) {
+                let membershipName = 'No Membership';
+                let isMembershipActive = false;
+                let invitationNumber = 0;
+                let maxInvitationsValue = 0;
+
+                if (user.tblUserMemberShips && user.tblUserMemberShips.length > 0) {
+                    const activeMembership = user.tblUserMemberShips.find(ms => ms.isActive) || user.tblUserMemberShips[0];
+                    membershipName = activeMembership.membershipName || 'No Membership Name';
+                    isMembershipActive = activeMembership.isActive || false;
+                    invitationNumber = activeMembership.invitationUsed || 0;
+                    maxInvitationsValue = activeMembership.maxInvitations || 0;
+                }
+
+                // Display user information
+                displayUserResults(user, membershipName, isMembershipActive, invitationNumber, maxInvitationsValue);
+            }
+
+            // Display user search results
+            function displayUserResults(user, membershipName, isMembershipActive, invitationNumber, maxInvitationsValue) {
+                const searchResults = document.getElementById('searchResults');
+
+                searchResults.innerHTML = `
+                    <table class="user-table">
+                        <thead>
+                            <tr>
+                                <th data-en="Name" data-ar="الاسم">Name</th>
+                                <th data-en="Code" data-ar="الكود">Code</th>
+                                <th data-en="Phone" data-ar="الهاتف">Phone</th>
+                                <th data-en="Membership" data-ar="العضوية">Membership</th>
+                                <th data-en="Invitation" data-ar="الدعوة">Invitation</th>
+                                <th data-en="Status" data-ar="الحالة">Status</th>
+                                <th data-en="Action" data-ar="الإجراء">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>${user.userName}</td>
+                                <td>${user.userCode}</td>
+                                <td>${user.userPhone}</td>
+                                <td>${membershipName}</td>
+                                <td>${invitationNumber} / ${maxInvitationsValue}</td>
+                                <td>
+                                    <span class="badge ${isMembershipActive ? 'bg-success' : 'bg-danger'}">
+                                        ${isMembershipActive ? 'Active' : 'Inactive'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="select-user-btn"
+                                            data-user-id="${user.userId}"
+                                            data-user-name="${user.userName}"
+                                            data-user-code="${user.userCode}"
+                                            data-user-phone="${user.userPhone}"
+                                            data-membership-name="${membershipName}"
+                                            data-is-active="${isMembershipActive}"
+                                            data-invitation-number="${invitationNumber}"
+                                            data-max-invitations="${maxInvitationsValue}">
+                                        <span data-en="Select" data-ar="اختر">Select</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                `;
+
+                // Add event listener to select button
+                const selectBtn = searchResults.querySelector('.select-user-btn');
+                selectBtn.addEventListener('click', handleUserSelection);
+
+                // Update language elements
+                updateLanguageElements();
+            }
+
+            // Handle user selection from search results
+            function handleUserSelection() {
+                const userId = this.getAttribute('data-user-id');
+                const userName = this.getAttribute('data-user-name');
+                const userCode = this.getAttribute('data-user-code');
+                const userPhone = this.getAttribute('data-user-phone');
+                const membershipName = this.getAttribute('data-membership-name');
+                const isActive = this.getAttribute('data-is-active') === 'true';
+                const invitationNumber = parseInt(this.getAttribute('data-invitation-number') || 0);
+                const maxInvitationsAttr = this.getAttribute('data-max-invitations');
+
+                // Get max invitations from the data attribute
+                maxInvitations = maxInvitationsAttr ? parseInt(maxInvitationsAttr) : 0;
+
+                // Store the selected user data
+                selectedUserData = {
+                    userId: userId,
+                    userName: userName,
+                    userCode: userCode,
+                    userPhone: userPhone,
+                    membershipName: membershipName,
+                    isActive: isActive,
+                    invitationNumber: invitationNumber,
+                    maxInvitations: maxInvitations
+                };
+
+                // Set the selected user info - show "3/10" format
+                document.getElementById('selectedUserId').value = userId;
+                document.getElementById('selectedUserName').textContent = userName;
+                document.getElementById('selectedUserCode').textContent = userCode;
+                document.getElementById('selectedUserPhone').textContent = userPhone;
+                document.getElementById('selectedUserMembership').textContent = membershipName;
+                document.getElementById('selectedUserInvitation').textContent = `${invitationNumber} / ${maxInvitations}`;
+
+                // Set status with appropriate badge
+                const statusElement = document.getElementById('selectedUserStatus');
+                if (statusElement) {
+                    statusElement.innerHTML = isActive
+                        ? '<span class="badge bg-success" data-en="Active" data-ar="نشط">Active</span>'
+                        : '<span class="badge bg-danger" data-en="Inactive" data-ar="غير نشط">Inactive</span>';
+                }
+
+                // Update invitations count
+                updateInvitationsCount();
+
+                // Show the checkin form
+                document.getElementById('checkinForm').style.display = 'block';
+
+                // Show/hide validation message and create button based on membership status
+                const validationElement = document.getElementById('membershipValidation');
+                if (validationElement) {
+                    validationElement.style.display = isActive ? 'none' : 'block';
+                }
+
+                const confirmCreateBtn = document.getElementById('confirmCreate');
+                if (confirmCreateBtn) {
+                    confirmCreateBtn.style.display = isActive ? 'block' : 'none';
+                }
+
+                // Show the invitations button only if user is active and has invitations remaining
+                const remainingInvitationsCount = maxInvitations - invitationNumber;
+                const openInvitationModalBtn = document.getElementById('openInvitationModal');
+                if (openInvitationModalBtn) {
+                    openInvitationModalBtn.style.display = isActive && remainingInvitationsCount > 0 ? 'block' : 'none';
+                }
+
+                // Clear any previous invited users
+                invitedUsers = [];
+                document.getElementById('invitedUsersList').innerHTML = '';
+                document.getElementById('invitedUsersSection').style.display = 'none';
+
+                // Scroll to form
+                document.getElementById('checkinForm').scrollIntoView({ behavior: 'smooth' });
+
+                // Update language elements after selection
+                updateLanguageElements();
+            }
+
+            // Handle create checkin
+            async function handleCreateCheckin() {
+                // First check if user is already checked in
+                try {
+                    const userId = document.getElementById('selectedUserId').value;
+                    const checkinCheckResponse = await fetch(`/Checkins/IsUserCheckedIn?userId=${userId}`);
+
+                    if (checkinCheckResponse.ok) {
+                        const isCheckedIn = await checkinCheckResponse.json();
+
+                        if (isCheckedIn) {
+                            alert('This user is already checked in. Cannot create duplicate check-in.');
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking user check-in status:', error);
+                    // Continue with creation if we can't verify
+                }
+
+                const formData = new FormData(document.getElementById('createCheckinForm'));
+
+                // Add invited users data
+                formData.append('InvitedUsersCount', invitedUsers.length);
+                invitedUsers.forEach((user, index) => {
+                    formData.append(`InvitedUsers[${index}].UserName`, user.userName);
+                    formData.append(`InvitedUsers[${index}].UserPhone`, user.userPhone);
+                });
+
+                // Show loading state
+                const originalText = this.textContent;
+                this.disabled = true;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+
+                try {
+                    const response = await fetch('/Checkins/CreateWithInvitations', {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        },
+                        body: formData
+                    });
+
+                    if (response.redirected) {
+                        // Success - redirect to index page
+                        window.location.href = response.url;
+                    } else if (!response.ok) {
+                        const errorData = await response.text();
+                        throw new Error(errorData || 'Failed to create checkin with invitations');
+                    } else {
+                        // Should not happen but just in case
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                    this.disabled = false;
+                    this.textContent = originalText;
+                }
+            }
+
+            // Update invitations count
+            function updateInvitationsCount() {
+                if (!selectedUserData) return;
+
+                const remaining = selectedUserData.maxInvitations - selectedUserData.invitationNumber - invitedUsers.length;
+                const openInvitationModalBtn = document.getElementById('openInvitationModal');
+
+                if (openInvitationModalBtn) {
+                    if (remaining <= 0) {
+                        openInvitationModalBtn.disabled = true;
+                        openInvitationModalBtn.style.opacity = '0.5';
+                    } else {
+                        openInvitationModalBtn.disabled = false;
+                        openInvitationModalBtn.style.opacity = '1';
+                    }
+                }
+            }
+
+            // Add invited user card with the same delete button style as the index page
+            function addInvitedUserCard(invitedUser) {
+                const invitedUserCard = document.createElement('div');
+                invitedUserCard.className = 'invited-user-card';
+                invitedUserCard.dataset.tempId = invitedUser.tempId;
+                invitedUserCard.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong data-en="Name:" data-ar="الاسم:">Name:</strong> ${invitedUser.userName}<br>
+                            <strong data-en="Phone:" data-ar="الهاتف:">Phone:</strong> ${invitedUser.userPhone}
+                        </div>
+                        <div class="action-buttons">
+                            <button class="delete-btn icon-btn remove-invited-user"
+                                    title="Remove"
+                                    data-temp-id="${invitedUser.tempId}"
+                                    data-en-title="Remove" data-ar-title="إزالة">
+                                <img src="/images/delete-red.png" alt="Remove" class="icon-default" />
+                                <img src="/images/delete-white.png" alt="Remove" class="icon-hover" />
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // Add remove event listener
+                const removeBtn = invitedUserCard.querySelector('.remove-invited-user');
+                removeBtn.addEventListener('click', () => {
+                    const tempId = parseInt(removeBtn.getAttribute('data-temp-id'));
+                    removeInvitedUser(tempId);
+                });
+
+                document.getElementById('invitedUsersList').appendChild(invitedUserCard);
+                updateLanguageElements();
+            }
+
+            // Remove invited user
+            function removeInvitedUser(tempId) {
+                invitedUsers = invitedUsers.filter(user => user.tempId !== tempId);
+
+                // Remove from DOM
+                const cardToRemove = document.querySelector(`.invited-user-card[data-temp-id="${tempId}"]`);
+                if (cardToRemove) {
+                    cardToRemove.remove();
+                }
+
+                // Update count
+                updateInvitationsCount();
+
+                // Hide section if no invited users
+                if (invitedUsers.length === 0) {
+                    document.getElementById('invitedUsersSection').style.display = 'none';
+                }
+            }
+
+            // Phone validation function
+            function isValidPhone(phone) {
+                const phoneRegex = /^[0-9+\-\s()]{8,20}$/;
+                return phoneRegex.test(phone);
+            }
+
+            // Check if phone is already in invited list
+            function isPhoneAlreadyInvited(phone) {
+                return invitedUsers.some(user => user.userPhone === phone);
+            }
+
+            // Timer functionality
+            function startTimers() {
+                setInterval(updateTimers, 1000);
+                updateTimers(); // Initial update
+            }
+
+            function updateTimers() {
+                document.querySelectorAll('[data-checkin-id]').forEach(row => {
+                    const checkinId = row.getAttribute('data-checkin-id');
+                    const checkinTime = new Date(row.getAttribute('data-checkin-time'));
+                    const now = new Date();
+
+                    // Calculate time difference in seconds
+                    const diffInSeconds = Math.floor((now - checkinTime) / 1000);
+                    const timeRemaining = 10800 - diffInSeconds; // 3 hours = 10800 seconds
+
+                    const timerCell = document.getElementById(`timer-${checkinId}`);
+
+                    if (timeRemaining <= 0) {
+                        // Time's up - delete the record
+                        deleteCheckin(checkinId);
+                    } else {
+                        // Update timer display
+                        const hours = Math.floor(timeRemaining / 3600);
+                        const minutes = Math.floor((timeRemaining % 3600) / 60);
+                        const seconds = timeRemaining % 60;
+
+                        timerCell.innerHTML = `<span>${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}</span>`;
+
+                        // Add warning class if less than 30 minutes remaining
+                        if (timeRemaining < 1800) {
+                            timerCell.classList.add('timer-danger');
+                        } else if (timeRemaining < 3600) {
+                            timerCell.classList.add('timer-warning');
+                        }
+                    }
+                });
+            }
+
+            // Function to delete checkin via AJAX
+            async function deleteCheckin(checkinId) {
+                try {
+                    const response = await fetch(`/Checkins/Delete/${checkinId}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        // Remove the row from the table
+                        const row = document.querySelector(`[data-checkin-id="${checkinId}"]`);
+                        if (row) {
+                            row.remove();
+                        }
+                    } else {
+                        console.error('Failed to delete checkin:', checkinId);
+                    }
+                } catch (error) {
+                    console.error('Error deleting checkin:', error);
+                }
+            }
+
+            // Language functionality
+            function updateLanguageElements() {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+
+                // Update text content for all elements with data-en and data-ar attributes
+                document.querySelectorAll('[data-en], [data-ar]').forEach(element => {
+                    const textAttr = `data-${currentLanguage}`;
+                    if (element.hasAttribute(textAttr)) {
+                        const text = element.getAttribute(textAttr);
+                        element.textContent = text;
+
+                        // Add a class to identify Arabic text for special handling if needed
+                        if (currentLanguage === 'ar') {
+                            element.classList.add('arabic-text');
+                            // Ensure LTR direction for specific elements that should not flip
+                            if (element.tagName === 'INPUT' || element.tagName === 'SELECT') {
+                                element.style.direction = 'ltr';
+                                element.style.textAlign = 'left';
+                            }
+                        } else {
+                            element.classList.remove('arabic-text');
+                            element.style.direction = '';
+                            element.style.textAlign = '';
+                        }
+                    }
+                });
+
+                // Update placeholder attributes
+                document.querySelectorAll('[data-en-placeholder], [data-ar-placeholder]').forEach(element => {
+                    const placeholderAttr = `data-${currentLanguage}-placeholder`;
+                    if (element.hasAttribute(placeholderAttr)) {
+                        element.placeholder = element.getAttribute(placeholderAttr);
+
+                        // Ensure LTR direction for input placeholders
+                        if (currentLanguage === 'ar') {
+                            element.style.direction = 'ltr';
+                            element.style.textAlign = 'left';
+                        } else {
+                            element.style.direction = '';
+                            element.style.textAlign = '';
+                        }
+                    }
+                });
+
+                // Update title attributes
+                updateButtonTitles();
+            }
+
+            function updateButtonTitles() {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                document.querySelectorAll('[data-en-title], [data-ar-title]').forEach(element => {
+                    const titleAttr = `data-${currentLanguage}-title`;
+                    if (element.hasAttribute(titleAttr)) {
+                        element.title = element.getAttribute(titleAttr);
+                    }
+                });
+            }
+
+            function updateStatusBadges() {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                document.querySelectorAll('.status-badge[data-en], .status-badge[data-ar]').forEach(element => {
+                    const textAttr = `data-${currentLanguage}`;
+                    if (element.hasAttribute(textAttr)) {
+                        element.textContent = element.getAttribute(textAttr);
+                    }
+                });
+            }
+
+            function updateSearchPlaceholder() {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                const searchInput = document.getElementById('searchInput');
+                const placeholderAttr = `data-${currentLanguage}-placeholder`;
+                if (searchInput && searchInput.hasAttribute(placeholderAttr)) {
+                    searchInput.placeholder = searchInput.getAttribute(placeholderAttr);
+
+                    // Ensure LTR direction for search input
+                    if (currentLanguage === 'ar') {
+                        searchInput.style.direction = 'ltr';
+                        searchInput.style.textAlign = 'left';
+                    } else {
+                        searchInput.style.direction = '';
+                        searchInput.style.textAlign = '';
+                    }
+                }
+            }
+
+            // Initialize the page
+            initializePage();
+        });
+    </script>
+}

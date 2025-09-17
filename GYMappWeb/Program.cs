@@ -23,10 +23,12 @@ builder.Services.AddScoped<ITblUser, TblUserService>();
 builder.Services.AddScoped<ITblOffer, TblOfferService>();
 builder.Services.AddScoped<ITblMembershipType, TblMembershipTypeService>();
 builder.Services.AddScoped<ITblMemberShipFreeze, TblMemberShipFreezeService>();
+builder.Services.AddScoped<IGymBranch, GymBranchService>();
+builder.Services.AddScoped<ICheckin, CheckinService>();
 // Add other services if needed
 // builder.Services.AddScoped<IMyOtherService, MyOtherService>();
 
-builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
     options.Password.RequireDigit = false;

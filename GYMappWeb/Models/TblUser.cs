@@ -20,5 +20,13 @@ public partial class TblUser
     public string? Notes { get; set; }
     public DateTime CreatedDate { get; set; }
     public string CreatedBy { get; set; }
+    public int? GymBranchId { get; set; }
+
+    // Add this navigation property
+    [ForeignKey("GymBranchId")]
+    public virtual GymBranch GymBranch { get; set; }
+
+    // Add this collection for checkins
+    public virtual ICollection<Checkin> Checkins { get; set; }
     public virtual ICollection<TblUserMemberShip> TblUserMemberShips { get; set; } = new List<TblUserMemberShip>();
 }

@@ -8,9 +8,11 @@ using GYMappWeb.Interface;
 using GYMappWeb.Models;
 using GYMappWeb.Areas.Identity.Data;
 using GYMappWeb.Helper;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GYMappWeb.Controllers
 {
+    [Authorize(Roles = "Captain,Developer,User")]
     public class TblUserMemberShipsController : Controller
     {
         private readonly ITblUserMemberShip _membershipService;

@@ -59,25 +59,5 @@ namespace GYMappWeb.Properties {
                 resourceCulture = value;
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] Active {
-            get {
-                object obj = ResourceManager.GetObject("Active", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] Inactive {
-            get {
-                object obj = ResourceManager.GetObject("Inactive", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
     }
 }

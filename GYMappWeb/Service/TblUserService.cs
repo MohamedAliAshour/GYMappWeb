@@ -281,6 +281,7 @@ namespace GYMappWeb.Services
                 totalCount,
                 userParameters.PageNumber,
                 userParameters.PageSize);
-        }
+             }
+
     }
 }

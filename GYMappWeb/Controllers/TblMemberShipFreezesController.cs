@@ -12,7 +12,7 @@ using GYMappWeb.Helper;
 
 namespace GYMappWeb.Controllers
 {
-    [Authorize(Roles = "Captain,Developer")]
+    [Authorize(Roles = "Captain,Developer,User")]
     public class TblMemberShipFreezesController : Controller
     {
         private readonly ITblMemberShipFreeze _freezeService;

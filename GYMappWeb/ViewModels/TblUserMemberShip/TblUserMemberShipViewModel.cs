@@ -20,8 +20,9 @@ namespace GYMappWeb.ViewModels.TblUserMemberShip
         public int MemberShipTypesId { get; set; }
         public string? CreatedBy { get; set; }
         public string? CreatedByUserName { get; set; }
+        public int? MaxInvitations { get; set; }
         public DateTime CreatedDate { get; set; }
-
+        public string? MembershipName { get; set; }
         public string? UserName { get; set; }
         public virtual TblMemberShipTypeViewModel? MemberShipTypes { get; set; } = null!;
         public virtual TblOfferViewModel? Off { get; set; }

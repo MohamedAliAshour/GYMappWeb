@@ -1,0 +1,161 @@
+﻿@model GYMappWeb.ViewModels.GymBranch.SaveGymBranchViewModel
+
+@{
+    ViewData["Title"] = "Create Gym Branch";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .card {
+        /* Keep other styles if any exist */
+    }
+
+    .validation-summary-errors ul {
+        list-style: none;
+        padding-left: 0;
+        color: #dc3545;
+        font-weight: bold;
+    }
+
+    .field-validation-error {
+        color: #dc3545;
+        font-size: 0.875em;
+    }
+
+    .form-floating {
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white">
+                    <h2 class="mb-0" data-en="Create New Gym Branch" data-ar="إنشاء فرع جديد">Create New Gym Branch</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-4"></div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="GymName" class="form-control" maxlength="100" />
+                                    <label asp-for="GymName" class="form-label" data-en="Gym Name" data-ar="اسم الصالة">Gym Name</label>
+                                    <span asp-validation-for="GymName" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="Location" class="form-control" maxlength="200" />
+                                    <label asp-for="Location" class="form-label" data-en="Location" data-ar="الموقع">Location</label>
+                                    <span asp-validation-for="Location" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hidden fields for CreateDate and CreatedBy (will be set server-side) -->
+                        <input type="hidden" asp-for="CreateDate" />
+                        <input type="hidden" asp-for="CreatedBy" />
+
+                        <div class="mt-4" id="buttonContainer">
+                            <button type="submit" class="btn btn-dark btn-lg" data-en="Create Gym Branch" data-ar="إنشاء فرع">Create Gym Branch</button>
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2" data-en="Back to List" data-ar="العودة إلى القائمة">Back to List</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function() {
+            // Update input titles based on language
+            function updateInputTitles() {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                document.querySelectorAll('[data-en-title], [data-ar-title]').forEach(element => {
+                    const titleAttr = `data-${currentLanguage}-title`;
+                    if (element.hasAttribute(titleAttr)) {
+                        element.title = element.getAttribute(titleAttr);
+                    }
+                });
+            }
+
+            // AJAX validation for gym name and location as user types
+            $('#GymName').on('blur', function() {
+                validateField('GymName', $(this).val());
+            });
+
+            $('#Location').on('blur', function() {
+                validateField('Location', $(this).val());
+            });
+
+            function validateField(fieldName, value) {
+                if (!value) return;
+
+                // Get current language from localStorage
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+
+                $.get(`/GymBranches/Validate${fieldName}?value=${encodeURIComponent(value)}&lang=${currentLanguage}`, function(response) {
+                    if (!response.isValid) {
+                        $(`#${fieldName}`).addClass('is-invalid');
+                        $(`span[data-valmsg-for="${fieldName}"]`).text(response.errorMessage);
+                    } else {
+                        $(`#${fieldName}`).removeClass('is-invalid');
+                        $(`span[data-valmsg-for="${fieldName}"]`).text('');
+                    }
+                }).fail(function() {
+                    console.error(`Validation failed for ${fieldName}`);
+                });
+            }
+
+            // Form submission handling
+            $('form').on('submit', function(e) {
+                // Clear previous validation messages
+                $('.is-invalid').removeClass('is-invalid');
+                $('.field-validation-error').text('');
+
+                // Optional: Add any final client-side validation here
+                let isValid = true;
+
+                // Example: Check if required fields are filled
+                $('#GymName, #Location').each(function() {
+                    if (!$(this).val().trim()) {
+                        $(this).addClass('is-invalid');
+                        isValid = false;
+                    }
+                });
+
+                if (!isValid) {
+                    e.preventDefault();
+                    // Scroll to first error
+                    $('html, body').animate({
+                        scrollTop: $('.is-invalid').first().offset().top - 100
+                    }, 500);
+                }
+            });
+
+            // Initialize language-specific elements
+            updateInputTitles();
+
+            // Update button texts based on language
+            function updateButtonTexts() {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                document.querySelectorAll('[data-en], [data-ar]').forEach(element => {
+                    const textAttr = `data-${currentLanguage}`;
+                    if (element.hasAttribute(textAttr)) {
+                        element.textContent = element.getAttribute(textAttr);
+                    }
+                });
+            }
+
+            updateButtonTexts();
+        });
+    </script>
+}

@@ -10,14 +10,16 @@ namespace GYMappWeb.Models
         {
             public string Id { get; set; }
             public string UserName { get; set; }
+            public int? GymBranchId { get; set; }
         }
 
-        public static void SetUserSession(this ISession session, string id, string userName)
+        public static void SetUserSession(this ISession session, string id, string userName, int GymBranchId)
         {
             var userSession = new UserSession
             {
                 Id = id,
-                UserName = userName
+                UserName = userName,
+                GymBranchId = GymBranchId
             };
             string serializedSession = JsonSerializer.Serialize(userSession);
             session.SetString(UserSessionKey, serializedSession);

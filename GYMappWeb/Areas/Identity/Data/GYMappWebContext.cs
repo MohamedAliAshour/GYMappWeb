@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GYMappWeb.Areas.Identity.Data;
 
-public class GYMappWebContext : IdentityDbContext<IdentityUser>
+public class GYMappWebContext : IdentityDbContext<ApplicationUser>
 {
     public GYMappWebContext(DbContextOptions<GYMappWebContext> options)
         : base(options)
@@ -17,10 +17,56 @@ public class GYMappWebContext : IdentityDbContext<IdentityUser>
     public DbSet<TblOffer> TblOffers { get; set; }
     public DbSet<TblUser> TblUsers { get; set; }
     public DbSet<TblUserMemberShip> TblUserMemberShips { get; set; }
+    public DbSet<GymBranch> GymBranches { get; set; }
+    public DbSet<Checkin> Checkins { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        // Configure GymBranch
+        builder.Entity<GymBranch>(entity =>
+        {
+            entity.HasKey(e => e.GymBranchId).HasName("PK_GymBranches");
+            entity.ToTable("GymBranches");
+            entity.Property(e => e.GymBranchId).HasColumnName("GymBranch_ID").ValueGeneratedOnAdd();
+            entity.Property(e => e.GymName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Location).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.CreateDate)
+                .HasColumnType("datetime2(0)")
+                .IsRequired(true);
+            entity.Property(e => e.CreatedBy)
+                .HasColumnType("nvarchar(100)")
+                .IsRequired(true);
+        });
+
+        // Configure Checkin
+        builder.Entity<Checkin>(entity =>
+        {
+            entity.HasKey(e => e.CheckinId).HasName("PK_Checkins");
+            entity.ToTable("Checkins");
+            entity.Property(e => e.CheckinId).HasColumnName("Checkin_ID").ValueGeneratedOnAdd();
+            entity.Property(e => e.CheckinDate)
+                .HasColumnType("datetime2(0)")
+                .IsRequired(true);
+            entity.Property(e => e.UserId).HasColumnName("User_ID");
+            entity.Property(e => e.GymBranchId).HasColumnName("GymBranch_ID");
+            entity.Property(e => e.CreatedBy)
+                .HasColumnType("nvarchar(100)")
+                .IsRequired(true);
+
+            entity.HasOne(d => d.User)
+                .WithMany(p => p.Checkins)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Checkins_tbl_Users");
+
+            entity.HasOne(d => d.GymBranch)
+                .WithMany(p => p.Checkins)
+                .HasForeignKey(d => d.GymBranchId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Checkins_GymBranches");
+        });
 
         // Configure TblUser
         builder.Entity<TblUser>(entity =>
@@ -41,6 +87,29 @@ public class GYMappWebContext : IdentityDbContext<IdentityUser>
             entity.Property(e => e.CreatedBy)
                     .HasColumnType("nvarchar(100)")
                     .IsRequired(true);
+            entity.Property(e => e.GymBranchId)
+                .HasColumnName("GymBranch_ID")
+                .IsRequired(false); // Make it nullable
+
+            entity.HasOne(d => d.GymBranch)
+                .WithMany(p => p.Users)
+                .HasForeignKey(d => d.GymBranchId)
+                .OnDelete(DeleteBehavior.SetNull) // Set null on delete
+                .HasConstraintName("FK_tbl_Users_GymBranches");
+        });
+
+        // Configure ApplicationUser - Make GymBranchId nullable
+        builder.Entity<ApplicationUser>(entity =>
+        {
+            entity.Property(e => e.GymBranchId)
+                .HasColumnName("GymBranch_ID")
+                .IsRequired(false); // Make it nullable
+
+            entity.HasOne<GymBranch>()
+                .WithMany(p => p.ApplicationUsers)
+                .HasForeignKey(d => d.GymBranchId)
+                .OnDelete(DeleteBehavior.SetNull) // Set null on delete
+                .HasConstraintName("FK_AspNetUsers_GymBranches");
         });
 
         // Configure TblUserMemberShip
@@ -138,6 +207,5 @@ public class GYMappWebContext : IdentityDbContext<IdentityUser>
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_tbl_MemberShipFreeze_tbl_UserMemberShip");
         });
-
     }
 }
