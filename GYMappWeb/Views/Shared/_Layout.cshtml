@@ -240,8 +240,11 @@
                         }
                         @if (User.IsInRole("Developer") || User.IsInRole("Captain"))
                         {
+                           
                             <li class="nav-item">
-                                <a class="nav-link text-dark" id="register" asp-area="Identity" asp-page="/Account/Register">Register</a>
+                                <a class="nav-link" asp-area="Identity" asp-page="/Account/UserManagement">
+                                    <i class="fas fa-users me-1"></i>Manage Users
+                                </a>
                             </li>
                         }
                     </ul>

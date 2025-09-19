@@ -2,67 +2,113 @@
 @model RegisterModel
 @{
     ViewData["Title"] = "Register";
-    Layout = "~/Views/Shared/_LoginLayout.cshtml";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>@ViewData["Title"]</h1>
+<style>
+    .card {
+        /* Keep other styles if any exist */
+    }
 
-<div class="row">
-    <div class="col-md-4">
-        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
-            <h2>Create a new account.</h2>
-            <hr />
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-            <div class="form-group">
-                <label asp-for="Input.UserName"></label>
-                <input asp-for="Input.UserName" class="form-control" />
-                <span asp-validation-for="Input.UserName" class="text-danger"></span>
-            </div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label asp-for="Input.Password">Password</label>
-                <span asp-validation-for="Input.Password" class="text-danger"></span>
-            </div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label asp-for="Input.ConfirmPassword">Confirm Password</label>
-                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
-            </div>
-            <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
-        </form>
-    </div>
-    <div class="col-md-6 col-md-offset-2">
-        <section>
-            <h3>Use another service to register.</h3>
-            <hr />
-            @{
-                if ((Model.ExternalLogins?.Count ?? 0) == 0)
-                {
-                    <div>
-                        <p>
-                            There are no external authentication services configured. See this <a href="https://go.microsoft.com/fwlink/?LinkID=532715">article
-                            about setting up this ASP.NET application to support logging in via external services</a>.
-                        </p>
-                    </div>
-                }
-                else
-                {
-                    <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
-                        <div>
-                            <p>
-                                @foreach (var provider in Model.ExternalLogins!)
+    .validation-summary-errors ul {
+        list-style: none;
+        padding-left: 0;
+        color: #dc3545;
+        font-weight: bold;
+    }
+
+    .field-validation-error {
+        color: #dc3545;
+        font-size: 0.875em;
+    }
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white">
+                    <h2 class="mb-0" data-en="Create New User" data-ar="إنشاء مستخدم جديد">Create New User</h2>
+                </div>
+                <div class="card-body">
+                    <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-4"></div>
+
+                        <div class="row g-3">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input asp-for="Input.UserName" class="form-control" />
+                                        <label asp-for="Input.UserName" class="form-label" data-en="User Name" data-ar="اسم المستخدم">User Name</label>
+                                        <span asp-validation-for="Input.UserName" class="text-danger"></span>
+                                    </div>
+                                </div>
+
+                                @if (User.IsInRole("Developer"))
                                 {
-                                    <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <select asp-for="Input.GymBranchId" class="form-control" asp-items="@(ViewData["GymBranches"] as SelectList)">
+                                                <option value="">-- Select Gym Branch --</option>
+                                            </select>
+                                            <label asp-for="Input.GymBranchId" class="form-label" data-en="Gym Branch" data-ar="الفرع الرياضي">Gym Branch</label>
+                                            <span asp-validation-for="Input.GymBranchId" class="text-danger"></span>
+                                        </div>
+                                    </div>
                                 }
-                            </p>
+                                else if (User.IsInRole("Captain") || User.IsInRole("User"))
+                                {
+                                    <!-- Hidden field to store the current user's branch ID from ViewData -->
+                                    <input type="hidden" asp-for="Input.GymBranchId" value="@(ViewData["CurrentUserBranchId"])" />
+                                }
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" />
+                                    <label asp-for="Input.Password" data-en="Password" data-ar="كلمة المرور">Password</label>
+                                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" />
+                                    <label asp-for="Input.ConfirmPassword" data-en="Confirm Password" data-ar="تأكيد كلمة المرور">Confirm Password</label>
+                                    <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4" id="buttonContainer">
+                            <button id="registerSubmit" type="submit" class="btn btn-dark btn-lg" data-en="Create User" data-ar="إنشاء مستخدم">Create User</button>
+                            <a asp-page="/Account/UserManagement" class="btn btn-outline-secondary btn-lg ms-2" data-en="Back to List" data-ar="العودة إلى القائمة">Back to List</a>
                         </div>
                     </form>
-                }
-            }
-        </section>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function() {
+            // Update input titles based on language
+            function updateInputTitles() {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                document.querySelectorAll('[data-en-title], [data-ar-title]').forEach(element => {
+                    const titleAttr = `data-${currentLanguage}-title`;
+                    if (element.hasAttribute(titleAttr)) {
+                        element.title = element.getAttribute(titleAttr);
+                    }
+                });
+            }
+
+            // Initialize language-specific elements
+            updateInputTitles();
+        });
+    </script>
 }

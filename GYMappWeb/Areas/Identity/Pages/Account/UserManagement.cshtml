@@ -1,0 +1,454 @@
+﻿@page
+@model GYMappWeb.Areas.Identity.Pages.Account.UserManagementModel
+@{
+    ViewData["Title"] = "Users Management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    /* Status icons */
+    .status-icon {
+        width: 24px;
+        height: 24px;
+        display: inline-block;
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+
+    .status-active {
+        background-image: url('/images/Active.png');
+    }
+
+    .status-inactive {
+        background-image: url('/images/Inactive.png');
+    }
+
+    /* Action buttons container */
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    /* Base button styles */
+    .icon-btn {
+        display: inline-block;
+        width: 33px;
+        height: 33px;
+        background-color: transparent;
+        border-radius: 4px;
+        padding: 3px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+        .icon-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+    /* Delete button styles */
+    .delete-btn {
+        border: 1px solid #dc3545;
+    }
+
+        .delete-btn:hover {
+            background-color: #dc3545;
+        }
+
+    /* Edit button styles */
+    .edit-btn {
+        border: 1px solid #42A5F5;
+    }
+
+        .edit-btn:hover {
+            background-color: #42A5F5;
+        }
+
+    /* Icon visibility control */
+    .icon-default {
+        display: block;
+    }
+
+    .icon-hover {
+        display: none;
+    }
+
+    .icon-btn:hover .icon-default {
+        display: none;
+    }
+
+    .icon-btn:hover .icon-hover {
+        display: block;
+    }
+
+    /* Add to your existing styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+        display: none;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        padding: 25px;
+        width: 400px;
+        max-width: 90%;
+        color: white;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+        padding-bottom: 15px;
+        margin-bottom: 15px;
+    }
+
+    .modal-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.4);
+        padding-top: 15px;
+        margin-top: 15px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .btn-modal {
+        padding: 8px 20px;
+        border-radius: 4px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-modal-cancel {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+
+        .btn-modal-cancel:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+    .btn-modal-confirm {
+        background: rgba(220, 53, 69, 0.7);
+        border: 1px solid rgba(220, 53, 69, 0.9);
+        color: white;
+    }
+
+        .btn-modal-confirm:hover {
+            background: rgba(220, 53, 69, 0.9);
+        }
+
+    /* Add this to your site.css */
+    .btn-light {
+        color: #000 !important; /* Black text */
+    }
+
+        .btn-light:hover {
+            color: #000 !important; /* Keep black text on hover */
+        }
+
+    /* Pagination styles */
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .search-create-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .search-input {
+        width: 250px;
+    }
+
+    /* Black pagination with white text */
+    .pagination .page-item .page-link {
+        background-color: #000;
+        color: #fff;
+        border-color: #333;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #333;
+        border-color: #444;
+    }
+
+    .pagination .page-item.disabled .page-link {
+        background-color: #555;
+        color: #ccc;
+    }
+
+    .pagination .page-item .page-link:hover {
+        background-color: #333;
+        color: #fff;
+    }
+
+    /* Role badge styles */
+    .role-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin: 2px;
+    }
+
+    .role-developer {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .role-captain {
+        background-color: #fd7e14;
+        color: white;
+    }
+
+    .role-user {
+        background-color: #198754;
+        color: white;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0" data-en="User Management" data-ar="إدارة المستخدمين">User Management</h2>
+                <div class="search-create-container">
+                    <input type="text" id="searchInput" class="form-control form-control-sm search-input"
+                           placeholder="Search users..."
+                           data-en-placeholder="Search users..." data-ar-placeholder="ابحث عن المستخدمين...">
+                    @if (Model.IsDeveloper || Model.IsCaptain)
+                    {
+                        <a asp-page="/Account/Register" asp-area="Identity" class="btn btn-light btn-sm"
+                           data-en="Create New" data-ar="إنشاء جديد">Create New</a>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <form id="deleteForm" method="post" asp-page-handler="DeleteUser">
+                @Html.AntiForgeryToken()
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th data-en="User Name" data-ar="اسم المستخدم">User Name</th>
+                                <th data-en="Gym Branch ID" data-ar="معرف الفرع">Gym Branch ID</th>
+                                <th data-en="Roles" data-ar="الأدوار">Roles</th>
+                                <th data-en="Actions" data-ar="الإجراءات">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var user in Model.Users)
+                            {
+                                <tr id="user-row-@user.Id">
+                                    <td>@user.UserName</td>
+                                    <td>@(user.GymBranch_ID?.ToString() ?? "N/A")</td>
+                                    <td>
+                                        @foreach (var role in user.Roles)
+                                        {
+                                            <span class="role-badge @($"role-{role.ToLower()}")">@role</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            @if (Model.IsDeveloper || Model.IsCaptain)
+                                            {
+                                                <a asp-page="/Account/EditUser" asp-route-id="@user.Id" class="edit-btn icon-btn" title="Edit"
+                                                   data-en-title="Edit" data-ar-title="تعديل">
+                                                    <img src="~/images/edit-blue.png" alt="Edit" class="icon-default" />
+                                                    <img src="~/images/edit-black.png" alt="Edit" class="icon-hover" />
+                                                </a>
+                                            }
+                                            @if ((Model.IsDeveloper && !user.Roles.Contains("Developer")) ||
+                                           (Model.IsCaptain && user.Roles.Contains("User") && !user.Roles.Any(r => r == "Developer" || r == "Captain")))
+                                            {
+                                                <button type="button" class="delete-btn icon-btn delete-user-btn"
+                                                        title="Delete"
+                                                        data-userid="@user.Id"
+                                                        data-username="@user.UserName"
+                                                        data-en-title="Delete" data-ar-title="حذف">
+                                                    <img src="~/images/delete-red.png" alt="Delete" class="icon-default" />
+                                                    <img src="~/images/delete-white.png" alt="Delete" class="icon-hover" />
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4 class="mb-0" data-en="Confirm Delete" data-ar="تأكيد الحذف">Confirm Delete</h4>
+        </div>
+        <div class="modal-body">
+            <p data-en="Are you sure you want to delete user" data-ar="هل أنت متأكد أنك تريد حذف المستخدم">Are you sure you want to delete user <strong id="userNameToDelete"></strong>?</p>
+            <p class="text-danger" data-en="This action cannot be undone." data-ar="هذا الإجراء لا يمكن التراجع عنه.">This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal-cancel" id="cancelDelete" data-en="Cancel" data-ar="إلغاء">Cancel</button>
+            <button class="btn-modal btn-modal-confirm" id="confirmDelete" data-en="Delete" data-ar="حذف">Delete</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Update search input placeholder based on language
+            function updateSearchPlaceholder() {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                const searchInput = document.getElementById('searchInput');
+                const placeholderAttr = `data-${currentLanguage}-placeholder`;
+                if (searchInput && searchInput.hasAttribute(placeholderAttr)) {
+                    searchInput.placeholder = searchInput.getAttribute(placeholderAttr);
+                }
+            }
+
+            // Update button titles based on language
+            function updateButtonTitles() {
+                const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                document.querySelectorAll('[data-en-title], [data-ar-title]').forEach(element => {
+                    const titleAttr = `data-${currentLanguage}-title`;
+                    if (element.hasAttribute(titleAttr)) {
+                        element.title = element.getAttribute(titleAttr);
+                    }
+                });
+                // Update modal buttons text
+                document.querySelectorAll('[data-en], [data-ar]').forEach(element => {
+                    const textAttr = `data-${currentLanguage}`;
+                    if (element.hasAttribute(textAttr)) {
+                        element.textContent = element.getAttribute(textAttr);
+                    }
+                });
+            }
+
+            // Search functionality
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('keyup', function() {
+                const searchTerm = this.value.toLowerCase();
+                const rows = document.querySelectorAll('tbody tr');
+
+                rows.forEach(row => {
+                    const userName = row.cells[0].textContent.toLowerCase();
+                    const gymBranchId = row.cells[1].textContent.toLowerCase();
+                    const roles = row.cells[2].textContent.toLowerCase();
+
+                    if (userName.includes(searchTerm) || gymBranchId.includes(searchTerm) || roles.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+
+            const deleteModal = document.getElementById('deleteModal');
+            const userNameToDelete = document.getElementById('userNameToDelete');
+            const cancelDelete = document.getElementById('cancelDelete');
+            const confirmDelete = document.getElementById('confirmDelete');
+
+            let userIdToDelete = null;
+            let userRowElement = null;
+
+            // Set up delete buttons
+            document.querySelectorAll('.delete-user-btn').forEach(button => {
+                button.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    userIdToDelete = this.getAttribute('data-userid');
+                    const username = this.getAttribute('data-username');
+
+                    userRowElement = this.closest('tr');
+                    userNameToDelete.textContent = username;
+                    deleteModal.style.display = 'flex';
+                });
+            });
+
+            // Cancel button
+            cancelDelete.addEventListener('click', function () {
+                deleteModal.style.display = 'none';
+                userIdToDelete = null;
+                userRowElement = null;
+            });
+
+            // Confirm button - AJAX delete
+            confirmDelete.addEventListener('click', async function () {
+                if (!userIdToDelete) return;
+
+                // Show loading state
+                const originalText = confirmDelete.textContent;
+                confirmDelete.disabled = true;
+                confirmDelete.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
+
+                try {
+                    const response = await fetch(`?handler=DeleteUser&id=${userIdToDelete}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value,
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        }
+                    });
+
+                    if (response.ok) {
+                        // Remove the row from the table
+                        if (userRowElement) {
+                            userRowElement.remove();
+                        }
+                        // Show success message
+                        alert('User deleted successfully');
+                    } else {
+                        const errorText = await response.text();
+                        throw new Error(errorText || 'Failed to delete user');
+                    }
+                } catch (error) {
+                    alert('Error deleting user: ' + error.message);
+                } finally {
+                    deleteModal.style.display = 'none';
+                    confirmDelete.disabled = false;
+                    confirmDelete.textContent = originalText;
+                    userIdToDelete = null;
+                    userRowElement = null;
+                }
+            });
+
+            // Close modal when clicking outside
+            deleteModal.addEventListener('click', function (e) {
+                if (e.target === deleteModal) {
+                    deleteModal.style.display = 'none';
+                    userIdToDelete = null;
+                    userRowElement = null;
+                }
+            });
+
+            // Initialize language-specific elements
+            updateSearchPlaceholder();
+            updateButtonTitles();
+        });
+    </script>
+}

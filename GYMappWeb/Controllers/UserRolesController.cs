@@ -1,4 +1,5 @@
-﻿using GYMappWeb.ViewModels.UserRoles;
+﻿using GYMappWeb.Areas.Identity.Data;
+using GYMappWeb.ViewModels.UserRoles;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,11 +13,11 @@ namespace GYMappWeb.Controllers
     [Authorize(Roles = "Developer")]
     public class UserRolesController : Controller
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
 
         public UserRolesController(
-            UserManager<IdentityUser> userManager,
+            UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
@@ -163,7 +164,7 @@ namespace GYMappWeb.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private async Task<List<UserRolesViewModel>> GetUserRolesViewModel(IdentityUser user)
+        private async Task<List<UserRolesViewModel>> GetUserRolesViewModel(ApplicationUser user)
         {
             var userRoles = new List<UserRolesViewModel>();
             var allRoles = await _roleManager.Roles.ToListAsync();
