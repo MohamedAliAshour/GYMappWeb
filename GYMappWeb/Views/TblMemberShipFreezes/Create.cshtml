@@ -46,6 +46,59 @@
         z-index: 1100;
         min-width: 400px;
     }
+
+    /* Membership search dropdown styling */
+    #membershipSearchResults {
+        width: 100%;
+        max-height: 250px;
+        overflow-y: auto;
+        border: 1px solid #444;
+        border-radius: 0.375rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        background-color: #000 !important;
+        color: #fff;
+    }
+
+        #membershipSearchResults .dropdown-item {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border: none;
+            text-align: left;
+            width: 100%;
+            background: none;
+            color: #fff !important;
+        }
+
+            #membershipSearchResults .dropdown-item:hover,
+            #membershipSearchResults .dropdown-item:focus {
+                background-color: #2d2d2d !important;
+                color: #fff !important;
+            }
+
+            #membershipSearchResults .dropdown-item.active {
+                background-color: #0d6efd !important;
+                color: white !important;
+            }
+
+        #membershipSearchResults .text-muted {
+            padding: 0.5rem 1rem;
+            color: #adb5bd !important;
+        }
+
+    /* Make sure the search input matches the dark theme */
+    #membershipSearchInput {
+        background-color: #000;
+        color: #fff;
+        border-color: #444;
+    }
+
+        #membershipSearchInput:focus {
+            background-color: #000;
+            color: #fff;
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
 </style>
 
 <div class="container py-5">
@@ -61,16 +114,18 @@
 
                         <div class="row g-3">
                             <div class="col-md-12">
-                                <div class="form-floating">
-                                    <select asp-for="UserMemberShipId" class="form-select" id="userMembershipSelect">
+                                <div class="form-floating user-search-container">
+                                    <select asp-for="UserMemberShipId" class="form-select" id="userMembershipSelect" style="display: none;">
                                         <option value="" data-en="-- Select Membership --" data-ar="-- اختر الاشتراك --">-- Select Membership --</option>
                                         @foreach (var item in ViewBag.UserMemberShipId)
                                         {
                                             <option value="@item.Value">@item.Text</option>
                                         }
                                     </select>
+                                    <input type="text" id="membershipSearchInput" class="form-control" placeholder="Search memberships..."
+                                           data-en="Search memberships..." data-ar="ابحث عن الاشتراكات...">
                                     <label asp-for="UserMemberShipId" class="form-label" data-en="Membership" data-ar="الاشتراك">Membership</label>
-                                    <span asp-validation-for="UserMemberShipId" class="text-danger"></span>
+                                    <div id="membershipSearchResults" class="dropdown-menu" style="display: none; max-height: 250px; overflow-y: auto; background-color: #000; color: #fff;"></div>
                                 </div>
                             </div>
                         </div>
@@ -159,6 +214,15 @@
                         $(this).text($(this).attr(textAttr));
                     }
                 });
+
+                // Update search input placeholders
+                const $membershipSearchInput = $('#membershipSearchInput');
+
+                if ($membershipSearchInput.length) {
+                    const membershipPlaceholder = currentLanguage === 'ar' ?
+                        $membershipSearchInput.data('ar') : $membershipSearchInput.data('en');
+                    $membershipSearchInput.attr('placeholder', membershipPlaceholder);
+                }
             }
 
             // Variables to store freeze periods and date pickers
@@ -170,6 +234,150 @@
             const $recordsGridBody = $('#freezeRecordsGridBody');
             let isInitialLoad = true;
             let freezeDetails = {}; // To store current membership freeze details
+
+            // Membership search functionality
+            function initializeMembershipSearch() {
+                const $membershipSelect = $('#userMembershipSelect');
+                const $searchInput = $('#membershipSearchInput');
+                const $searchResults = $('#membershipSearchResults');
+                let selectedIndex = -1;
+
+                // Get all membership options from the hidden select
+                const allMemberships = [];
+                $membershipSelect.find('option').each(function() {
+                    if ($(this).val()) {
+                        const optionText = $(this).text();
+
+                        allMemberships.push({
+                            id: $(this).val(),
+                            text: optionText,
+                            // The text now contains user code in format: "UserName (UserCode) - MembershipType"
+                            code: optionText.match(/\(([^)]+)\)/)?.[1] || '' // Extract user code from parentheses
+                        });
+                    }
+                });
+
+                console.log('All memberships with codes:', allMemberships);
+
+                function populateResults(memberships) {
+                    $searchResults.empty();
+
+                    if (memberships.length === 0) {
+                        $searchResults.append('<div class="dropdown-item text-muted">No memberships found</div>');
+                        return;
+                    }
+
+                    memberships.forEach((membership, index) => {
+                        const $item = $(`
+                            <button type="button" class="dropdown-item" data-value="${membership.id}" data-index="${index}">
+                                ${membership.text}
+                            </button>
+                        `);
+
+                        $item.on('click', function() {
+                            selectMembership(membership.id, membership.text);
+                        });
+
+                        $searchResults.append($item);
+                    });
+                }
+
+                function selectMembership(membershipId, membershipText) {
+                    $membershipSelect.val(membershipId);
+                    $searchInput.val(membershipText);
+                    $searchResults.hide();
+                    selectedIndex = -1;
+
+                    // MANUALLY trigger the load since programmatic value change doesn't trigger the change event
+                    loadMembershipFreezeDetails(membershipId);
+                }
+
+                function filterMemberships(searchTerm) {
+                    if (!searchTerm) {
+                        return allMemberships;
+                    }
+
+                    const term = searchTerm.toLowerCase().trim();
+                    console.log('Searching for:', term);
+
+                    return allMemberships.filter(membership => {
+                        const membershipText = (membership.text || '').toLowerCase();
+                        const userCode = (membership.code || '').toLowerCase();
+
+                        console.log('Checking:', membershipText, 'Code:', userCode);
+
+                        // Search in both the full text and the user code
+                        return membershipText.includes(term) || userCode.includes(term);
+                    });
+                }
+
+                // Event handlers
+                $searchInput.on('input', function() {
+                    const searchTerm = $(this).val();
+                    console.log('Input changed to:', searchTerm);
+
+                    const filteredMemberships = filterMemberships(searchTerm);
+                    console.log('Filtered results:', filteredMemberships);
+
+                    populateResults(filteredMemberships);
+                    $searchResults.show();
+                    selectedIndex = -1;
+                });
+
+                $searchInput.on('focus', function() {
+                    if ($(this).val() === '') {
+                        populateResults(allMemberships);
+                    }
+                    $searchResults.show();
+                });
+
+                $searchInput.on('keydown', function(e) {
+                    const $items = $searchResults.find('.dropdown-item');
+
+                    switch(e.key) {
+                        case 'ArrowDown':
+                            e.preventDefault();
+                            selectedIndex = Math.min(selectedIndex + 1, $items.length - 1);
+                            break;
+                        case 'ArrowUp':
+                            e.preventDefault();
+                            selectedIndex = Math.max(selectedIndex - 1, -1);
+                            break;
+                        case 'Enter':
+                            e.preventDefault();
+                            if (selectedIndex >= 0 && selectedIndex < $items.length) {
+                                $items.eq(selectedIndex).click();
+                            }
+                            break;
+                        case 'Escape':
+                            $searchResults.hide();
+                            selectedIndex = -1;
+                            break;
+                        case 'Tab':
+                            $searchResults.hide();
+                            selectedIndex = -1;
+                            break;
+                        default:
+                            return;
+                    }
+
+                    $items.removeClass('active');
+                    if (selectedIndex >= 0) {
+                        $items.eq(selectedIndex).addClass('active');
+                        $items.eq(selectedIndex)[0].scrollIntoView({ block: 'nearest' });
+                    }
+                });
+
+                $(document).on('click', function(e) {
+                    if (!$searchInput.is(e.target) && !$searchResults.is(e.target) &&
+                        $searchResults.has(e.target).length === 0) {
+                        $searchResults.hide();
+                    }
+                });
+
+                // Initialize with all memberships
+                populateResults(allMemberships);
+            }
 
             // Function to show alert message
             function showAlert(message, type = 'danger') {
@@ -245,8 +453,12 @@
                     to: formatDate(period.to)
                 }));
 
-                startDatePicker.set('disable', disabledRanges);
-                endDatePicker.set('disable', disabledRanges);
+                if (startDatePicker) {
+                    startDatePicker.set('disable', disabledRanges);
+                }
+                if (endDatePicker) {
+                    endDatePicker.set('disable', disabledRanges);
+                }
             }
 
             // Function to toggle grid visibility
@@ -262,6 +474,8 @@
 
             // Function to load membership freeze details
             function loadMembershipFreezeDetails(userMembershipId) {
+                console.log('Loading details for membership:', userMembershipId);
+
                 if (!userMembershipId) {
                     toggleGrid($summaryGrid, false);
                     toggleGrid($recordsGrid, false);
@@ -281,6 +495,7 @@
 
                 // Fetch membership summary details
                 $.get(`/TblMemberShipFreezes/GetMembershipFreezeDetails?userMembershipId=${userMembershipId}`, function(summaryData) {
+                    console.log('Summary data received:', summaryData);
                     if (summaryData) {
                         freezeDetails = summaryData; // Store the details
                         $summaryGridBody.html(`
@@ -292,12 +507,14 @@
                             </tr>
                         `);
                     }
-                }).fail(function() {
+                }).fail(function(error) {
+                    console.error('Error loading summary:', error);
                     $summaryGridBody.html('<tr><td colspan="4" class="text-center text-danger">Error loading summary</td></tr>');
                 });
 
                 // Fetch freeze records
                 $.get(`/TblMemberShipFreezes/GetFreezeRecords?userMembershipId=${userMembershipId}`, function(recordsData) {
+                    console.log('Records data received:', recordsData);
                     freezePeriods = []; // Reset frozen periods
 
                     if (recordsData && recordsData.length > 0) {
@@ -330,42 +547,53 @@
 
                     // Update date picker disabled dates
                     updateDatePickerDisabledDates();
-                }).fail(function() {
+                }).fail(function(error) {
+                    console.error('Error loading records:', error);
                     $recordsGridBody.html('<tr><td colspan="4" class="text-center text-danger">Error loading records</td></tr>');
                 });
             }
 
             // Initialize Flatpickr with dark theme and date restrictions
-            startDatePicker = flatpickr("#freezeStartDate", {
-                minDate: "today",
-                dateFormat: "Y-m-d",
-                theme: "dark",
-                allowInput: true,
-                onChange: function(selectedDates, dateStr) {
-                    endDatePicker.set("minDate", dateStr);
-                    if (endDatePicker.selectedDates[0] && new Date(dateStr) >= endDatePicker.selectedDates[0]) {
-                        endDatePicker.clear();
+            try {
+                startDatePicker = flatpickr("#freezeStartDate", {
+                    minDate: "today",
+                    dateFormat: "Y-m-d",
+                    theme: "dark",
+                    allowInput: true,
+                    onChange: function(selectedDates, dateStr) {
+                        if (endDatePicker) {
+                            endDatePicker.set("minDate", dateStr);
+                            if (endDatePicker.selectedDates[0] && new Date(dateStr) >= endDatePicker.selectedDates[0]) {
+                                endDatePicker.clear();
+                            }
+                        }
+                        // Trigger validation
+                        $("#freezeStartDate").trigger("change");
                     }
-                    // Trigger validation
-                    $("#freezeStartDate").trigger("change");
-                }
-            });
+                });
 
-            endDatePicker = flatpickr("#freezeEndDate", {
-                minDate: "today",
-                dateFormat: "Y-m-d",
-                theme: "dark",
-                allowInput: true,
-                onChange: function() {
-                    // Trigger validation
-                    $("#freezeEndDate").trigger("change");
-                }
-            });
+                endDatePicker = flatpickr("#freezeEndDate", {
+                    minDate: "today",
+                    dateFormat: "Y-m-d",
+                    theme: "dark",
+                    allowInput: true,
+                    onChange: function() {
+                        // Trigger validation
+                        $("#freezeEndDate").trigger("change");
+                    }
+                });
+            } catch (error) {
+                console.error('Error initializing Flatpickr:', error);
+            }
 
-            // Membership select change handler
+            // Manual change event handler for the membership select
             $('#userMembershipSelect').on('change', function() {
                 loadMembershipFreezeDetails($(this).val());
             });
+
+            // Initialize membership search
+            console.log('Initializing membership search...');
+            initializeMembershipSearch();
 
             // Form submission handler
             $('#freezeForm').on('submit', function(e) {
@@ -445,13 +673,20 @@
                 var endDate = new Date($('#freezeEndDate').val());
 
                 if (startDate && endDate && endDate <= startDate) {
-                    endDatePicker.clear();
+                    if (endDatePicker) {
+                        endDatePicker.clear();
+                    }
                     showAlert(getLocalizedMessage('endDateAfterStart'));
                 }
             });
 
             // Update select options based on language
             updateSelectOptions();
+
+            // Debug logs
+            console.log('Flatpickr instances initialized');
+            console.log('Summary grid exists:', $summaryGrid.length);
+            console.log('Records grid exists:', $recordsGrid.length);
 
             // Trigger change if there's a preselected value
             if ($('#userMembershipSelect').val()) {

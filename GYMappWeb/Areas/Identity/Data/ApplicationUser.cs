@@ -5,5 +5,6 @@ namespace GYMappWeb.Areas.Identity.Data
     public class ApplicationUser : IdentityUser
     {
         public int? GymBranchId { get; set; }
+        public bool IsActive { get; set; }
     }
 }

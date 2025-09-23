@@ -25,9 +25,15 @@ namespace GYMappWeb.Models
         [MaxLength(100)]
         public string CreatedBy { get; set; }
 
+        public bool IsActive { get; set; }
+
         // Navigation properties
-        public virtual ICollection<TblUser> Users { get; set; }
-        public virtual ICollection<ApplicationUser> ApplicationUsers { get; set; }
-        public virtual ICollection<Checkin> Checkins { get; set; }
+        public ICollection<ApplicationUser> ApplicationUsers { get; set; }
+        public ICollection<TblUser> Users { get; set; }
+        public ICollection<TblUserMemberShip> UserMemberships { get; set; }
+        public ICollection<TblOffer> Offers { get; set; }
+        public ICollection<TblMembershipType> MembershipTypes { get; set; }
+        public ICollection<TblMemberShipFreeze> MembershipFreezes { get; set; }
+        public ICollection<Checkin> Checkins { get; set; }
     }
 }

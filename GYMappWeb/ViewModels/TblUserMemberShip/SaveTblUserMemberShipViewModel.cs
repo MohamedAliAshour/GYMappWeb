@@ -21,6 +21,7 @@ namespace GYMappWeb.ViewModels.TblUserMemberShip
         public string? CreatedByUserName { get; set; }
         public DateTime CreatedDate { get; set; }
 
+        public int? GymBranchId { get; set; }
         public string? UserName { get; set; }
         public virtual TblMemberShipTypeViewModel? MemberShipTypes { get; set; } = null!;
         public virtual TblOfferViewModel? Off { get; set; }

@@ -26,21 +26,30 @@ namespace GYMappWeb.Controllers
 
         public async Task<IActionResult> Index(UserParameters userParameters)
         {
-            var freezes = await _freezeService.GetAllFreezesAsync(userParameters);
+            var userSession = HttpContext.Session.GetUserSession();
+            var gymBranchId = userSession.GymBranchId ?? 1;
+
+            var freezes = await _freezeService.GetAllFreezesAsync(userParameters, gymBranchId);
             return View(freezes);
         }
 
         [HttpGet]
         public async Task<IActionResult> GetFreezeRecords(int userMembershipId)
         {
-            var freezeRecords = await _freezeService.GetFreezeRecordsAsync(userMembershipId);
+            var userSession = HttpContext.Session.GetUserSession();
+            var gymBranchId = userSession.GymBranchId ?? 1;
+
+            var freezeRecords = await _freezeService.GetFreezeRecordsAsync(userMembershipId, gymBranchId);
             return Json(freezeRecords);
         }
 
         [HttpGet]
         public async Task<IActionResult> GetMembershipFreezeDetails(int userMembershipId)
         {
-            var details = await _freezeService.GetMembershipFreezeDetailsAsync(userMembershipId);
+            var userSession = HttpContext.Session.GetUserSession();
+            var gymBranchId = userSession.GymBranchId ?? 1;
+
+            var details = await _freezeService.GetMembershipFreezeDetailsAsync(userMembershipId, gymBranchId);
             if (details == null)
             {
                 return NotFound();
@@ -50,7 +59,10 @@ namespace GYMappWeb.Controllers
 
         public async Task<IActionResult> Create()
         {
-            var activeMemberships = await _freezeService.GetActiveMembershipsForDropdownAsync();
+            var userSession = HttpContext.Session.GetUserSession();
+            var gymBranchId = userSession.GymBranchId ?? 1;
+
+            var activeMemberships = await _freezeService.GetActiveMembershipsForDropdownAsync(gymBranchId);
             ViewData["UserMemberShipId"] = new SelectList(activeMemberships, "UserMemberShipId", "UserName");
             return View();
         }
@@ -63,6 +75,9 @@ namespace GYMappWeb.Controllers
             {
                 try
                 {
+                    var userSession = HttpContext.Session.GetUserSession();
+                    var gymBranchId = userSession.GymBranchId ?? 1;
+
                     // Convert DateOnly to DateTime for the service method
                     DateTime startDateTime = model.FreezeStartDate.ToDateTime(TimeOnly.MinValue);
                     DateTime endDateTime = model.FreezeEndDate.ToDateTime(TimeOnly.MinValue);
@@ -71,7 +86,8 @@ namespace GYMappWeb.Controllers
                     bool hasOverlap = await _freezeService.HasDateOverlapAsync(
                         model.UserMemberShipId,
                         startDateTime,
-                        endDateTime);
+                        endDateTime,
+                        gymBranchId);
 
                     if (hasOverlap)
                     {
@@ -85,8 +101,7 @@ namespace GYMappWeb.Controllers
                     }
                     else
                     {
-                        var userSession = HttpContext.Session.GetUserSession();
-                        await _freezeService.AddFreezeAsync(model, userSession?.Id);
+                        await _freezeService.AddFreezeAsync(model, userSession?.Id, gymBranchId);
                         return RedirectToAction(nameof(Index));
                     }
                 }
@@ -96,7 +111,10 @@ namespace GYMappWeb.Controllers
                 }
             }
 
-            var activeMemberships = await _freezeService.GetActiveMembershipsForDropdownAsync();
+            var userSessionForView = HttpContext.Session.GetUserSession();
+            var gymBranchIdForView = userSessionForView.GymBranchId ?? 1;
+
+            var activeMemberships = await _freezeService.GetActiveMembershipsForDropdownAsync(gymBranchIdForView);
             ViewData["UserMemberShipId"] = new SelectList(activeMemberships, "UserMemberShipId", "UserName", model.UserMemberShipId);
             return View(model);
         }
@@ -107,7 +125,10 @@ namespace GYMappWeb.Controllers
         {
             try
             {
-                await _freezeService.DeleteFreezeAsync(id);
+                var userSession = HttpContext.Session.GetUserSession();
+                var gymBranchId = userSession.GymBranchId ?? 1;
+
+                await _freezeService.DeleteFreezeAsync(id, gymBranchId);
                 return Ok();
             }
             catch (Exception ex)
@@ -119,7 +140,10 @@ namespace GYMappWeb.Controllers
         [HttpGet]
         public async Task<IActionResult> ValidateFreezeDates(int userMembershipId, DateTime freezeStartDate, DateTime freezeEndDate)
         {
-            bool hasOverlap = await _freezeService.HasDateOverlapAsync(userMembershipId, freezeStartDate, freezeEndDate);
+            var userSession = HttpContext.Session.GetUserSession();
+            var gymBranchId = userSession.GymBranchId ?? 1;
+
+            bool hasOverlap = await _freezeService.HasDateOverlapAsync(userMembershipId, freezeStartDate, freezeEndDate, gymBranchId);
 
             // Get language preference from cookie or default to 'en'
             string language = Request.Cookies["preferredLanguage"] ?? "en";

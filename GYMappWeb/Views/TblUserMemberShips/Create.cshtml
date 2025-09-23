@@ -24,6 +24,68 @@
         display: table-row !important;
     }
 
+    /* Improved dropdown styling with black theme */
+    .user-search-container {
+        position: relative;
+    }
+
+    #userSearchInput.form-select {
+        background-image: none;
+        cursor: text;
+    }
+
+    #userSearchResults {
+        width: 100%;
+        max-height: 250px;
+        overflow-y: auto;
+        border: 1px solid #444;
+        border-radius: 0.375rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        background-color: #000 !important;
+        color: #fff;
+    }
+
+        #userSearchResults .dropdown-item {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border: none;
+            text-align: left;
+            width: 100%;
+            background: none;
+            color: #fff !important;
+        }
+
+            #userSearchResults .dropdown-item:hover,
+            #userSearchResults .dropdown-item:focus {
+                background-color: #2d2d2d !important;
+                color: #fff !important;
+            }
+
+            #userSearchResults .dropdown-item.active {
+                background-color: #0d6efd !important;
+                color: white !important;
+            }
+
+        #userSearchResults .text-muted {
+            padding: 0.5rem 1rem;
+            color: #adb5bd !important;
+        }
+
+    /* Make sure the search input matches the dark theme */
+    #userSearchInput {
+        background-color: #000;
+        color: #fff;
+        border-color: #444;
+    }
+
+        #userSearchInput:focus {
+            background-color: #000;
+            color: #fff;
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+
 </style>
 
 <div class="container py-5">
@@ -65,15 +127,18 @@
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="form-floating">
-                                    <select asp-for="UserId" class="form-select" id="userIdSelect">
+                                <div class="form-floating user-search-container">
+                                    <select asp-for="UserId" class="form-select" id="userIdSelect" style="display: none;">
                                         <option value="" data-en="--Select--" data-ar="--اختر--">--Select--</option>
                                         @foreach (var item in ViewBag.UserId)
                                         {
                                             <option value="@item.Value">@item.Text</option>
                                         }
                                     </select>
+                                    <input type="text" id="userSearchInput" class="form-control" placeholder="Search users..."
+                                           data-en="Search users..." data-ar="ابحث عن المستخدمين...">
                                     <label asp-for="UserId" class="form-label" data-en="User" data-ar="المستخدم">User</label>
+                                    <div id="userSearchResults" class="dropdown-menu" style="display: none; max-height: 250px; overflow-y: auto; background-color: #000; color: #fff;"></div>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -127,19 +192,149 @@
         $(document).ready(function () {
             const membershipDurations = JSON.parse('@Html.Raw(Json.Serialize(ViewBag.MembershipDurations))');
             const membershipDetails = JSON.parse('@Html.Raw(Json.Serialize(ViewBag.MembershipDetails))');
-            const userDetails = JSON.parse('@Html.Raw(Json.Serialize(ViewBag.UserDetails))');
+            const userDetailsData = JSON.parse('@Html.Raw(Json.Serialize(ViewBag.UserDetails))') || [];
             const offerDetails = JSON.parse('@Html.Raw(Json.Serialize(ViewBag.OfferDetails))');
             const membershipFeatures = JSON.parse('@Html.Raw(Json.Serialize(ViewBag.MembershipFeatures))') || {};
+            const gymBranchId = @(ViewBag.GymBranchId ?? 1);
 
             const $grid = $('#membershipGrid');
             const $gridBody = $('#membershipGridBody');
-
-            // Store all ACTIVE offers initially (they're already filtered on server side)
             const allOffers = @Html.Raw(Json.Serialize(ViewBag.AllOffers));
 
-            // Set initial state and flag
+            // Process user data to ensure consistent structure
+            const allUsers = userDetailsData.map(user => ({
+                id: user.id || user.userId || user.UserId,
+                name: user.name || user.userName || user.UserName,
+                code: user.code || user.userCode || user.UserCode || ''
+            }));
+            console.log('Processed users:', allUsers);
+
+            let filteredUsers = [...allUsers];
+
             $grid.hide().removeClass('visible');
             let isInitialLoad = true;
+
+            // User search functionality
+            function initializeUserSearch() {
+                const $userSelect = $('#userIdSelect');
+                const $searchInput = $('#userSearchInput');
+                const $searchResults = $('#userSearchResults');
+                let selectedIndex = -1;
+
+                // Style to look like a dropdown
+                $searchInput.addClass('form-select');
+                $searchResults.addClass('dropdown-menu show w-100');
+
+                function populateResults(users) {
+                    $searchResults.empty();
+
+                    if (users.length === 0) {
+                        $searchResults.append('<div class="dropdown-item text-muted">No users found</div>');
+                        return;
+                    }
+
+                    users.forEach((user, index) => {
+                        const displayText = user.code ? `${user.name} (${user.code})` : user.name;
+                        const $item = $(`
+                            <button type="button" class="dropdown-item" data-value="${user.id}" data-index="${index}">
+                                ${displayText}
+                            </button>
+                        `);
+
+                        $item.on('click', function() {
+                            selectUser(user.id, user.name, user.code);
+                        });
+
+                        $searchResults.append($item);
+                    });
+                }
+
+                function selectUser(userId, userName, userCode) {
+                    $userSelect.val(userId);
+                    const displayText = userCode ? `${userName} (${userCode})` : userName;
+                    $searchInput.val(displayText);
+                    $searchResults.hide();
+                    selectedIndex = -1;
+                    $userSelect.trigger('change');
+                }
+
+                function filterUsers(searchTerm) {
+                    if (!searchTerm) {
+                        return allUsers;
+                    }
+
+                    const term = searchTerm.toLowerCase().trim();
+                    return allUsers.filter(user => {
+                        const userName = (user.name || '').toLowerCase();
+                        const userCode = (user.code || '').toString().toLowerCase();
+
+                        return userName.includes(term) || userCode.includes(term);
+                    });
+                }
+
+                // Event handlers
+                $searchInput.on('input', function() {
+                    const searchTerm = $(this).val();
+                    filteredUsers = filterUsers(searchTerm);
+                    populateResults(filteredUsers);
+                    $searchResults.show();
+                    selectedIndex = -1;
+                });
+
+                $searchInput.on('focus', function() {
+                    if ($(this).val() === '') {
+                        populateResults(allUsers);
+                    }
+                    $searchResults.show();
+                });
+
+                $searchInput.on('keydown', function(e) {
+                    const $items = $searchResults.find('.dropdown-item');
+
+                    switch(e.key) {
+                        case 'ArrowDown':
+                            e.preventDefault();
+                            selectedIndex = Math.min(selectedIndex + 1, $items.length - 1);
+                            break;
+                        case 'ArrowUp':
+                            e.preventDefault();
+                            selectedIndex = Math.max(selectedIndex - 1, -1);
+                            break;
+                        case 'Enter':
+                            e.preventDefault();
+                            if (selectedIndex >= 0 && selectedIndex < $items.length) {
+                                $items.eq(selectedIndex).click();
+                            }
+                            break;
+                        case 'Escape':
+                            $searchResults.hide();
+                            selectedIndex = -1;
+                            break;
+                        case 'Tab':
+                            $searchResults.hide();
+                            selectedIndex = -1;
+                            break;
+                        default:
+                            return;
+                    }
+
+                    $items.removeClass('active');
+                    if (selectedIndex >= 0) {
+                        $items.eq(selectedIndex).addClass('active');
+                        $items.eq(selectedIndex)[0].scrollIntoView({ block: 'nearest' });
+                    }
+                });
+
+                $(document).on('click', function(e) {
+                    if (!$searchInput.is(e.target) && !$searchResults.is(e.target) &&
+                        $searchResults.has(e.target).length === 0) {
+                        $searchResults.hide();
+                    }
+                });
+
+                // Initialize with all users
+                populateResults(allUsers);
+            }
 
             // Function to update option text based on language
             function updateSelectOptions() {
@@ -150,6 +345,12 @@
                         $(this).text($(this).attr(textAttr));
                     }
                 });
+
+                // Update search input placeholder
+                const $searchInput = $('#userSearchInput');
+                const placeholder = currentLanguage === 'ar' ?
+                    $searchInput.data('ar') : $searchInput.data('en');
+                $searchInput.attr('placeholder', placeholder);
             }
 
             // Function to filter offers based on membership type
@@ -215,7 +416,7 @@
                 }
 
                 // Find the selected items (all are active since they're filtered on server side)
-                const user = numUserId ? userDetails.find(u => u.id === numUserId) : null;
+                const user = numUserId ? allUsers.find(u => u.id === numUserId) : null;
                 const membership = membershipDetails.find(m => m.id === numMembershipTypeId);
                 const offer = numOffId ? offerDetails.find(o => o.id === numOffId) : null;
                 const features = membershipFeatures[membershipTypeId] || {};
@@ -279,6 +480,9 @@
             // Initialize with all ACTIVE offers
             filterOffers(null);
             isInitialLoad = false;
+
+            // Initialize user search
+            initializeUserSearch();
 
             // Update select options based on language
             updateSelectOptions();
@@ -358,6 +562,11 @@
                     console.error('Validation error:', error);
                     return true;
                 }
+            });
+
+            // Handle language changes if you have language switching
+            $(document).on('languageChanged', function() {
+                updateSelectOptions();
             });
         });
     </script>

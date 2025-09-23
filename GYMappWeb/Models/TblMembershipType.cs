@@ -23,6 +23,11 @@ public partial class TblMembershipType
     public int TotalFreezeDays { get; set; }
     public string CreatedBy { get; set; }
     public DateTime CreatedDate { get; set; }
+
+    public int? GymBranchId { get; set; }
+
+    [ForeignKey("GymBranchId")]
+    public virtual GymBranch? GymBranch { get; set; }
     public virtual ICollection<TblOffer> TblOffers { get; set; } = new List<TblOffer>();
     public virtual ICollection<TblUserMemberShip> TblUserMemberShips { get; set; } = new List<TblUserMemberShip>();
 }

@@ -24,6 +24,24 @@ public class GYMappWebContext : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(builder);
 
+        // Configure ApplicationUser - Add IsActive property and GymBranchId foreign key
+        builder.Entity<ApplicationUser>(entity =>
+        {
+            entity.Property(e => e.IsActive)
+                .IsRequired()
+                .HasDefaultValue(true); // Default to active
+
+            entity.Property(e => e.GymBranchId)
+                .HasColumnName("GymBranch_ID")
+                .IsRequired(false); // Make it nullable
+
+            entity.HasOne<GymBranch>()
+                .WithMany(p => p.ApplicationUsers)
+                .HasForeignKey(d => d.GymBranchId)
+                .OnDelete(DeleteBehavior.SetNull) // Set null on delete
+                .HasConstraintName("FK_AspNetUsers_GymBranches");
+        });
+
         // Configure GymBranch
         builder.Entity<GymBranch>(entity =>
         {
@@ -38,43 +56,45 @@ public class GYMappWebContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.CreatedBy)
                 .HasColumnType("nvarchar(100)")
                 .IsRequired(true);
+            entity.Property(e => e.IsActive)
+                .IsRequired()
+                .HasDefaultValue(true); // Default to active
         });
 
         // Configure Checkin
         builder.Entity<Checkin>(entity =>
-        {
-            entity.HasKey(e => e.CheckinId).HasName("PK_Checkins");
-            entity.ToTable("Checkins");
-            entity.Property(e => e.CheckinId).HasColumnName("Checkin_ID").ValueGeneratedOnAdd();
-            entity.Property(e => e.CheckinDate)
-                .HasColumnType("datetime2(0)")
-                .IsRequired(true);
-            entity.Property(e => e.UserId).HasColumnName("User_ID");
-            entity.Property(e => e.GymBranchId).HasColumnName("GymBranch_ID");
-            entity.Property(e => e.CreatedBy)
-                .HasColumnType("nvarchar(100)")
-                .IsRequired(true);
+    {
+        entity.HasKey(e => e.CheckinId).HasName("PK_Checkins");
+        entity.ToTable("Checkins");
+        entity.Property(e => e.CheckinId).HasColumnName("Checkin_ID").ValueGeneratedOnAdd();
+        entity.Property(e => e.CheckinDate)
+            .HasColumnType("datetime2(0)")
+            .IsRequired(true);
+        entity.Property(e => e.UserId).HasColumnName("User_ID");
+        entity.Property(e => e.GymBranchId).HasColumnName("GymBranch_ID");
+        entity.Property(e => e.CreatedBy)
+            .HasColumnType("nvarchar(100)")
+            .IsRequired(true);
+        // IsActive property removed from here
 
-            entity.HasOne(d => d.User)
-                .WithMany(p => p.Checkins)
-                .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Checkins_tbl_Users");
+        entity.HasOne(d => d.User)
+            .WithMany(p => p.Checkins)
+            .HasForeignKey(d => d.UserId)
+            .OnDelete(DeleteBehavior.ClientSetNull)
+            .HasConstraintName("FK_Checkins_tbl_Users");
 
-            entity.HasOne(d => d.GymBranch)
-                .WithMany(p => p.Checkins)
-                .HasForeignKey(d => d.GymBranchId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Checkins_GymBranches");
-        });
+        entity.HasOne(d => d.GymBranch)
+            .WithMany(p => p.Checkins)
+            .HasForeignKey(d => d.GymBranchId)
+            .OnDelete(DeleteBehavior.ClientSetNull)
+            .HasConstraintName("FK_Checkins_GymBranches");
+    });
 
         // Configure TblUser
         builder.Entity<TblUser>(entity =>
         {
             entity.HasKey(e => e.UserId).HasName("PK_Users");
             entity.ToTable("tbl_Users");
-            entity.HasIndex(e => e.UserCode, "IX_tbl_UserCode").IsUnique();
-            entity.HasIndex(e => e.UserName, "IX_tbl_UserName").IsUnique();
             entity.Property(e => e.UserId).HasColumnName("User_ID").ValueGeneratedOnAdd();
             entity.Property(e => e.UserCode).IsRequired();
             entity.Property(e => e.UserName).IsRequired().HasMaxLength(50);
@@ -98,21 +118,7 @@ public class GYMappWebContext : IdentityDbContext<ApplicationUser>
                 .HasConstraintName("FK_tbl_Users_GymBranches");
         });
 
-        // Configure ApplicationUser - Make GymBranchId nullable
-        builder.Entity<ApplicationUser>(entity =>
-        {
-            entity.Property(e => e.GymBranchId)
-                .HasColumnName("GymBranch_ID")
-                .IsRequired(false); // Make it nullable
-
-            entity.HasOne<GymBranch>()
-                .WithMany(p => p.ApplicationUsers)
-                .HasForeignKey(d => d.GymBranchId)
-                .OnDelete(DeleteBehavior.SetNull) // Set null on delete
-                .HasConstraintName("FK_AspNetUsers_GymBranches");
-        });
-
-        // Configure TblUserMemberShip
+        // Configure TblUserMemberShip - Add GymBranchId foreign key
         builder.Entity<TblUserMemberShip>(entity =>
         {
             entity.HasKey(e => e.UserMemberShipId).HasName("PK_UserMemberShip");
@@ -126,29 +132,41 @@ public class GYMappWebContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.OffId).HasColumnName("Off_ID");
             entity.Property(e => e.UserId).HasColumnName("User_ID");
             entity.Property(e => e.MemberShipTypesId).HasColumnName("MemberShipTypes_ID");
+            entity.Property(e => e.GymBranchId)
+                .HasColumnName("GymBranch_ID")
+                .IsRequired(false); // Make it nullable
             entity.Property(e => e.CreatedBy)
                    .HasColumnType("nvarchar(100)")
                    .IsRequired(true);
             entity.Property(e => e.CreatedDate)
                      .HasColumnType("datetime2(0)")
                      .IsRequired(true);
+
             entity.HasOne(d => d.User)
                 .WithMany(p => p.TblUserMemberShips)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_tbl_UserMemberShip_tbl_Users");
+
             entity.HasOne(d => d.MemberShipTypes)
                 .WithMany(p => p.TblUserMemberShips)
                 .HasForeignKey(d => d.MemberShipTypesId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_tbl_UserMemberShip_tbl_MembershipTypes");
+
             entity.HasOne(d => d.Off)
                 .WithMany(p => p.TblUserMemberShips)
                 .HasForeignKey(d => d.OffId)
                 .HasConstraintName("FK_tbl_UserMemberShip_tbl_Offers");
+
+            entity.HasOne(d => d.GymBranch)
+                .WithMany(p => p.UserMemberships)
+                .HasForeignKey(d => d.GymBranchId)
+                .OnDelete(DeleteBehavior.SetNull) // Set null on delete
+                .HasConstraintName("FK_tbl_UserMemberShip_GymBranches");
         });
 
-        // Configure TblOffer
+        // Configure TblOffer - Add GymBranchId foreign key
         builder.Entity<TblOffer>(entity =>
         {
             entity.HasKey(e => e.OffId).HasName("PK_Offers");
@@ -158,18 +176,28 @@ public class GYMappWebContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.DiscountPrecentage).IsRequired();
             entity.Property(e => e.IsActive).IsRequired();
             entity.Property(e => e.MemberShipTypesId).HasColumnName("MemberShipTypes_ID");
+            entity.Property(e => e.GymBranchId)
+                .HasColumnName("GymBranch_ID")
+                .IsRequired(false); // Make it nullable
             entity.Property(e => e.CreatedBy).HasColumnType("nvarchar(100)").IsRequired(true);
             entity.Property(e => e.CreatedDate)
                     .HasColumnType("datetime2(0)")
                     .IsRequired(true);
+
             entity.HasOne(d => d.MemberShipTypes)
                 .WithMany(p => p.TblOffers)
                 .HasForeignKey(d => d.MemberShipTypesId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_tbl_Offers_tbl_MembershipTypes");
+
+            entity.HasOne(d => d.GymBranch)
+                .WithMany(p => p.Offers)
+                .HasForeignKey(d => d.GymBranchId)
+                .OnDelete(DeleteBehavior.SetNull) // Set null on delete
+                .HasConstraintName("FK_tbl_Offers_GymBranches");
         });
 
-        // Configure TblMembershipType
+        // Configure TblMembershipType - Add GymBranchId foreign key
         builder.Entity<TblMembershipType>(entity =>
         {
             entity.HasKey(e => e.MemberShipTypesId).HasName("PK_MembershipTypes");
@@ -182,14 +210,23 @@ public class GYMappWebContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.FreezeCount).IsRequired();
             entity.Property(e => e.IsActive).IsRequired();
             entity.Property(e => e.TotalFreezeDays).IsRequired();
+            entity.Property(e => e.GymBranchId)
+                .HasColumnName("GymBranch_ID")
+                .IsRequired(false); // Make it nullable
             entity.Property(e => e.CreatedBy).HasColumnType("nvarchar(100)").IsRequired(true);
             entity.Property(e => e.CreatedDate)
                      .HasColumnType("datetime2(0)")
                      .IsRequired(true);
             entity.Property(e => e.invitationCount).IsRequired();
+
+            entity.HasOne(d => d.GymBranch)
+                .WithMany(p => p.MembershipTypes)
+                .HasForeignKey(d => d.GymBranchId)
+                .OnDelete(DeleteBehavior.SetNull) // Set null on delete
+                .HasConstraintName("FK_tbl_MembershipTypes_GymBranches");
         });
 
-        // Configure TblMemberShipFreeze
+        // Configure TblMemberShipFreeze - Add GymBranchId foreign key
         builder.Entity<TblMemberShipFreeze>(entity =>
         {
             entity.HasKey(e => e.MemberShipFreezeId).HasName("PK_MemberShipFreeze");
@@ -199,13 +236,23 @@ public class GYMappWebContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.FreezeStartDate).IsRequired();
             entity.Property(e => e.FreezeEndDate).IsRequired();
             entity.Property(e => e.Reason).HasMaxLength(50);
+            entity.Property(e => e.GymBranchId)
+                .HasColumnName("GymBranch_ID")
+                .IsRequired(false); // Make it nullable
             entity.Property(e => e.CreatedBy).HasColumnType("nvarchar(100)").IsRequired(true);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime2(0)").IsRequired(true);
+
             entity.HasOne(d => d.UserMemberShip)
                 .WithMany(p => p.TblMemberShipFreezes)
                 .HasForeignKey(d => d.UserMemberShipId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_tbl_MemberShipFreeze_tbl_UserMemberShip");
+
+            entity.HasOne(d => d.GymBranch)
+                .WithMany(p => p.MembershipFreezes)
+                .HasForeignKey(d => d.GymBranchId)
+                .OnDelete(DeleteBehavior.SetNull) // Set null on delete
+                .HasConstraintName("FK_tbl_MemberShipFreeze_GymBranches");
         });
     }
 }

@@ -21,13 +21,15 @@ namespace GYMappWeb.Service
             _context = context;
         }
 
-        public async Task<PagedResult<GetWithPaginationTblMemberShipTypeViewModel>> GetAllMembershipTypesAsync(UserParameters userParameters)
+        public async Task<PagedResult<GetWithPaginationTblMemberShipTypeViewModel>> GetAllMembershipTypesAsync(UserParameters userParameters, int gymBranchId)
         {
             var userNames = await _context.Users
                 .Select(u => new { u.Id, u.UserName })
                 .ToDictionaryAsync(u => u.Id, u => u.UserName);
 
-            var query = _context.TblMembershipTypes.AsQueryable();
+            var query = _context.TblMembershipTypes
+                .Where(m => m.GymBranchId == gymBranchId) // Filter by gym branch
+                .AsQueryable();
 
             // Apply filtering
             if (!string.IsNullOrEmpty(userParameters.SearchTerm))
@@ -94,11 +96,21 @@ namespace GYMappWeb.Service
                 userParameters.PageSize);
         }
 
-        public async Task<bool> AddMembershipTypeAsync(SaveTblMemberShipTypeViewModel model, string createdById)
+        public async Task<bool> AddMembershipTypeAsync(SaveTblMemberShipTypeViewModel model, string createdById, int gymBranchId)
         {
+            // Check for duplicate membership type name in the same gym branch
+            bool nameExists = await _context.TblMembershipTypes
+                .AnyAsync(m => m.Name.ToLower() == model.Name.ToLower() && m.GymBranchId == gymBranchId);
+
+            if (nameExists)
+            {
+                throw new Exception("A membership type with this name already exists in this gym branch.");
+            }
+
             model.CreatedBy = createdById;
             model.CreatedDate = DateTime.Today;
             model.IsActive = true;
+            model.GymBranchId = gymBranchId; // Set gym branch ID
 
             var entity = ObjectMapper.Mapper.Map<TblMembershipType>(model);
             _context.Add(entity);
@@ -106,17 +118,30 @@ namespace GYMappWeb.Service
             return true;
         }
 
-        public async Task<bool> UpdateMembershipTypeAsync(SaveTblMemberShipTypeViewModel model, int id, string updatedById)
+        public async Task<bool> UpdateMembershipTypeAsync(SaveTblMemberShipTypeViewModel model, int id, string updatedById, int gymBranchId)
         {
             if (id != model.MemberShipTypesId)
             {
                 throw new Exception("Membership Type ID mismatch");
             }
 
-            var existingMembershipType = await _context.TblMembershipTypes.FindAsync(id);
+            var existingMembershipType = await _context.TblMembershipTypes
+                .FirstOrDefaultAsync(m => m.MemberShipTypesId == id && m.GymBranchId == gymBranchId);
+
             if (existingMembershipType == null)
             {
-                throw new Exception("Membership Type not found");
+                throw new Exception("Membership Type not found or doesn't belong to this gym branch");
+            }
+
+            // Check for duplicate name (excluding current record)
+            bool nameExists = await _context.TblMembershipTypes
+                .AnyAsync(m => m.Name.ToLower() == model.Name.ToLower() &&
+                             m.MemberShipTypesId != id &&
+                             m.GymBranchId == gymBranchId);
+
+            if (nameExists)
+            {
+                throw new Exception("A membership type with this name already exists in this gym branch.");
             }
 
             existingMembershipType.Name = model.Name;
@@ -135,12 +160,14 @@ namespace GYMappWeb.Service
             return true;
         }
 
-        public async Task<bool> DeleteMembershipTypeAsync(int id)
+        public async Task<bool> DeleteMembershipTypeAsync(int id, int gymBranchId)
         {
-            var membershipType = await _context.TblMembershipTypes.FindAsync(id);
+            var membershipType = await _context.TblMembershipTypes
+                .FirstOrDefaultAsync(m => m.MemberShipTypesId == id && m.GymBranchId == gymBranchId);
+
             if (membershipType == null)
             {
-                throw new Exception("Membership Type not found");
+                throw new Exception("Membership Type not found or doesn't belong to this gym branch");
             }
 
             _context.TblMembershipTypes.Remove(membershipType);
@@ -148,24 +175,35 @@ namespace GYMappWeb.Service
             return true;
         }
 
-        public async Task<bool> HasRelatedMembershipsAsync(int membershipTypeId)
+        public async Task<bool> HasRelatedMembershipsAsync(int membershipTypeId, int gymBranchId)
         {
             return await _context.TblUserMemberShips
-                .AnyAsync(m => m.MemberShipTypesId == membershipTypeId);
+                .Include(m => m.MemberShipTypes)
+                .AnyAsync(m => m.MemberShipTypesId == membershipTypeId &&
+                             m.MemberShipTypes.GymBranchId == gymBranchId);
         }
 
-        public async Task<SaveTblMemberShipTypeViewModel> GetMembershipTypeDetailsAsync(int id)
+        public async Task<SaveTblMemberShipTypeViewModel> GetMembershipTypeDetailsAsync(int id, int gymBranchId)
         {
-            var membershipType = await _context.TblMembershipTypes.FindAsync(id);
+            var membershipType = await _context.TblMembershipTypes
+                .FirstOrDefaultAsync(m => m.MemberShipTypesId == id && m.GymBranchId == gymBranchId);
+
+            if (membershipType == null)
+            {
+                throw new Exception("Membership Type not found or doesn't belong to this gym branch");
+            }
+
             return ObjectMapper.Mapper.Map<SaveTblMemberShipTypeViewModel>(membershipType);
         }
 
-        public async Task<bool> ToggleMembershipTypeStatusAsync(int id)
+        public async Task<bool> ToggleMembershipTypeStatusAsync(int id, int gymBranchId)
         {
-            var membershipType = await _context.TblMembershipTypes.FindAsync(id);
+            var membershipType = await _context.TblMembershipTypes
+                .FirstOrDefaultAsync(m => m.MemberShipTypesId == id && m.GymBranchId == gymBranchId);
+
             if (membershipType == null)
             {
-                throw new Exception("Membership Type not found");
+                throw new Exception("Membership Type not found or doesn't belong to this gym branch");
             }
 
             // Toggle the IsActive status

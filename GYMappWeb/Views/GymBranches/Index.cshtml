@@ -6,6 +6,23 @@
 }
 
 <style>
+    /* Status icons */
+    .status-icon {
+        width: 24px;
+        height: 24px;
+        display: inline-block;
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+
+    .status-active {
+        background-image: url('/images/Active.png');
+    }
+
+    .status-inactive {
+        background-image: url('/images/Inactive.png');
+    }
+
     /* Action buttons container */
     .action-buttons {
         display: flex;
@@ -55,6 +72,15 @@
     }
 
         .details-btn:hover {
+            background-color: #28a745;
+        }
+
+    /* Toggle Active button styles */
+    .toggle-active-btn {
+        border: 1px solid #28a745;
+    }
+
+        .toggle-active-btn:hover {
             background-color: #28a745;
         }
 
@@ -144,6 +170,16 @@
             background: rgba(220, 53, 69, 0.9);
         }
 
+    .btn-modal-toggle {
+        background: rgba(40, 167, 69, 0.7);
+        border: 1px solid rgba(40, 167, 69, 0.9);
+        color: white;
+    }
+
+        .btn-modal-toggle:hover {
+            background: rgba(40, 167, 69, 0.9);
+        }
+
     /* Button styles */
     .btn-light {
         color: #000 !important;
@@ -223,6 +259,7 @@
                         <tr>
                             <th data-en="Gym Name" data-ar="اسم الصالة">Gym Name</th>
                             <th data-en="Location" data-ar="الموقع">Location</th>
+                            <th data-en="Status" data-ar="الحالة">Status</th>
                             <th data-en="Created Date" data-ar="تاريخ الإنشاء">Created Date</th>
                             <th data-en="Created By" data-ar="تم الإنشاء بواسطة">Created By</th>
                             <th data-en="Actions" data-ar="الإجراءات">Actions</th>
@@ -231,19 +268,46 @@
                     <tbody>
                         @foreach (var item in Model.Items)
                         {
-                            <tr>
+                            <tr id="branch-row-@item.GymBranchId">
                                 <td>@Html.DisplayFor(modelItem => item.GymName)</td>
                                 <td>@Html.DisplayFor(modelItem => item.Location)</td>
+                                <td>
+                                    @if (item.IsActive)
+                                    {
+                                        <img src="~/images/Active.png" alt="Active" title="Active" style="width:24px; height:24px;" />
+                                    }
+                                    else
+                                    {
+                                        <img src="~/images/Inactive.png" alt="Inactive" title="Inactive" style="width:24px; height:24px;" />
+                                    }
+                                </td>
                                 <td class="date-cell">@item.CreateDate.ToString("yyyy-MM-dd")</td>
                                 <td>@Html.DisplayFor(modelItem => item.CreatedByUserName)</td>
                                 <td>
                                     <div class="action-buttons">
-                                        
                                         <a asp-action="Edit" asp-route-id="@item.GymBranchId" class="edit-btn icon-btn" title="Edit"
                                            data-en-title="Edit" data-ar-title="تعديل">
                                             <img src="~/images/edit-blue.png" alt="Edit" class="icon-default" />
                                             <img src="~/images/edit-black.png" alt="Edit" class="icon-hover" />
                                         </a>
+                                        <button class="toggle-active-btn icon-btn toggle-branch-btn"
+                                                title="@(item.IsActive ? "Deactivate" : "Activate")"
+                                                data-branchid="@item.GymBranchId"
+                                                data-isactive="@item.IsActive.ToString().ToLower()"
+                                                data-branchname="@item.GymName"
+                                                data-en-title="@(item.IsActive ? "Deactivate" : "Activate")"
+                                                data-ar-title="@(item.IsActive ? "تعطيل" : "تفعيل")">
+                                            @if (item.IsActive)
+                                            {
+                                                <img src="~/images/switch.png" alt="Deactivate" class="icon-default" />
+                                                <img src="~/images/switch.png" alt="Deactivate" class="icon-hover" />
+                                            }
+                                            else
+                                            {
+                                                <img src="~/images/switch.png" alt="Activate" class="icon-default" />
+                                                <img src="~/images/switch.png" alt="Activate" class="icon-hover" />
+                                            }
+                                        </button>
                                         <button class="delete-btn icon-btn delete-branch-btn"
                                                 title="Delete"
                                                 data-branchid="@item.GymBranchId"
@@ -319,6 +383,24 @@
     </div>
 </div>
 
+<!-- Toggle Active Confirmation Modal -->
+<div class="modal-overlay" id="toggleActiveModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4 class="mb-0" id="toggleModalTitle" data-en="Confirm Action" data-ar="تأكيد الإجراء">Confirm Action</h4>
+        </div>
+        <div class="modal-body">
+            <p id="toggleModalMessage" data-en="Are you sure you want to" data-ar="هل أنت متأكد أنك تريد">
+                Are you sure you want to <strong id="actionType"></strong> the gym branch <strong id="branchNameToToggle"></strong>?
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal-cancel" id="cancelToggle" data-en="Cancel" data-ar="إلغاء">Cancel</button>
+            <button class="btn-modal btn-modal-toggle" id="confirmToggle" data-en="Confirm" data-ar="تأكيد">Confirm</button>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -358,12 +440,23 @@
                 }, 500);
             });
 
+            // Modal elements
             const deleteModal = document.getElementById('deleteModal');
+            const toggleActiveModal = document.getElementById('toggleActiveModal');
             const branchNameToDelete = document.getElementById('branchNameToDelete');
+            const branchNameToToggle = document.getElementById('branchNameToToggle');
+            const actionType = document.getElementById('actionType');
             const cancelDelete = document.getElementById('cancelDelete');
             const confirmDelete = document.getElementById('confirmDelete');
+            const cancelToggle = document.getElementById('cancelToggle');
+            const confirmToggle = document.getElementById('confirmToggle');
+            const toggleModalTitle = document.getElementById('toggleModalTitle');
+            const toggleModalMessage = document.getElementById('toggleModalMessage');
 
             let branchIdToDelete = null;
+            let branchRowElement = null;
+            let branchIdToToggle = null;
+            let isCurrentlyActive = null;
 
             // Set up delete buttons
             document.querySelectorAll('.delete-branch-btn').forEach(button => {
@@ -372,18 +465,111 @@
                     branchIdToDelete = this.getAttribute('data-branchid');
                     const branchName = this.getAttribute('data-branchname');
 
+                    branchRowElement = document.getElementById(`branch-row-${branchIdToDelete}`);
                     branchNameToDelete.textContent = branchName;
                     deleteModal.style.display = 'flex';
                 });
             });
 
-            // Cancel button
+            // Set up toggle active buttons
+            document.querySelectorAll('.toggle-branch-btn').forEach(button => {
+                button.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    branchIdToToggle = this.getAttribute('data-branchid');
+                    isCurrentlyActive = this.getAttribute('data-isactive') === 'true';
+                    const branchName = this.getAttribute('data-branchname');
+
+                    // Update modal content based on action
+                    const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                    const action = isCurrentlyActive ? 'deactivate' : 'activate';
+
+                    if (currentLanguage === 'ar') {
+                        toggleModalTitle.textContent = isCurrentlyActive ? 'تأكيد التعطيل' : 'تأكيد التفعيل';
+                        actionType.textContent = isCurrentlyActive ? 'تعطيل' : 'تفعيل';
+                        toggleModalMessage.innerHTML = `هل أنت متأكد أنك تريد <strong>${isCurrentlyActive ? 'تعطيل' : 'تفعيل'}</strong> الفرع الرياضي <strong>${branchName}</strong>؟`;
+                    } else {
+                        toggleModalTitle.textContent = isCurrentlyActive ? 'Confirm Deactivation' : 'Confirm Activation';
+                        actionType.textContent = isCurrentlyActive ? 'deactivate' : 'activate';
+                        toggleModalMessage.innerHTML = `Are you sure you want to <strong>${isCurrentlyActive ? 'deactivate' : 'activate'}</strong> the gym branch <strong>${branchName}</strong>?`;
+                    }
+
+                    branchNameToToggle.textContent = branchName;
+                    toggleActiveModal.style.display = 'flex';
+                });
+            });
+
+            // Cancel buttons
             cancelDelete.addEventListener('click', function () {
                 deleteModal.style.display = 'none';
                 branchIdToDelete = null;
+                branchRowElement = null;
             });
 
-            // Confirm button - AJAX delete
+            cancelToggle.addEventListener('click', function () {
+                toggleActiveModal.style.display = 'none';
+                branchIdToToggle = null;
+                isCurrentlyActive = null;
+            });
+
+            // Confirm toggle action
+            confirmToggle.addEventListener('click', async function () {
+                if (!branchIdToToggle) return;
+
+                // Show loading state
+                const originalText = confirmToggle.textContent;
+                confirmToggle.disabled = true;
+                confirmToggle.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+
+                try {
+                    // Get the anti-forgery token
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                    const response = await fetch(`/GymBranches/ToggleActive/${branchIdToToggle}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': token,
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    if (response.ok) {
+                        // Show success message
+                        const successMessage = isCurrentlyActive ?
+                            (localStorage.getItem('preferredLanguage') === 'ar' ?
+                                'تم تعطيل الفرع الرياضي بنجاح' :
+                                'Gym branch deactivated successfully') :
+                            (localStorage.getItem('preferredLanguage') === 'ar' ?
+                                'تم تفعيل الفرع الرياضي بنجاح' :
+                                'Gym branch activated successfully');
+
+                        // Show toast notification
+                        showToast(successMessage, 'success');
+
+                        // Wait a bit before reloading to show the toast
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        const errorData = await response.text();
+                        throw new Error(errorData || 'Failed to toggle status');
+                    }
+                } catch (error) {
+                    console.error('Toggle error:', error);
+                    const errorMessage = localStorage.getItem('preferredLanguage') === 'ar' ?
+                        'حدث خطأ أثناء تغيير الحالة' :
+                        'Error changing status';
+                    showToast(`${errorMessage}: ${error.message}`, 'error');
+                } finally {
+                    toggleActiveModal.style.display = 'none';
+                    confirmToggle.disabled = false;
+                    confirmToggle.textContent = originalText;
+                    branchIdToToggle = null;
+                    isCurrentlyActive = null;
+                }
+            });
+
+            // Confirm delete action
             confirmDelete.addEventListener('click', async function () {
                 if (!branchIdToDelete) return;
 
@@ -393,39 +579,88 @@
                 confirmDelete.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
 
                 try {
+                    // Get the anti-forgery token
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
                     const response = await fetch(`/GymBranches/Delete/${branchIdToDelete}`, {
                         method: 'POST',
                         headers: {
-                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value,
-                            'Content-Type': 'application/json'
+                            'RequestVerificationToken': token,
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
                         }
                     });
 
                     if (!response.ok) {
-                        const errorData = await response.json();
+                        const errorData = await response.text();
                         throw new Error(errorData || 'Failed to delete gym branch');
                     }
 
-                    // Show success message and reload the page
-                    window.location.reload();
+                    // Show success message
+                    const successMessage = localStorage.getItem('preferredLanguage') === 'ar' ?
+                        'تم حذف الفرع الرياضي بنجاح' :
+                        'Gym branch deleted successfully';
+                    showToast(successMessage, 'success');
+
+                    // Remove the row from the table
+                    branchRowElement.remove();
 
                 } catch (error) {
-                    alert('Error deleting: ' + error.message);
+                    console.error('Delete error:', error);
+                    showToast(error.message, 'error');
                 } finally {
                     deleteModal.style.display = 'none';
                     confirmDelete.disabled = false;
                     confirmDelete.textContent = originalText;
                     branchIdToDelete = null;
+                    branchRowElement = null;
                 }
             });
 
-            // Close modal when clicking outside
-            deleteModal.addEventListener('click', function (e) {
-                if (e.target === deleteModal) {
-                    deleteModal.style.display = 'none';
-                    branchIdToDelete = null;
-                }
+            // Close modals when clicking outside
+            [deleteModal, toggleActiveModal].forEach(modal => {
+                modal.addEventListener('click', function (e) {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                        branchIdToDelete = null;
+                        branchRowElement = null;
+                        branchIdToToggle = null;
+                        isCurrentlyActive = null;
+                    }
+                });
             });
+
+            // Toast notification function
+            function showToast(message, type = 'info') {
+                // Remove any existing toasts
+                const existingToasts = document.querySelectorAll('.custom-toast');
+                existingToasts.forEach(toast => toast.remove());
+
+                const toast = document.createElement('div');
+                toast.className = `custom-toast alert alert-${type} alert-dismissible fade show`;
+                toast.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 9999;
+                    min-width: 300px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                `;
+
+                toast.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+
+                document.body.appendChild(toast);
+
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 5000);
+            }
 
             // Initialize language-specific elements
             updateSearchPlaceholder();

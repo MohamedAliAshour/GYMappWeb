@@ -23,7 +23,17 @@ namespace GYMappWeb.Controllers
         // GET: TblUsers
         public async Task<IActionResult> Index(UserParameters userParameters)
         {
-            var users = await _userService.GetWithPaginations(userParameters);
+            var userSession = HttpContext.Session.GetUserSession();
+            var gymBranchId = userSession.GymBranchId ?? 1;
+
+            // Temporary debug
+            Console.WriteLine($"Current user gym branch ID: {gymBranchId}");
+
+            var users = await _userService.GetWithPaginations(userParameters, gymBranchId);
+
+            // Check how many users were returned
+            Console.WriteLine($"Users found: {users.Items.Count}");
+
             return View(users);
         }
 
@@ -35,7 +45,10 @@ namespace GYMappWeb.Controllers
                 return NotFound();
             }
 
-            var user = await _userService.GetUserDetailsAsync(id.Value);
+            var userSession = HttpContext.Session.GetUserSession();
+            var gymBranchId = userSession.GymBranchId ?? 1;
+
+            var user = await _userService.GetUserDetailsAsync(id.Value, gymBranchId);
             if (user == null)
             {
                 return NotFound();
@@ -47,7 +60,10 @@ namespace GYMappWeb.Controllers
         // GET: TblUsers/Create
         public async Task<IActionResult> Create()
         {
-            ViewData["UserCode"] = await _userService.GetNextUserCode();
+            var userSession = HttpContext.Session.GetUserSession();
+            var gymBranchId = userSession.GymBranchId ?? 1;
+
+            ViewData["UserCode"] = await _userService.GetNextUserCode(gymBranchId);
             return View();
         }
 
@@ -61,7 +77,9 @@ namespace GYMappWeb.Controllers
                 try
                 {
                     var userSession = HttpContext.Session.GetUserSession();
-                    await _userService.Add(tblUser, userSession?.Id);
+                    var gymBranchId = userSession.GymBranchId ?? 1;
+
+                    await _userService.Add(tblUser, userSession?.Id, gymBranchId);
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
@@ -70,7 +88,10 @@ namespace GYMappWeb.Controllers
                 }
             }
 
-            ViewData["UserCode"] = tblUser.UserCode;
+            var userSessionForView = HttpContext.Session.GetUserSession();
+            var gymBranchIdForView = userSessionForView.GymBranchId ?? 1;
+
+            ViewData["UserCode"] = await _userService.GetNextUserCode(gymBranchIdForView);
             return View(tblUser);
         }
 
@@ -82,7 +103,10 @@ namespace GYMappWeb.Controllers
                 return NotFound();
             }
 
-            var user = _userService.GetDetailsById(id.Value);
+            var userSession = HttpContext.Session.GetUserSession();
+            var gymBranchId = userSession.GymBranchId ?? 1;
+
+            var user = _userService.GetDetailsById(id.Value, gymBranchId);
             if (user == null)
             {
                 return NotFound();
@@ -148,25 +172,12 @@ namespace GYMappWeb.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ValidateUserName(string value, string lang = "en")
-        {
-            bool exists = await _userService.CheckNameExist(value);
-
-            string errorMessage = lang == "ar"
-                ? "اسم المستخدم هذا مستخدم بالفعل"
-                : "This username is already taken";
-
-            return Json(new
-            {
-                isValid = !exists,
-                errorMessage = exists ? errorMessage : ""
-            });
-        }
-
-        [HttpGet]
         public async Task<IActionResult> ValidateUserPhone(string value, string lang = "en")
         {
-            bool exists = await _userService.CheckPhoneExist(value);
+            var userSession = HttpContext.Session.GetUserSession();
+            var gymBranchId = userSession.GymBranchId ?? 1;
+
+            bool exists = await _userService.CheckPhoneExist(value, gymBranchId);
 
             string errorMessage = lang == "ar"
                 ? "رقم الهاتف هذا مسجل بالفعل"

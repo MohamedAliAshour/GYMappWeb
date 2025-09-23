@@ -300,7 +300,7 @@
                                                 <img src="~/images/switch.png" alt="Activate" class="icon-hover" />
                                             }
                                         </button>
-                                        <button class="delete-btn icon-btn delete-offer-btn"
+                                       @*  <button class="delete-btn icon-btn delete-offer-btn"
                                                 title="Delete"
                                                 data-offerid="@item.OffId"
                                                 data-offername="@item.OfferName"
@@ -308,7 +308,7 @@
                                                 data-en-title="Delete" data-ar-title="حذف">
                                             <img src="~/images/delete-red.png" alt="Delete" class="icon-default" />
                                             <img src="~/images/delete-white.png" alt="Delete" class="icon-hover" />
-                                        </button>
+                                        </button> *@
                                     </div>
                                 </td>
                             </tr>
@@ -439,19 +439,31 @@
                 });
             }
 
-            // Automatic search functionality
+              // Client-side search functionality (FIXED - no page reload)
             const searchInput = document.getElementById('searchInput');
-            let searchTimer;
+            searchInput.addEventListener('keyup', function() {
+                const searchTerm = this.value.toLowerCase();
+                const rows = document.querySelectorAll('tbody tr');
 
-            searchInput.addEventListener('input', function() {
-                clearTimeout(searchTimer);
-                searchTimer = setTimeout(function() {
-                    const searchTerm = searchInput.value;
-                    const url = new URL(window.location.href);
-                    url.searchParams.set('searchTerm', searchTerm);
-                    url.searchParams.set('pageNumber', '1'); // Reset to first page when searching
-                    window.location.href = url.toString();
-                }, 500); // 500ms delay after typing stops
+                rows.forEach(row => {
+                    const offerName = row.cells[0].textContent.toLowerCase();
+                    const discount = row.cells[1].textContent.toLowerCase();
+                    const membershipType = row.cells[2].textContent.toLowerCase();
+                    const status = row.cells[3].textContent.toLowerCase();
+                    const createdBy = row.cells[4].textContent.toLowerCase();
+                    const createdDate = row.cells[5].textContent.toLowerCase();
+
+                    if (offerName.includes(searchTerm) ||
+                        discount.includes(searchTerm) ||
+                        membershipType.includes(searchTerm) ||
+                        status.includes(searchTerm) ||
+                        createdBy.includes(searchTerm) ||
+                        createdDate.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
             });
 
             // Modal elements

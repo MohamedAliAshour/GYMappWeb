@@ -19,6 +19,10 @@ public partial class TblOffer
     public bool IsActive { get; set; }
     public string CreatedBy { get; set; }
     public DateTime CreatedDate { get; set; }
+    public int? GymBranchId { get; set; }
+
+    [ForeignKey("GymBranchId")]
+    public virtual GymBranch? GymBranch { get; set; }
     public virtual TblMembershipType MemberShipTypes { get; set; } = null!;
     public virtual ICollection<TblUserMemberShip> TblUserMemberShips { get; set; } = new List<TblUserMemberShip>();
 }

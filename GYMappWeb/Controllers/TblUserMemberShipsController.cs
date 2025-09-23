@@ -26,13 +26,19 @@ namespace GYMappWeb.Controllers
 
         public async Task<IActionResult> Index(UserParameters userParameters)
         {
-            var memberships = await _membershipService.GetAllUserMembershipsAsync(userParameters);
+            var userSession = HttpContext.Session.GetUserSession();
+            var gymBranchId = userSession.GymBranchId ?? 1;
+            
+            var memberships = await _membershipService.GetAllUserMembershipsAsync(userParameters, gymBranchId);
             return View(memberships);
         }
 
         public IActionResult Create()
         {
-            SetupCreateViewBag();
+            var userSession = HttpContext.Session.GetUserSession();
+            var gymBranchId = userSession.GymBranchId ?? 1;
+            
+            SetupCreateViewBag(gymBranchId);
             return View();
         }
 
@@ -45,7 +51,9 @@ namespace GYMappWeb.Controllers
                 try
                 {
                     var userSession = HttpContext.Session.GetUserSession();
-                    await _membershipService.AddMembershipAsync(model, userSession?.Id);
+                    var gymBranchId = userSession.GymBranchId ?? 1;
+                    
+                    await _membershipService.AddMembershipAsync(model, userSession?.Id, gymBranchId);
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
@@ -54,7 +62,10 @@ namespace GYMappWeb.Controllers
                 }
             }
 
-            SetupCreateViewBag();
+            var userSessionForView = HttpContext.Session.GetUserSession();
+            var gymBranchIdForView = userSessionForView.GymBranchId ?? 1;
+            
+            SetupCreateViewBag(gymBranchIdForView);
             return View(model);
         }
 
@@ -64,7 +75,10 @@ namespace GYMappWeb.Controllers
         {
             try
             {
-                await _membershipService.DeleteFreezesAsync(id);
+                var userSession = HttpContext.Session.GetUserSession();
+                var gymBranchId = userSession.GymBranchId ?? 1;
+                
+                await _membershipService.DeleteFreezesAsync(id, gymBranchId);
                 return Ok();
             }
             catch (Exception ex)
@@ -79,7 +93,10 @@ namespace GYMappWeb.Controllers
         {
             try
             {
-                await _membershipService.DeleteMembershipAsync(id);
+                var userSession = HttpContext.Session.GetUserSession();
+                var gymBranchId = userSession.GymBranchId ?? 1;
+                
+                await _membershipService.DeleteMembershipAsync(id, gymBranchId);
                 return Ok();
             }
             catch (Exception ex)
@@ -91,24 +108,27 @@ namespace GYMappWeb.Controllers
         [HttpGet]
         public async Task<IActionResult> CheckActiveMembership(int userId)
         {
-            var hasActive = await _membershipService.HasActiveMembershipAsync(userId);
+            var userSession = HttpContext.Session.GetUserSession();
+            var gymBranchId = userSession.GymBranchId ?? 1;
+            
+            var hasActive = await _membershipService.HasActiveMembershipAsync(userId, gymBranchId);
             return Json(new { hasActiveMembership = hasActive });
         }
 
-        private void SetupCreateViewBag()
+        private void SetupCreateViewBag(int gymBranchId)
         {
-            // Filter active users for both userDetails and SelectList
+            // Filter active users for current gym branch
             var activeUsers = _context.TblUsers
-                .Where(u => u.IsActive == false)
+                .Where(u => u.IsActive == false && u.GymBranchId == gymBranchId) // Added gym branch filter
                 .ToList();
 
             var userDetails = activeUsers
-                .Select(u => new { Id = u.UserId, Name = u.UserName })
+                .Select(u => new { Id = u.UserId, Name = u.UserName, Code = u.UserCode })
                 .ToList();
 
-            // Modified to include membership type
+            // Filter offers for current gym branch
             var offerDetails = _context.TblOffers
-                .Where(o => o.IsActive == true)
+                .Where(o => o.IsActive == true && o.GymBranchId == gymBranchId) // Added gym branch filter
                 .Select(o => new
                 {
                     Id = o.OffId,
@@ -116,35 +136,51 @@ namespace GYMappWeb.Controllers
                     MembershipTypeId = o.MemberShipTypesId
                 }).ToList();
 
+            // Filter membership types for current gym branch
             var membershipDetails = _context.TblMembershipTypes
-                .Where(m => m.IsActive == true)
+                .Where(m => m.IsActive == true && m.GymBranchId == gymBranchId) // Added gym branch filter
                 .Select(m => new { Id = m.MemberShipTypesId, Name = m.Name, Price = m.Price })
                 .ToList();
 
             var membershipDurations = _context.TblMembershipTypes
-                .Where(m => m.IsActive == true)
+                .Where(m => m.IsActive == true && m.GymBranchId == gymBranchId) // Added gym branch filter
                 .ToDictionary(m => m.MemberShipTypesId.ToString(), m => m.MembershipDuration);
 
             var membershipFeatures = _context.TblMembershipTypes
-                .Where(m => m.IsActive == true)
+                .Where(m => m.IsActive == true && m.GymBranchId == gymBranchId) // Added gym branch filter
                 .ToDictionary(m => m.MemberShipTypesId.ToString(), m => new {
                     invitationCount = m.invitationCount,
                     totalFreezeDays = m.TotalFreezeDays,
                     freezeCount = m.FreezeCount
                 });
+            
             ViewBag.MembershipFeatures = membershipFeatures;
-
-            // Use the filtered activeUsers for the SelectList
             ViewBag.UserId = new SelectList(activeUsers, "UserId", "UserName");
-            ViewBag.AllOffers = new SelectList(_context.TblOffers.Where(o => o.IsActive == true), "OffId", "OfferName");
-
-            // Modified to show only ACTIVE membership types in the dropdown
-            ViewBag.MemberShipTypesId = new SelectList(_context.TblMembershipTypes.Where(m => m.IsActive == true), "MemberShipTypesId", "Name");
-
+            ViewBag.AllOffers = new SelectList(_context.TblOffers.Where(o => o.IsActive == true && o.GymBranchId == gymBranchId), "OffId", "OfferName");
+            ViewBag.MemberShipTypesId = new SelectList(_context.TblMembershipTypes.Where(m => m.IsActive == true && m.GymBranchId == gymBranchId), "MemberShipTypesId", "Name");
             ViewBag.MembershipDurations = membershipDurations;
             ViewBag.UserDetails = userDetails;
             ViewBag.OfferDetails = offerDetails;
             ViewBag.MembershipDetails = membershipDetails;
+        }
+
+        [HttpGet]
+        public IActionResult SearchUsers(string term, int gymBranchId)
+        {
+            var users = _context.TblUsers
+                .Where(u => u.IsActive == false &&
+                           u.GymBranchId == gymBranchId &&
+                           (u.UserName.Contains(term) || u.UserCode.ToString().Contains(term)))
+                .Select(u => new
+                {
+                    id = u.UserId,
+                    name = u.UserName,
+                    code = u.UserCode
+                })
+                .Take(10)
+                .ToList();
+
+            return Json(users);
         }
     }
 }

@@ -229,10 +229,10 @@
                             <th data-en="Actions" data-ar="الإجراءات">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="usersTableBody">
                         @foreach (var item in Model.Items)
                         {
-                            <tr>
+                            <tr id="user-row-@item.UserId" data-userid="@item.UserId">
                                 <td>@Html.DisplayFor(modelItem => item.UserCode)</td>
                                 <td>@Html.DisplayFor(modelItem => item.UserName)</td>
                                 <td>@Html.DisplayFor(modelItem => item.UserPhone)</td>
@@ -334,6 +334,10 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Store all user rows for client-side filtering
+            const allUserRows = document.querySelectorAll('#usersTableBody tr');
+            const originalPagination = document.querySelector('.pagination-container');
+
             // Update search input placeholder based on language
             function updateSearchPlaceholder() {
                 const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
@@ -355,6 +359,40 @@
                 });
             }
 
+            // Client-side search functionality
+            function performClientSideSearch(searchTerm) {
+                if (!searchTerm.trim()) {
+                    // Show all rows if search is empty
+                    allUserRows.forEach(row => {
+                        row.style.display = '';
+                    });
+                    originalPagination.style.display = 'flex';
+                    return;
+                }
+
+                // Hide original pagination during client-side search
+                originalPagination.style.display = 'none';
+
+                const term = searchTerm.toLowerCase();
+                let foundResults = false;
+
+                allUserRows.forEach(row => {
+                    const rowText = row.textContent.toLowerCase();
+                    if (rowText.includes(term)) {
+                        row.style.display = '';
+                        foundResults = true;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                // Show message if no results found
+                if (!foundResults) {
+                    // You could add a "no results" message here if needed
+                    console.log('No results found for:', searchTerm);
+                }
+            }
+
             // Automatic search functionality
             const searchInput = document.getElementById('searchInput');
             let searchTimer;
@@ -363,12 +401,23 @@
                 clearTimeout(searchTimer);
                 searchTimer = setTimeout(function() {
                     const searchTerm = searchInput.value;
-                    const url = new URL(window.location.href);
-                    url.searchParams.set('searchTerm', searchTerm);
-                    url.searchParams.set('pageNumber', '1'); // Reset to first page when searching
-                    window.location.href = url.toString();
-                }, 500); // 500ms delay after typing stops
+                    performClientSideSearch(searchTerm);
+                }, 300); // 300ms delay after typing stops
             });
+
+            // Clear search and show all results when Escape key is pressed
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    searchInput.value = '';
+                    performClientSideSearch('');
+                }
+            });
+
+            // Initialize with any existing search term
+            const initialSearchTerm = searchInput.value;
+            if (initialSearchTerm) {
+                performClientSideSearch(initialSearchTerm);
+            }
 
             const deleteModal = document.getElementById('deleteModal');
             const userNameToDelete = document.getElementById('userNameToDelete');
@@ -378,17 +427,18 @@
             let userIdToDelete = null;
             let userRowElement = null;
 
-            // Set up delete buttons
-            document.querySelectorAll('.delete-user-btn').forEach(button => {
-                button.addEventListener('click', function (e) {
+            // Set up delete buttons (using event delegation for filtered rows)
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.delete-user-btn')) {
+                    const button = e.target.closest('.delete-user-btn');
                     e.preventDefault();
-                    userIdToDelete = this.getAttribute('data-userid');
-                    const username = this.getAttribute('data-username');
+                    userIdToDelete = button.getAttribute('data-userid');
+                    const username = button.getAttribute('data-username');
 
                     userRowElement = document.getElementById(`user-row-${userIdToDelete}`);
                     userNameToDelete.textContent = username;
                     deleteModal.style.display = 'flex';
-                });
+                }
             });
 
             // Cancel button
@@ -434,7 +484,14 @@
                         throw new Error('Failed to delete user');
                     }
 
-                    // Show success message and reload the page
+                    // Remove the user row from the table
+                    if (userRowElement) {
+                        userRowElement.remove();
+                    }
+
+                    // Update the stored rows after deletion
+                    const updatedRows = document.querySelectorAll('#usersTableBody tr');
+                    // Note: You might want to refresh the page instead for consistency
                     window.location.reload();
 
                 } catch (error) {

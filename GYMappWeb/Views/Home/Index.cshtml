@@ -4,7 +4,7 @@
 }
 
 <style>
-    /* Animation Styles (unchanged) */
+    /* Animation Styles */
     .animate-card {
         opacity: 0;
         transform: translateY(30px);
@@ -36,6 +36,10 @@
         transition-delay: 0.5s !important;
     }
 
+    .delay-6 {
+        transition-delay: 0.6s !important;
+    }
+
     @@keyframes fadeIn {
         from {
             opacity: 0;
@@ -50,72 +54,305 @@
         animation: fadeIn 0.5s ease-out forwards !important;
     }
 
+    /* White font styles for all card elements */
+    .card {
+        color: white !important;
+    }
+
+    .card-body,
+    .card-header,
+    .stat-label,
+    .progress-value,
+    .progress-label,
+    .progress-count,
+    .progress-max,
+    .table,
+    .table th,
+    .table td {
+        color: white !important;
+    }
+
+    /* Specific styling for progress inner circles */
+    .progress-inner {
+        background: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    /* Table header styling */
+    .table thead th {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        border-color: rgba(255, 255, 255, 0.2) !important;
+    }
+
+    /* Table row styling */
+    .table tbody tr {
+        border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    /* Table cell styling */
+    .table tbody td {
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        background-color: rgba(255, 255, 255, 0.05) !important;
+    }
+
     /* Only adding this new style for the specific header texts */
     .stat-label {
-        font-size: 1.1rem !important; /* Increased from default */
+        font-size: 1.1rem !important;
         font-weight: 700 !important;
+    }
+
+    /* Circular Progress Chart Styles */
+    .progress-chart-container {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        margin: 0 auto;
+    }
+
+    .circular-progress {
+        position: relative;
+        width: 120px;
+        height: 120px;
+    }
+
+    .progress-circle {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: conic-gradient(#4e73df var(--progress), rgba(255, 255, 255, 0.2) 0deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .progress-circle-success {
+        background: conic-gradient(#1cc88a var(--progress), rgba(255, 255, 255, 0.2) 0deg);
+    }
+
+    .progress-circle-warning {
+        background: conic-gradient(#f6c23e var(--progress), rgba(255, 255, 255, 0.2) 0deg);
+    }
+
+    .progress-circle-danger {
+        background: conic-gradient(#e74a3b var(--progress), rgba(255, 255, 255, 0.2) 0deg);
+    }
+
+    .progress-inner {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+
+    .progress-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: white !important;
+    }
+
+    .progress-value-success {
+        color: white !important;
+    }
+
+    .progress-value-warning {
+        color: white !important;
+    }
+
+    .progress-value-danger {
+        color: white !important;
+    }
+
+    .progress-label {
+        font-size: 0.8rem;
+        color: white !important;
+        margin-top: -5px;
+    }
+
+    .progress-stats {
+        text-align: center;
+        margin-top: 10px;
+    }
+
+    .progress-count {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: white !important;
+    }
+
+    .progress-count-success {
+        color: white !important;
+    }
+
+    .progress-count-warning {
+        color: white !important;
+    }
+
+    .progress-count-danger {
+        color: white !important;
+    }
+
+    .progress-max {
+        font-size: 0.9rem;
+        color: white !important;
+    }
+
+    /* Change the header text color to white */
+    .text-info {
+        color: white !important;
+    }
+
+    /* Chart Styles */
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 20px;
+    }
+
+    /* New color for the membership trends chart */
+    .chart-color-primary {
+        background-color: #6f42c1 !important;
+        border-color: #6f42c1 !important;
+    }
+
+    .border-left-chart {
+        border-left-color: #6f42c1 !important;
+    }
+
+    /* Card border adjustments for better contrast */
+    .card {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Shadow adjustment for better visibility */
+    .shadow {
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(255, 255, 255, 0.1) !important;
     }
 </style>
 
 <div class="container-fluid animate-container">
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
     </div>
-    <!-- Stats Cards Row -->
+
+    <!-- Four Percentage Cards Row -->
     <div class="row">
-        <!-- Total Members Card -->
+        <!-- Active Memberships Percentage Card -->
         <div class="col-xl-3 col-md-6 mb-4 animate-card delay-1">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="stat-label text-xs text-primary text-uppercase mb-1"
-                                 data-en="TOTAL MEMBERS" data-ar="إجمالي الأعضاء">
-                                TOTAL MEMBERS
+            <div class="card border-left-success shadow h-100 py-2" style="background: linear-gradient(to right, rgba(28, 200, 138, 0.8), rgba(28, 200, 138, 0.4));">
+                <div class="card-body text-center">
+                    <div class="stat-label text-xs text-uppercase mb-3"
+                         data-en="ACTIVE MEMBERSHIPS" data-ar="الاشتراكات النشطة">
+                        ACTIVE MEMBERSHIPS
+                    </div>
+
+                    <div class="progress-chart-container">
+                        <div class="circular-progress">
+                            <div class="progress-circle progress-circle-success" style="--progress: @(Model.ActiveMembershipPercentage * 3.6)deg">
+                                <div class="progress-inner">
+                                    <div class="progress-value progress-value-success">@Model.ActiveMembershipPercentage.ToString("0")%</div>
+                                    <div class="progress-label" data-en="Active" data-ar="نشط">Active</div>
+                                </div>
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalMembers</div>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+
+                    <div class="progress-stats">
+                        <div class="progress-count progress-count-success">@Model.ActiveMemberships / @Model.TotalMembers</div>
+                        <div class="progress-max" data-en="active memberships" data-ar="اشتراكات نشطة">
+                            active of total members
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Active Memberships Card -->
+        <!-- Today's Checkins Percentage Card -->
         <div class="col-xl-3 col-md-6 mb-4 animate-card delay-2">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="stat-label text-xs text-success text-uppercase mb-1"
-                                 data-en="ACTIVE MEMBERSHIPS" data-ar="الاشتراكات النشطة">
-                                ACTIVE MEMBERSHIPS
+            <div class="card border-left-info shadow h-100 py-2" style="background: linear-gradient(to right, rgba(78, 115, 223, 0.8), rgba(78, 115, 223, 0.4));">
+                <div class="card-body text-center">
+                    <div class="stat-label text-xs text-uppercase mb-3"
+                         data-en="TODAY'S CHECKINS" data-ar="الحضور اليوم">
+                        TODAY'S CHECKINS
+                    </div>
+
+                    <div class="progress-chart-container">
+                        <div class="circular-progress">
+                            <div class="progress-circle" style="--progress: @(Model.CheckinPercentage * 3.6)deg">
+                                <div class="progress-inner">
+                                    <div class="progress-value">@Model.CheckinPercentage.ToString("0")%</div>
+                                    <div class="progress-label" data-en="Capacity" data-ar="السعة">Capacity</div>
+                                </div>
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.ActiveMemberships</div>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-id-card fa-2x text-gray-300"></i>
+                    </div>
+
+                    <div class="progress-stats">
+                        <div class="progress-count">@Model.TodaysCheckins / @Model.MaxCheckins</div>
+                        <div class="progress-max" data-en="members checked in today" data-ar="عضو حضر اليوم">
+                            members checked in today
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Expiring Memberships Card -->
+        <!-- Expiring This Week Percentage Card -->
         <div class="col-xl-3 col-md-6 mb-4 animate-card delay-3">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="stat-label text-xs text-warning text-uppercase mb-1"
-                                 data-en="EXPIRING THIS WEEK" data-ar="تنتهي هذا الأسبوع">
-                                EXPIRING THIS WEEK
+            <div class="card border-left-warning shadow h-100 py-2" style="background: linear-gradient(to right, rgba(246, 194, 62, 0.8), rgba(246, 194, 62, 0.4));">
+                <div class="card-body text-center">
+                    <div class="stat-label text-xs text-uppercase mb-3"
+                         data-en="EXPIRING THIS WEEK" data-ar="تنتهي هذا الأسبوع">
+                        EXPIRING THIS WEEK
+                    </div>
+
+                    <div class="progress-chart-container">
+                        <div class="circular-progress">
+                            <div class="progress-circle progress-circle-warning" style="--progress: @(Model.ExpiringPercentage * 3.6)deg">
+                                <div class="progress-inner">
+                                    <div class="progress-value progress-value-warning">@Model.ExpiringPercentage.ToString("0")%</div>
+                                    <div class="progress-label" data-en="Expiring" data-ar="تنتهي">Expiring</div>
+                                </div>
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.ExpiringMemberships</div>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-calendar-times fa-2x text-gray-300"></i>
+                    </div>
+
+                    <div class="progress-stats">
+                        <div class="progress-count progress-count-warning">@Model.ExpiringMemberships / @Model.ActiveMemberships</div>
+                        <div class="progress-max" data-en="expiring this week" data-ar="تنتهي هذا الأسبوع">
+                            expiring of active memberships
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Members This Month Percentage Card -->
+        <div class="col-xl-3 col-md-6 mb-4 animate-card delay-4">
+            <div class="card border-left-danger shadow h-100 py-2" style="background: linear-gradient(to right, rgba(231, 74, 59, 0.8), rgba(231, 74, 59, 0.4));">
+                <div class="card-body text-center">
+                    <div class="stat-label text-xs text-uppercase mb-3"
+                         data-en="NEW MEMBERS THIS MONTH" data-ar="أعضاء جدد هذا الشهر">
+                        NEW MEMBERS THIS MONTH
+                    </div>
+
+                    <div class="progress-chart-container">
+                        <div class="circular-progress">
+                            <div class="progress-circle progress-circle-danger" style="--progress: @(Model.NewMembersPercentage * 3.6)deg">
+                                <div class="progress-inner">
+                                    <div class="progress-value progress-value-danger">@Model.NewMembersPercentage.ToString("0")%</div>
+                                    <div class="progress-label" data-en="New Members" data-ar="أعضاء جدد">New Members</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="progress-stats">
+                        <div class="progress-count progress-count-danger">@Model.NewMembersThisMonth / 100</div>
+                        <div class="progress-max" data-en="new members this month" data-ar="أعضاء جدد هذا الشهر">
+                            new members of 100 goal
                         </div>
                     </div>
                 </div>
@@ -126,9 +363,9 @@
     <!-- Content Row -->
     <div class="row">
         <!-- Recent Freezes -->
-        <div class="col-xl-6 col-lg-6 animate-card delay-2">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <div class="col-xl-6 col-lg-6 animate-card delay-5">
+            <div class="card shadow mb-4" style="background: linear-gradient(to right, rgba(42, 44, 53, 0.9), rgba(42, 44, 53, 0.7));">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between" style="background: rgba(0,0,0,0.2);">
                     <h6 class="m-0 font-weight-bold text-light"
                         data-en="RECENT MEMBERSHIP FREEZES" data-ar="التجميدات الحديثة للاشتراكات">
                         RECENT MEMBERSHIP FREEZES
@@ -136,8 +373,8 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered" width="100%" cellspacing="0">
-                            <thead class="table-dark">
+                        <table class="table" width="100%" cellspacing="0">
+                            <thead>
                                 <tr>
                                     <th data-en="MEMBER" data-ar="العضو">MEMBER</th>
                                     <th data-en="START DATE" data-ar="تاريخ البداية">START DATE</th>
@@ -146,13 +383,24 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var freeze in Model.RecentFreezes)
+                                @if (Model.RecentFreezes != null && Model.RecentFreezes.Any())
+                                {
+                                    @foreach (var freeze in Model.RecentFreezes)
+                                    {
+                                        <tr>
+                                            <td>@freeze.UserMemberShip?.UserName</td>
+                                            <td>@freeze.FreezeStartDate.ToString("d")</td>
+                                            <td>@freeze.FreezeEndDate.ToString("d")</td>
+                                            <td>@freeze.Reason</td>
+                                        </tr>
+                                    }
+                                }
+                                else
                                 {
                                     <tr>
-                                        <td>@freeze.UserMemberShip?.UserName</td>
-                                        <td>@freeze.FreezeStartDate.ToString("d")</td>
-                                        <td>@freeze.FreezeEndDate.ToString("d")</td>
-                                        <td>@freeze.Reason</td>
+                                        <td colspan="4" class="text-center" data-en="No recent freezes" data-ar="لا توجد تجميدات حديثة">
+                                            No recent freezes
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
@@ -162,57 +410,140 @@
             </div>
         </div>
 
-        <!-- Quick Actions (commented out but adding data attributes for future use) -->
-        @* <div class="col-xl-6 col-lg-6 animate-card delay-3">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-light" 
-                        data-en="QUICK ACTIONS" data-ar="إجراءات سريعة">
-                        QUICK ACTIONS
+        <!-- Membership Trends Chart (Replaced Gym Branch Performance) -->
+        <div class="col-xl-6 col-lg-6 animate-card delay-5">
+            <div class="card shadow mb-4" style="background: linear-gradient(to right, rgba(42, 44, 53, 0.9), rgba(42, 44, 53, 0.7));">
+                <div class="card-header py-3" style="background: rgba(0,0,0,0.2);">
+                    <h6 class="m-0 font-weight-bold text-light"
+                        data-en="MEMBERSHIP TRENDS" data-ar="اتجاهات العضوية">
+                        MEMBERSHIP TRENDS
                     </h6>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-4">
-                            <a asp-controller="TblUsers" asp-action="Create" class="btn btn-success btn-block">
-                                <i class="fas fa-user-plus"></i> 
-                                <span data-en="Add New Member" data-ar="إضافة عضو جديد">Add New Member</span>
-                            </a>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <a asp-controller="TblUserMemberShips" asp-action="Create" class="btn btn-info btn-block">
-                                <i class="fas fa-id-card"></i> 
-                                <span data-en="Create Membership" data-ar="إنشاء اشتراك">Create Membership</span>
-                            </a>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <a asp-controller="TblMemberShipFreezes" asp-action="Create" class="btn btn-warning btn-block">
-                                <i class="fas fa-pause"></i> 
-                                <span data-en="Freeze Membership" data-ar="تجميد الاشتراك">Freeze Membership</span>
-                            </a>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <a asp-controller="Reports" asp-action="Index" class="btn btn-primary btn-block">
-                                <i class="fas fa-chart-bar"></i> 
-                                <span data-en="View Reports" data-ar="عرض التقارير">View Reports</span>
-                            </a>
-                        </div>
+                    <div class="chart-container">
+                        <canvas id="membershipTrendsChart"></canvas>
                     </div>
                 </div>
             </div>
-        </div> *@
+        </div>
     </div>
 </div>
 
+<!-- Add Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <link href="~/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
-<script src="~/vendor/chart.js/Chart.min.js"></script>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-        // Language toggle functionality
-        // This will be handled by the layout page's JavaScript
-        // The data attributes will be processed by the setLanguage() function
+        // Animation script
+        document.addEventListener('DOMContentLoaded', function () {
+            const animatedElements = document.querySelectorAll('.animate-card');
+
+            animatedElements.forEach((element, index) => {
+                setTimeout(() => {
+                    element.classList.add('animated');
+                }, index * 100);
+            });
+
+            // Initialize membership trends chart
+            initMembershipTrendsChart();
+        });
+
+        function initMembershipTrendsChart() {
+            var ctx = document.getElementById('membershipTrendsChart').getContext('2d');
+
+            // Use real data from your model
+            var months = @Html.Raw(Json.Serialize(Model.MembershipTrendMonths ?? new List<string>()));
+            var membershipData = @Html.Raw(Json.Serialize(Model.MembershipTrendData ?? new List<int>()));
+
+            // If no data, show empty chart with message
+            if (!membershipData || membershipData.length === 0) {
+                membershipData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            }
+
+            var chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months && months.length > 0 ? months : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [
+                        {
+                            label: 'Memberships',
+                            backgroundColor: 'rgba(111, 66, 193, 0.1)', // Purple with transparency
+                            borderColor: '#6f42c1', // Bright purple
+                            pointRadius: 4,
+                            pointBackgroundColor: '#6f42c1',
+                            pointBorderColor: '#ffffff',
+                            pointHoverRadius: 6,
+                            pointHoverBackgroundColor: '#6f42c1',
+                            pointHoverBorderColor: '#ffffff',
+                            pointHitRadius: 10,
+                            pointBorderWidth: 2,
+                            data: membershipData,
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 3
+                        }
+                    ]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false,
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'white',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        y: {
+                            suggestedMin: 0,
+                            suggestedMax: 100, // Set maximum Y-axis value to 100
+                            ticks: {
+                                stepSize: 20, // Changed step size to 20 for better readability with max 100
+                                color: 'white',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgb(42, 44, 53)',
+                            bodyColor: 'white',
+                            titleColor: 'white',
+                            titleMarginBottom: 10,
+                            borderColor: '#6f42c1',
+                            borderWidth: 1,
+                            padding: 15,
+                            displayColors: false,
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    return tooltipItems[0].label + ' Memberships';
+                                },
+                                label: function(context) {
+                                    return 'Total: ' + context.parsed.y;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
     </script>
 }

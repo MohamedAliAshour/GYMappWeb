@@ -66,6 +66,15 @@
             background-color: #42A5F5;
         }
 
+    /* Toggle Active button styles */
+    .toggle-active-btn {
+        border: 1px solid #28a745;
+    }
+
+        .toggle-active-btn:hover {
+            background-color: #28a745;
+        }
+
     /* Icon visibility control */
     .icon-default {
         display: block;
@@ -152,6 +161,16 @@
             background: rgba(220, 53, 69, 0.9);
         }
 
+    .btn-modal-toggle {
+        background: rgba(40, 167, 69, 0.7);
+        border: 1px solid rgba(40, 167, 69, 0.9);
+        color: white;
+    }
+
+        .btn-modal-toggle:hover {
+            background: rgba(40, 167, 69, 0.9);
+        }
+
     /* Add this to your site.css */
     .btn-light {
         color: #000 !important; /* Black text */
@@ -224,6 +243,12 @@
         background-color: #198754;
         color: white;
     }
+
+    /* User status column */
+    .user-status {
+        text-align: center;
+        vertical-align: middle;
+    }
 </style>
 
 <div class="container py-4">
@@ -251,8 +276,9 @@
                         <thead class="table-dark">
                             <tr>
                                 <th data-en="User Name" data-ar="اسم المستخدم">User Name</th>
-                                <th data-en="Gym Branch ID" data-ar="معرف الفرع">Gym Branch ID</th>
+                                @* <th data-en="Gym Branch ID" data-ar="معرف الفرع">Gym Branch ID</th> *@
                                 <th data-en="Roles" data-ar="الأدوار">Roles</th>
+                                <th data-en="Status" data-ar="الحالة">Status</th>
                                 <th data-en="Actions" data-ar="الإجراءات">Actions</th>
                             </tr>
                         </thead>
@@ -261,33 +287,65 @@
                             {
                                 <tr id="user-row-@user.Id">
                                     <td>@user.UserName</td>
-                                    <td>@(user.GymBranch_ID?.ToString() ?? "N/A")</td>
+                                    @* <td>@(user.GymBranch_ID?.ToString() ?? "N/A")</td> *@
                                     <td>
                                         @foreach (var role in user.Roles)
                                         {
                                             <span class="role-badge @($"role-{role.ToLower()}")">@role</span>
                                         }
                                     </td>
+                                    <td class="user-status">
+                                        @if (user.IsActive)
+                                        {
+                                            <img src="~/images/Active.png" alt="Active" title="Active" style="width:24px; height:24px;" />
+                                        }
+                                        else
+                                        {
+                                            <img src="~/images/Inactive.png" alt="Inactive" title="Inactive" style="width:24px; height:24px;" />
+                                        }
+                                    </td>
                                     <td>
                                         <div class="action-buttons">
                                             @if (Model.IsDeveloper || Model.IsCaptain)
                                             {
-                                                <a asp-page="/Account/EditUser" asp-route-id="@user.Id" class="edit-btn icon-btn" title="Edit"
+                                             @*    <a asp-page="/Account/EditUser" asp-route-id="@user.Id" class="edit-btn icon-btn" title="Edit"
                                                    data-en-title="Edit" data-ar-title="تعديل">
                                                     <img src="~/images/edit-blue.png" alt="Edit" class="icon-default" />
                                                     <img src="~/images/edit-black.png" alt="Edit" class="icon-hover" />
-                                                </a>
+                                                </a> *@
                                             }
                                             @if ((Model.IsDeveloper && !user.Roles.Contains("Developer")) ||
                                            (Model.IsCaptain && user.Roles.Contains("User") && !user.Roles.Any(r => r == "Developer" || r == "Captain")))
                                             {
-                                                <button type="button" class="delete-btn icon-btn delete-user-btn"
+                                               @*  <button type="button" class="delete-btn icon-btn delete-user-btn"
                                                         title="Delete"
                                                         data-userid="@user.Id"
                                                         data-username="@user.UserName"
                                                         data-en-title="Delete" data-ar-title="حذف">
                                                     <img src="~/images/delete-red.png" alt="Delete" class="icon-default" />
                                                     <img src="~/images/delete-white.png" alt="Delete" class="icon-hover" />
+                                                </button> *@
+                                            }
+                                            @if ((Model.IsDeveloper && !user.Roles.Contains("Developer")) ||
+                                           (Model.IsCaptain && user.Roles.Contains("User") && !user.Roles.Any(r => r == "Developer" || r == "Captain")))
+                                            {
+                                                <button class="toggle-active-btn icon-btn toggle-user-btn"
+                                                        title="@(user.IsActive ? "Deactivate" : "Activate")"
+                                                        data-userid="@user.Id"
+                                                        data-isactive="@user.IsActive.ToString().ToLower()"
+                                                        data-username="@user.UserName"
+                                                        data-en-title="@(user.IsActive ? "Deactivate" : "Activate")"
+                                                        data-ar-title="@(user.IsActive ? "تعطيل" : "تفعيل")">
+                                                    @if (user.IsActive)
+                                                    {
+                                                        <img src="~/images/switch.png" alt="Deactivate" class="icon-default" />
+                                                        <img src="~/images/switch.png" alt="Deactivate" class="icon-hover" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <img src="~/images/switch.png" alt="Activate" class="icon-default" />
+                                                        <img src="~/images/switch.png" alt="Activate" class="icon-hover" />
+                                                    }
                                                 </button>
                                             }
                                         </div>
@@ -315,6 +373,24 @@
         <div class="modal-footer">
             <button class="btn-modal btn-modal-cancel" id="cancelDelete" data-en="Cancel" data-ar="إلغاء">Cancel</button>
             <button class="btn-modal btn-modal-confirm" id="confirmDelete" data-en="Delete" data-ar="حذف">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toggle Active Confirmation Modal -->
+<div class="modal-overlay" id="toggleActiveModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4 class="mb-0" id="toggleModalTitle" data-en="Confirm Action" data-ar="تأكيد الإجراء">Confirm Action</h4>
+        </div>
+        <div class="modal-body">
+            <p id="toggleModalMessage" data-en="Are you sure you want to" data-ar="هل أنت متأكد أنك تريد">
+                Are you sure you want to <strong id="actionType"></strong> the user <strong id="userNameToToggle"></strong>?
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal-cancel" id="cancelToggle" data-en="Cancel" data-ar="إلغاء">Cancel</button>
+            <button class="btn-modal btn-modal-toggle" id="confirmToggle" data-en="Confirm" data-ar="تأكيد">Confirm</button>
         </div>
     </div>
 </div>
@@ -369,13 +445,23 @@
                 });
             });
 
+            // Modal elements
             const deleteModal = document.getElementById('deleteModal');
+            const toggleActiveModal = document.getElementById('toggleActiveModal');
             const userNameToDelete = document.getElementById('userNameToDelete');
+            const userNameToToggle = document.getElementById('userNameToToggle');
+            const actionType = document.getElementById('actionType');
             const cancelDelete = document.getElementById('cancelDelete');
             const confirmDelete = document.getElementById('confirmDelete');
+            const cancelToggle = document.getElementById('cancelToggle');
+            const confirmToggle = document.getElementById('confirmToggle');
+            const toggleModalTitle = document.getElementById('toggleModalTitle');
+            const toggleModalMessage = document.getElementById('toggleModalMessage');
 
             let userIdToDelete = null;
             let userRowElement = null;
+            let userIdToToggle = null;
+            let isCurrentlyActive = null;
 
             // Set up delete buttons
             document.querySelectorAll('.delete-user-btn').forEach(button => {
@@ -390,14 +476,47 @@
                 });
             });
 
-            // Cancel button
+            // Set up toggle active buttons
+            document.querySelectorAll('.toggle-user-btn').forEach(button => {
+                button.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    userIdToToggle = this.getAttribute('data-userid');
+                    isCurrentlyActive = this.getAttribute('data-isactive') === 'true';
+                    const username = this.getAttribute('data-username');
+
+                    // Update modal content based on action
+                    const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                    const action = isCurrentlyActive ? 'deactivate' : 'activate';
+
+                    if (currentLanguage === 'ar') {
+                        toggleModalTitle.textContent = isCurrentlyActive ? 'تأكيد التعطيل' : 'تأكيد التفعيل';
+                        actionType.textContent = isCurrentlyActive ? 'تعطيل' : 'تفعيل';
+                        toggleModalMessage.innerHTML = `هل أنت متأكد أنك تريد <strong>${isCurrentlyActive ? 'تعطيل' : 'تفعيل'}</strong> المستخدم <strong>${username}</strong>؟`;
+                    } else {
+                        toggleModalTitle.textContent = isCurrentlyActive ? 'Confirm Deactivation' : 'Confirm Activation';
+                        actionType.textContent = isCurrentlyActive ? 'deactivate' : 'activate';
+                        toggleModalMessage.innerHTML = `Are you sure you want to <strong>${isCurrentlyActive ? 'deactivate' : 'activate'}</strong> the user <strong>${username}</strong>?`;
+                    }
+
+                    userNameToToggle.textContent = username;
+                    toggleActiveModal.style.display = 'flex';
+                });
+            });
+
+            // Cancel buttons
             cancelDelete.addEventListener('click', function () {
                 deleteModal.style.display = 'none';
                 userIdToDelete = null;
                 userRowElement = null;
             });
 
-            // Confirm button - AJAX delete
+            cancelToggle.addEventListener('click', function () {
+                toggleActiveModal.style.display = 'none';
+                userIdToToggle = null;
+                isCurrentlyActive = null;
+            });
+
+            // Confirm delete action
             confirmDelete.addEventListener('click', async function () {
                 if (!userIdToDelete) return;
 
@@ -421,13 +540,13 @@
                             userRowElement.remove();
                         }
                         // Show success message
-                        alert('User deleted successfully');
+                        showToast('User deleted successfully', 'success');
                     } else {
                         const errorText = await response.text();
                         throw new Error(errorText || 'Failed to delete user');
                     }
                 } catch (error) {
-                    alert('Error deleting user: ' + error.message);
+                    showToast('Error deleting user: ' + error.message, 'error');
                 } finally {
                     deleteModal.style.display = 'none';
                     confirmDelete.disabled = false;
@@ -437,14 +556,114 @@
                 }
             });
 
-            // Close modal when clicking outside
-            deleteModal.addEventListener('click', function (e) {
-                if (e.target === deleteModal) {
-                    deleteModal.style.display = 'none';
-                    userIdToDelete = null;
-                    userRowElement = null;
+            // Confirm toggle action
+            confirmToggle.addEventListener('click', async function () {
+                if (!userIdToToggle) return;
+
+                // Show loading state
+                const originalText = confirmToggle.textContent;
+                confirmToggle.disabled = true;
+                confirmToggle.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+
+                try {
+                    const response = await fetch(`?handler=ToggleUserStatus&id=${userIdToToggle}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value,
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        }
+                    });
+
+                    if (response.ok) {
+                        // Update UI immediately
+                        const toggleButton = document.querySelector(`.toggle-user-btn[data-userid="${userIdToToggle}"]`);
+                        const statusIcon = document.querySelector(`#user-row-${userIdToToggle} td.user-status img`);
+
+                        if (toggleButton && statusIcon) {
+                            const wasActive = toggleButton.getAttribute('data-isactive') === 'true';
+                            const nowActive = !wasActive;
+
+                            // Update button state
+                            toggleButton.setAttribute('data-isactive', nowActive.toString());
+                            toggleButton.setAttribute('title', nowActive ? 'Deactivate' : 'Activate');
+                            toggleButton.setAttribute('data-en-title', nowActive ? 'Deactivate' : 'Activate');
+                            toggleButton.setAttribute('data-ar-title', nowActive ? 'تعطيل' : 'تفعيل');
+
+                            // Update status icon
+                            statusIcon.src = nowActive ? '/images/Active.png' : '/images/Inactive.png';
+                            statusIcon.alt = nowActive ? 'Active' : 'Inactive';
+                            statusIcon.title = nowActive ? 'Active' : 'Inactive';
+                        }
+
+                        // Show success message
+                        const successMessage = wasActive ?
+                            (localStorage.getItem('preferredLanguage') === 'ar' ?
+                                'تم تعطيل المستخدم بنجاح' :
+                                'User deactivated successfully') :
+                            (localStorage.getItem('preferredLanguage') === 'ar' ?
+                                'تم تفعيل المستخدم بنجاح' :
+                                'User activated successfully');
+
+                        showToast(successMessage, 'success');
+                    } else {
+                        const errorText = await response.text();
+                        throw new Error(errorText || 'Failed to toggle user status');
+                    }
+                } catch (error) {
+
+                } finally {
+                    toggleActiveModal.style.display = 'none';
+                    confirmToggle.disabled = false;
+                    confirmToggle.textContent = originalText;
+                    userIdToToggle = null;
+                    isCurrentlyActive = null;
                 }
             });
+
+            // Close modals when clicking outside
+            [deleteModal, toggleActiveModal].forEach(modal => {
+                modal.addEventListener('click', function (e) {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                        userIdToDelete = null;
+                        userRowElement = null;
+                        userIdToToggle = null;
+                        isCurrentlyActive = null;
+                    }
+                });
+            });
+
+            // Toast notification function
+            function showToast(message, type = 'info') {
+                // Remove any existing toasts
+                const existingToasts = document.querySelectorAll('.custom-toast');
+                existingToasts.forEach(toast => toast.remove());
+
+                const toast = document.createElement('div');
+                toast.className = `custom-toast alert alert-${type} alert-dismissible fade show`;
+                toast.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 9999;
+                    min-width: 300px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                `;
+
+                toast.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+
+                document.body.appendChild(toast);
+
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 5000);
+            }
 
             // Initialize language-specific elements
             updateSearchPlaceholder();

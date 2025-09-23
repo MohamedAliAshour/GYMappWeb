@@ -6,13 +6,13 @@ namespace GYMappWeb.Interface
 {
     public interface ITblOffer
     {
-        Task<PagedResult<GetWithPaginationTblOfferViewModel>> GetAllOffersAsync(UserParameters userParameters);
-        Task<bool> AddOfferAsync(SaveTblOfferViewModel model, string createdById);
-        Task<bool> UpdateOfferAsync(SaveTblOfferViewModel model, int id, string updatedById);
-        Task<bool> ToggleOfferStatusAsync(int id);
-        Task<bool> DeleteOfferAsync(int id);
-        Task<bool> HasRelatedMembershipsAsync(int offerId);
-        Task<TblOffer> GetOfferByIdAsync(int id);
-        Task<SaveTblOfferViewModel> GetOfferDetailsByIdAsync(int id);
+        Task<PagedResult<GetWithPaginationTblOfferViewModel>> GetAllOffersAsync(UserParameters userParameters, int gymBranchId);
+        Task<bool> AddOfferAsync(SaveTblOfferViewModel model, string createdById, int gymBranchId);
+        Task<bool> UpdateOfferAsync(SaveTblOfferViewModel model, int id, string updatedById, int gymBranchId);
+        Task<bool> ToggleOfferStatusAsync(int id, int gymBranchId);
+        Task<bool> DeleteOfferAsync(int id, int gymBranchId);
+        Task<bool> HasRelatedMembershipsAsync(int offerId, int gymBranchId);
+        Task<TblOffer> GetOfferByIdAsync(int id, int gymBranchId);
+        Task<SaveTblOfferViewModel> GetOfferDetailsByIdAsync(int id, int gymBranchId);
     }
 }

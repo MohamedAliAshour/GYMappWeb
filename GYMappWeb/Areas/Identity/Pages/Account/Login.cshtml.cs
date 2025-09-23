@@ -15,22 +15,28 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using GYMappWeb.Models;
-using GYMappWeb.Areas.Identity.Data; // Add this using directive
+using GYMappWeb.Areas.Identity.Data;
+using Microsoft.EntityFrameworkCore; // Add this for Include()
 
 namespace GYMappWeb.Areas.Identity.Pages.Account
 {
     [AllowAnonymous]
     public class LoginModel : PageModel
     {
-        private readonly SignInManager<ApplicationUser> _signInManager; // Changed to ApplicationUser
-        private readonly UserManager<ApplicationUser> _userManager;     // Changed to ApplicationUser
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<LoginModel> _logger;
+        private readonly GYMappWebContext _context; // Add DbContext
 
-        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger, UserManager<ApplicationUser> userManager) // Changed to ApplicationUser
+        public LoginModel(SignInManager<ApplicationUser> signInManager,
+                         ILogger<LoginModel> logger,
+                         UserManager<ApplicationUser> userManager,
+                         GYMappWebContext context) // Inject DbContext
         {
             _signInManager = signInManager;
             _logger = logger;
             _userManager = userManager;
+            _context = context;
         }
 
         /// <summary>
@@ -114,35 +120,69 @@ namespace GYMappWeb.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
-                // This doesn't count login failures towards account lockout
-                // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(Input.UserName, Input.Password, Input.RememberMe, lockoutOnFailure: false);
-                if (result.Succeeded)
+                // First, find the user by username
+                var user = await _userManager.FindByNameAsync(Input.UserName);
+
+                if (user != null)
                 {
-                    // Retrieve the user to get their Id
-                    var user = await _userManager.FindByNameAsync(Input.UserName);
-                    if (user != null)
+                    // Check if user is active
+                    if (!user.IsActive)
                     {
-                        // Set user session
-                        HttpContext.Session.SetUserSession(user.Id, Input.UserName, user.GymBranchId?? 1);
+                        ModelState.AddModelError(string.Empty, "Your account is deactivated. Please contact administrator.");
+                        return Page();
                     }
 
-                    return LocalRedirect(returnUrl);
+                    // Check if user has a gym branch and if it's active
+                    if (user.GymBranchId.HasValue)
+                    {
+                        var gymBranch = await _context.GymBranches
+                            .FirstOrDefaultAsync(g => g.GymBranchId == user.GymBranchId.Value);
+
+                        if (gymBranch != null)
+                        {
+                            // Check if gym branch has expired (CreateDate + 1 year <= today)
+                            if (gymBranch.IsActive && gymBranch.CreateDate.AddYears(1).Date <= DateTime.Today)
+                            {
+                                // Update gym branch to inactive in database
+                                gymBranch.IsActive = false;
+                                await _context.SaveChangesAsync();
+
+                                ModelState.AddModelError(string.Empty, "Your gym branch subscription has expired. Please contact administrator.");
+                                return Page();
+                            }
+
+                            if (!gymBranch.IsActive)
+                            {
+                                ModelState.AddModelError(string.Empty, "Your gym branch is currently deactivated. Please contact administrator.");
+                                return Page();
+                            }
+                        }
+                    }
+
+                    // If both user and gym branch are active, proceed with password sign in
+                    var result = await _signInManager.PasswordSignInAsync(Input.UserName, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+
+                    if (result.Succeeded)
+                    {
+                        // Set user session
+                        HttpContext.Session.SetUserSession(user.Id, Input.UserName, user.GymBranchId ?? 1);
+                        _logger.LogInformation("User logged in.");
+                        return LocalRedirect(returnUrl);
+                    }
+                    if (result.RequiresTwoFactor)
+                    {
+                        return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
+                    }
+                    if (result.IsLockedOut)
+                    {
+                        _logger.LogWarning("User account locked out.");
+                        return RedirectToPage("./Lockout");
+                    }
                 }
-                if (result.RequiresTwoFactor)
-                {
-                    return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
-                }
-                if (result.IsLockedOut)
-                {
-                    _logger.LogWarning("User account locked out.");
-                    return RedirectToPage("./Lockout");
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                    return Page();
-                }
+
+                // If we reach here, either user doesn't exist or password is wrong
+                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                return Page();
             }
 
             // If we got this far, something failed, redisplay form

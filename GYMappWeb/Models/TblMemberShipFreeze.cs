@@ -19,5 +19,9 @@ public partial class TblMemberShipFreeze
     public string? Reason { get; set; }
     public string CreatedBy { get; set; }
     public DateTime CreatedDate { get; set; }
+    public int? GymBranchId { get; set; }
+
+    [ForeignKey("GymBranchId")]
+    public virtual GymBranch? GymBranch { get; set; }
     public virtual TblUserMemberShip UserMemberShip { get; set; } = null!;
 }

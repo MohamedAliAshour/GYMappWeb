@@ -6,9 +6,11 @@ using GYMappWeb.Helpers;
 using GYMappWeb.Interface;
 using GYMappWeb.Models;
 using GYMappWeb.Helper;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GYMappWeb.Controllers
 {
+    [Authorize(Roles = "Captain,Developer,User")]
     public class TblMembershipTypesController : Controller
     {
         private readonly ITblMembershipType _membershipTypeService;
@@ -20,7 +22,10 @@ namespace GYMappWeb.Controllers
 
         public async Task<IActionResult> Index(UserParameters userParameters)
         {
-            var membershipTypes = await _membershipTypeService.GetAllMembershipTypesAsync(userParameters);
+            var userSession = HttpContext.Session.GetUserSession();
+            var gymBranchId = userSession.GymBranchId ?? 1;
+
+            var membershipTypes = await _membershipTypeService.GetAllMembershipTypesAsync(userParameters, gymBranchId);
             return View(membershipTypes);
         }
 
@@ -38,7 +43,9 @@ namespace GYMappWeb.Controllers
                 try
                 {
                     var userSession = HttpContext.Session.GetUserSession();
-                    await _membershipTypeService.AddMembershipTypeAsync(model, userSession?.Id);
+                    var gymBranchId = userSession.GymBranchId ?? 1;
+
+                    await _membershipTypeService.AddMembershipTypeAsync(model, userSession?.Id, gymBranchId);
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
@@ -58,7 +65,10 @@ namespace GYMappWeb.Controllers
 
             try
             {
-                var viewModel = await _membershipTypeService.GetMembershipTypeDetailsAsync(id.Value);
+                var userSession = HttpContext.Session.GetUserSession();
+                var gymBranchId = userSession.GymBranchId ?? 1;
+
+                var viewModel = await _membershipTypeService.GetMembershipTypeDetailsAsync(id.Value, gymBranchId);
                 return View(viewModel);
             }
             catch
@@ -81,7 +91,9 @@ namespace GYMappWeb.Controllers
                 try
                 {
                     var userSession = HttpContext.Session.GetUserSession();
-                    await _membershipTypeService.UpdateMembershipTypeAsync(model, id, userSession?.Id);
+                    var gymBranchId = userSession.GymBranchId ?? 1;
+
+                    await _membershipTypeService.UpdateMembershipTypeAsync(model, id, userSession?.Id, gymBranchId);
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
@@ -97,7 +109,10 @@ namespace GYMappWeb.Controllers
         {
             try
             {
-                var hasMemberships = await _membershipTypeService.HasRelatedMembershipsAsync(id);
+                var userSession = HttpContext.Session.GetUserSession();
+                var gymBranchId = userSession.GymBranchId ?? 1;
+
+                var hasMemberships = await _membershipTypeService.HasRelatedMembershipsAsync(id, gymBranchId);
                 return Json(hasMemberships);
             }
             catch (Exception ex)
@@ -112,7 +127,10 @@ namespace GYMappWeb.Controllers
         {
             try
             {
-                await _membershipTypeService.DeleteMembershipTypeAsync(id);
+                var userSession = HttpContext.Session.GetUserSession();
+                var gymBranchId = userSession.GymBranchId ?? 1;
+
+                await _membershipTypeService.DeleteMembershipTypeAsync(id, gymBranchId);
                 return Ok();
             }
             catch (Exception ex)
@@ -127,7 +145,10 @@ namespace GYMappWeb.Controllers
         {
             try
             {
-                await _membershipTypeService.ToggleMembershipTypeStatusAsync(id);
+                var userSession = HttpContext.Session.GetUserSession();
+                var gymBranchId = userSession.GymBranchId ?? 1;
+
+                await _membershipTypeService.ToggleMembershipTypeStatusAsync(id, gymBranchId);
                 return Ok();
             }
             catch (Exception ex)
@@ -135,7 +156,5 @@ namespace GYMappWeb.Controllers
                 return StatusCode(500, $"Error toggling membership type status: {ex.Message}");
             }
         }
-
-
     }
 }

@@ -26,7 +26,10 @@ namespace GYMappWeb.Controllers
         // GET: Checkins
         public async Task<IActionResult> Index(UserParameters userParameters)
         {
-            var checkins = await _checkinService.GetWithPaginations(userParameters);
+            var userSession = HttpContext.Session.GetUserSession();
+            var gymBranchId = userSession.GymBranchId ?? 1;
+
+            var checkins = await _checkinService.GetWithPaginations(userParameters, gymBranchId);
             return View(checkins);
         }
 
@@ -38,7 +41,10 @@ namespace GYMappWeb.Controllers
                 return NotFound();
             }
 
-            var checkin = await _checkinService.GetCheckinDetailsAsync(id.Value);
+            var userSession = HttpContext.Session.GetUserSession();
+            var gymBranchId = userSession.GymBranchId ?? 1;
+
+            var checkin = await _checkinService.GetCheckinDetailsAsync(id.Value, gymBranchId);
             if (checkin == null)
             {
                 return NotFound();
@@ -50,7 +56,10 @@ namespace GYMappWeb.Controllers
         // GET: Checkins/Create
         public async Task<IActionResult> Create()
         {
-            await PopulateViewData();
+            var userSession = HttpContext.Session.GetUserSession();
+            var gymBranchId = userSession.GymBranchId ?? 1;
+
+            await PopulateViewData(gymBranchId);
             var model = new SaveCheckinViewModel
             {
                 CheckinDate = DateTime.Now
@@ -68,7 +77,9 @@ namespace GYMappWeb.Controllers
                 try
                 {
                     var userSession = HttpContext.Session.GetUserSession();
-                    await _checkinService.Add(checkin, userSession?.Id, userSession.GymBranchId ?? 1);
+                    var gymBranchId = userSession.GymBranchId ?? 1;
+
+                    await _checkinService.Add(checkin, userSession?.Id, gymBranchId);
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
@@ -77,7 +88,10 @@ namespace GYMappWeb.Controllers
                 }
             }
 
-            await PopulateViewData();
+            var userSessionForView = HttpContext.Session.GetUserSession();
+            var gymBranchIdForView = userSessionForView.GymBranchId ?? 1;
+
+            await PopulateViewData(gymBranchIdForView);
             return View(checkin);
         }
 
@@ -86,8 +100,8 @@ namespace GYMappWeb.Controllers
         {
             try
             {
-                // Get gym branch ID from current user context or other method
-                int gymBranchId = GetCurrentGymBranchId(); // Implement this method
+                var userSession = HttpContext.Session.GetUserSession();
+                var gymBranchId = userSession.GymBranchId ?? 1;
 
                 var result = await _checkinService.CreateCheckinWithInvitationsAsync(
                     model, InvitedUsers, User.FindFirstValue(ClaimTypes.NameIdentifier), gymBranchId);
@@ -107,33 +121,15 @@ namespace GYMappWeb.Controllers
             }
         }
 
-        private int GetCurrentGymBranchId()
-        {
-            // Use the same session approach as your Create method
-            var userSession = HttpContext.Session.GetUserSession();
-
-            if (userSession?.GymBranchId != null)
-            {
-                return userSession.GymBranchId.Value;
-            }
-
-            // Fallback: If session doesn't have gym branch ID, try to get it from user claims
-            var gymBranchIdClaim = User.FindFirst("GymBranchId");
-            if (gymBranchIdClaim != null && int.TryParse(gymBranchIdClaim.Value, out int gymBranchId))
-            {
-                return gymBranchId;
-            }
-
-            // Final fallback: Return a default value
-            return 1; // Default gym branch ID - change this to your actual default
-        }
-
         [HttpGet]
         public async Task<IActionResult> CheckPhoneExists(string phone)
         {
             try
             {
-                var exists = await _checkinService.CheckPhoneExistsAsync(phone);
+                var userSession = HttpContext.Session.GetUserSession();
+                var gymBranchId = userSession.GymBranchId ?? 1;
+
+                var exists = await _checkinService.CheckPhoneExistsAsync(phone, gymBranchId);
                 return Ok(exists);
             }
             catch (Exception ex)
@@ -150,13 +146,16 @@ namespace GYMappWeb.Controllers
                 return NotFound();
             }
 
-            var checkin = _checkinService.GetDetailsById(id.Value);
+            var userSession = HttpContext.Session.GetUserSession();
+            var gymBranchId = userSession.GymBranchId ?? 1;
+
+            var checkin = _checkinService.GetDetailsById(id.Value, gymBranchId);
             if (checkin == null)
             {
                 return NotFound();
             }
 
-            await PopulateViewData();
+            await PopulateViewData(gymBranchId);
             var saveViewModel = new SaveCheckinViewModel
             {
                 CheckinId = checkin.CheckinId,
@@ -169,43 +168,15 @@ namespace GYMappWeb.Controllers
             return View(saveViewModel);
         }
 
-        // POST: Checkins/Edit/5
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Edit(int id, SaveCheckinViewModel checkinViewModel)
-        //{
-        //    if (id != checkinViewModel.CheckinId)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    if (ModelState.IsValid)
-        //    {
-        //        try
-        //        {
-        //            var userSession = HttpContext.Session.GetUserSession();
-        //            await _checkinService.Update(checkinViewModel, id, userSession?.Id);
-        //            return RedirectToAction(nameof(Index));
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            ModelState.AddModelError(string.Empty, ex.Message);
-        //        }
-        //    }
-
-        //    await PopulateViewData();
-        //    return View(checkinViewModel);
-        //}
-
-        // Add these methods to CheckinsController.cs
-
-
         [HttpGet]
         public async Task<IActionResult> IsUserCheckedIn(int userId)
         {
             try
             {
-                var isCheckedIn = await _checkinService.IsUserCheckedInAsync(userId);
+                var userSession = HttpContext.Session.GetUserSession();
+                var gymBranchId = userSession.GymBranchId ?? 1;
+
+                var isCheckedIn = await _checkinService.IsUserCheckedInAsync(userId, gymBranchId);
                 return Ok(isCheckedIn);
             }
             catch (Exception ex)
@@ -219,7 +190,10 @@ namespace GYMappWeb.Controllers
         {
             try
             {
-                var user = await _checkinService.SearchUserByCodeAsync(code);
+                var userSession = HttpContext.Session.GetUserSession();
+                var gymBranchId = userSession.GymBranchId ?? 1;
+
+                var user = await _checkinService.SearchUserByCodeAsync(code, gymBranchId);
                 if (user == null)
                 {
                     return NotFound(new { message = "User not found" });
@@ -238,7 +212,10 @@ namespace GYMappWeb.Controllers
         {
             try
             {
-                var user = await _checkinService.SearchUserByPhoneAsync(phone);
+                var userSession = HttpContext.Session.GetUserSession();
+                var gymBranchId = userSession.GymBranchId ?? 1;
+
+                var user = await _checkinService.SearchUserByPhoneAsync(phone, gymBranchId);
                 if (user == null)
                 {
                     return NotFound(new { message = "User not found" });
@@ -258,7 +235,10 @@ namespace GYMappWeb.Controllers
         {
             try
             {
-                await _checkinService.Delete(id);
+                var userSession = HttpContext.Session.GetUserSession();
+                var gymBranchId = userSession.GymBranchId ?? 1;
+
+                await _checkinService.Delete(id, gymBranchId);
                 return Ok();
             }
             catch (Exception ex)
@@ -267,10 +247,10 @@ namespace GYMappWeb.Controllers
             }
         }
 
-        private async Task PopulateViewData()
+        private async Task PopulateViewData(int gymBranchId)
         {
             ViewData["GymBranchId"] = new SelectList(await _checkinService.GetGymBranchesSelectList(), "Value", "Text");
-            ViewData["UserId"] = new SelectList(await _checkinService.GetUsersSelectList(), "Value", "Text");
+            ViewData["UserId"] = new SelectList(await _checkinService.GetUsersSelectList(gymBranchId), "Value", "Text");
         }
     }
 }

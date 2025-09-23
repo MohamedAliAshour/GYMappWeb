@@ -116,6 +116,8 @@ namespace GYMappWeb.Areas.Identity.Pages.Account
                 await _userStore.SetUserNameAsync(user, Input.UserName, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.UserName, CancellationToken.None);
 
+                user.IsActive = true;
+
                 // Set GymBranchId based on user role
                 if (User.IsInRole("Developer"))
                 {

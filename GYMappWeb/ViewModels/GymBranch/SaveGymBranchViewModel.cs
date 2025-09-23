@@ -13,7 +13,8 @@ namespace GYMappWeb.ViewModels.GymBranch
         [Required]
         [MaxLength(200)]
         public string Location { get; set; }
-
+        // In GymBranch model
+        public bool IsActive { get; set; }
         public DateTime? CreateDate { get; set; }
 
         public string? CreatedBy { get; set; }

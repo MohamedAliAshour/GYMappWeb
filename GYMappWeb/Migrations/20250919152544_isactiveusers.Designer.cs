@@ -4,6 +4,7 @@ using GYMappWeb.Areas.Identity.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GYMappWeb.Migrations
 {
     [DbContext(typeof(GYMappWebContext))]
-    partial class GYMappWebContextModelSnapshot : ModelSnapshot
+    [Migration("20250919152544_isactiveusers")]
+    partial class isactiveusers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -359,6 +362,12 @@ namespace GYMappWeb.Migrations
                         .HasName("PK_Users");
 
                     b.HasIndex("GymBranchId");
+
+                    b.HasIndex(new[] { "UserCode" }, "IX_tbl_UserCode")
+                        .IsUnique();
+
+                    b.HasIndex(new[] { "UserName" }, "IX_tbl_UserName")
+                        .IsUnique();
 
                     b.ToTable("tbl_Users", (string)null);
                 });

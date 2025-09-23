@@ -14,6 +14,7 @@ namespace GYMappWeb.ViewModels.TblOffer
         public bool IsActive { get; set; }
         public string? CreatedByUserName { get; set; }
         public DateTime CreatedDate { get; set; }
+        public int GymBranchId { get; set; }
         public virtual TblMembershipType? MemberShipTypes { get; set; } = null!;
         public virtual ICollection<TblUserMemberShipViewModel>? TblUserMemberShips { get; set; } = new List<TblUserMemberShipViewModel>();
     }

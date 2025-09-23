@@ -138,7 +138,6 @@
         background: rgba(220, 53, 69, 0.7);
         border: 1px solid rgba(220, 53, 69, 0.9);
         color: white;
-        data-en ="Delete" data-ar="حذف"
     }
 
         .btn-modal-confirm:hover {
@@ -222,14 +221,14 @@
                             <th data-en="Actions" data-ar="الإجراءات">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="freezesTableBody">
                         @foreach (var item in Model.Items)
                         {
                             var startDate = new DateTime(item.FreezeStartDate.Year, item.FreezeStartDate.Month, item.FreezeStartDate.Day);
                             var endDate = new DateTime(item.FreezeEndDate.Year, item.FreezeEndDate.Month, item.FreezeEndDate.Day);
                             var durationDays = (endDate - startDate).Days + 1;
 
-                            <tr id="freeze-row-@item.MemberShipFreezeId">
+                            <tr id="freeze-row-@item.MemberShipFreezeId" class="freeze-row">
                                 <td>@Html.DisplayFor(modelItem => item.UserMemberShip.User.UserName)</td>
                                 <td>@item.FreezeStartDate.ToString("yyyy-MM-dd")</td>
                                 <td>@item.FreezeEndDate.ToString("yyyy-MM-dd")</td>
@@ -330,6 +329,13 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Store all freeze rows for client-side filtering
+            const allFreezeRows = Array.from(document.querySelectorAll('.freeze-row'));
+            const tableBody = document.getElementById('freezesTableBody');
+            const searchInput = document.getElementById('searchInput');
+
+            let searchTimer;
+
             // Update search input placeholder based on language
             function updateSearchPlaceholder() {
                 const currentLanguage = localStorage.getItem('preferredLanguage') || 'en';
@@ -362,19 +368,33 @@
                 });
             }
 
-            // Automatic search functionality
-            const searchInput = document.getElementById('searchInput');
-            let searchTimer;
+            // Client-side search functionality
+            function performSearch() {
+                const searchTerm = searchInput.value.toLowerCase().trim();
 
+                if (searchTerm === '') {
+                    // Show all rows
+                    allFreezeRows.forEach(row => {
+                        row.style.display = '';
+                    });
+                    return;
+                }
+
+                // Filter rows based on search term
+                allFreezeRows.forEach(row => {
+                    const rowText = row.textContent.toLowerCase();
+                    if (rowText.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            }
+
+            // Search input event listener
             searchInput.addEventListener('input', function() {
                 clearTimeout(searchTimer);
-                searchTimer = setTimeout(function() {
-                    const searchTerm = searchInput.value;
-                    const url = new URL(window.location.href);
-                    url.searchParams.set('searchTerm', searchTerm);
-                    url.searchParams.set('pageNumber', '1'); // Reset to first page when searching
-                    window.location.href = url.toString();
-                }, 500); // 500ms delay after typing stops
+                searchTimer = setTimeout(performSearch, 500); // 500ms delay after typing stops
             });
 
             const deleteModal = document.getElementById('deleteModal');

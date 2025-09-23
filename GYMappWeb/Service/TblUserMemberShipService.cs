@@ -24,7 +24,7 @@ namespace GYMappWeb.Service
             _context = context;
         }
 
-        public async Task<PagedResult<GetWithPaginationTblUserMemberShipViewModel>> GetAllUserMembershipsAsync(UserParameters userParameters)
+        public async Task<PagedResult<GetWithPaginationTblUserMemberShipViewModel>> GetAllUserMembershipsAsync(UserParameters userParameters, int gymBranchId)
         {
             var userNames = await _context.Users
                 .Select(u => new { u.Id, u.UserName })
@@ -34,6 +34,7 @@ namespace GYMappWeb.Service
                 .Include(m => m.User)
                 .Include(m => m.MemberShipTypes)
                 .Include(m => m.Off)
+                .Where(m => m.User.GymBranchId == gymBranchId) // Filter by gym branch
                 .AsQueryable();
 
             // Apply filtering
@@ -121,12 +122,12 @@ namespace GYMappWeb.Service
                 userParameters.PageSize);
         }
 
-        public async Task UpdateExpiredMembershipsAsync()
+        public async Task UpdateExpiredMembershipsAsync(int gymBranchId)
         {
             var today = DateOnly.FromDateTime(DateTime.Today);
             var expiredMemberships = await _context.TblUserMemberShips
                 .Include(m => m.User)
-                .Where(m => m.EndDate <= today && m.IsActive)
+                .Where(m => m.EndDate <= today && m.IsActive && m.User.GymBranchId == gymBranchId) // Filter by gym branch
                 .ToListAsync();
 
             foreach (var membership in expiredMemberships)
@@ -147,16 +148,19 @@ namespace GYMappWeb.Service
             await _context.SaveChangesAsync();
         }
 
-        public async Task<bool> AddMembershipAsync(SaveTblUserMemberShipViewModel model, string createdById)
+        public async Task<bool> AddMembershipAsync(SaveTblUserMemberShipViewModel model, string createdById, int gymBranchId)
         {
+            // Verify user belongs to the same gym branch
+            var user = await _context.TblUsers
+                .FirstOrDefaultAsync(u => u.UserId == model.UserId && u.GymBranchId == gymBranchId);
+
+            if (user == null) throw new Exception("User not found or doesn't belong to this gym branch");
+
             if (await _context.TblUserMemberShips
                 .AnyAsync(m => m.UserId == model.UserId && m.IsActive))
             {
                 throw new Exception("User already has an active membership");
             }
-
-            var user = await _context.TblUsers.FindAsync(model.UserId);
-            if (user == null) throw new Exception("User not found");
 
             user.IsActive = true;
             _context.Update(user);
@@ -165,16 +169,19 @@ namespace GYMappWeb.Service
             entity.CreatedBy = createdById;
             entity.CreatedDate = DateTime.Today;
             entity.IsActive = true;
-
+            entity.GymBranchId = gymBranchId;
 
             _context.Add(entity);
             await _context.SaveChangesAsync();
             return true;
         }
 
-        public async Task<bool> DeleteMembershipAsync(int id)
+        public async Task<bool> DeleteMembershipAsync(int id, int gymBranchId)
         {
-            var membership = await _context.TblUserMemberShips.FindAsync(id);
+            var membership = await _context.TblUserMemberShips
+                .Include(m => m.User)
+                .FirstOrDefaultAsync(m => m.UserMemberShipId == id && m.User.GymBranchId == gymBranchId);
+
             if (membership == null) return false;
 
             _context.Remove(membership);
@@ -182,10 +189,13 @@ namespace GYMappWeb.Service
             return true;
         }
 
-        public async Task<bool> DeleteFreezesAsync(int userMemberShipId)
+        public async Task<bool> DeleteFreezesAsync(int userMemberShipId, int gymBranchId)
         {
             var freezes = await _context.TblMemberShipFreezes
-                .Where(f => f.UserMemberShipId == userMemberShipId)
+                .Include(f => f.UserMemberShip)
+                .ThenInclude(m => m.User)
+                .Where(f => f.UserMemberShipId == userMemberShipId &&
+                           f.UserMemberShip.User.GymBranchId == gymBranchId)
                 .ToListAsync();
 
             _context.RemoveRange(freezes);
@@ -193,16 +203,18 @@ namespace GYMappWeb.Service
             return true;
         }
 
-        public async Task<bool> HasActiveMembershipAsync(int userId)
+        public async Task<bool> HasActiveMembershipAsync(int userId, int gymBranchId)
         {
             return await _context.TblUserMemberShips
-                .AnyAsync(m => m.UserId == userId && m.IsActive);
+                .Include(m => m.User)
+                .AnyAsync(m => m.UserId == userId && m.IsActive && m.User.GymBranchId == gymBranchId);
         }
 
-        public async Task<TblUserMemberShip> GetMembershipByIdAsync(int id)
+        public async Task<TblUserMemberShip> GetMembershipByIdAsync(int id, int gymBranchId)
         {
-            return await _context.TblUserMemberShips.FindAsync(id);
+            return await _context.TblUserMemberShips
+                .Include(m => m.User)
+                .FirstOrDefaultAsync(m => m.UserMemberShipId == id && m.User.GymBranchId == gymBranchId);
         }
-
     }
 }

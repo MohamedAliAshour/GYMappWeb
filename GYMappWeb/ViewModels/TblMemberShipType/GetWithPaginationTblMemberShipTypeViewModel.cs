@@ -1,5 +1,6 @@
 ﻿using GYMappWeb.ViewModels.TblOffer;
 using GYMappWeb.ViewModels.TblUserMemberShip;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GYMappWeb.ViewModels.TblMemberShipType
 {
@@ -18,6 +19,7 @@ namespace GYMappWeb.ViewModels.TblMemberShipType
         public string? CreatedBy { get; set; }
         public string? CreatedByUserName { get; set; }
         public DateTime CreatedDate { get; set; }
+        public int? GymBranchId { get; set; }
         public virtual ICollection<TblOfferViewModel> TblOffers { get; set; } = new List<TblOfferViewModel>();
         public virtual ICollection<TblUserMemberShipViewModel> TblUserMemberShips { get; set; } = new List<TblUserMemberShipViewModel>();
     }

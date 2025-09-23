@@ -7,12 +7,12 @@ namespace GYMappWeb.Interface
 {
     public interface ITblUserMemberShip
     {
-        Task<PagedResult<GetWithPaginationTblUserMemberShipViewModel>> GetAllUserMembershipsAsync(UserParameters userParameters);
-        Task UpdateExpiredMembershipsAsync();
-        Task<bool> AddMembershipAsync(SaveTblUserMemberShipViewModel model, string createdById);
-        Task<bool> DeleteMembershipAsync(int id);
-        Task<bool> DeleteFreezesAsync(int userMemberShipId);
-        Task<bool> HasActiveMembershipAsync(int userId);
-        Task<TblUserMemberShip> GetMembershipByIdAsync(int id);
+        Task<PagedResult<GetWithPaginationTblUserMemberShipViewModel>> GetAllUserMembershipsAsync(UserParameters userParameters, int gymBranchId);
+        Task UpdateExpiredMembershipsAsync(int gymBranchId);
+        Task<bool> AddMembershipAsync(SaveTblUserMemberShipViewModel model, string createdById, int gymBranchId);
+        Task<bool> DeleteMembershipAsync(int id, int gymBranchId);
+        Task<bool> DeleteFreezesAsync(int userMemberShipId, int gymBranchId);
+        Task<bool> HasActiveMembershipAsync(int userId, int gymBranchId);
+        Task<TblUserMemberShip> GetMembershipByIdAsync(int id, int gymBranchId);
     }
 }

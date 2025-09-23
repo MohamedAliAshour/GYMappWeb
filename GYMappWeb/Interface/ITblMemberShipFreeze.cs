@@ -6,12 +6,12 @@ namespace GYMappWeb.Interface
 {
     public interface ITblMemberShipFreeze
     {
-        Task<PagedResult<GetWithPaginationTblMemberShipFreezeViewModel>> GetAllFreezesAsync(UserParameters userParameters);
-        Task<List<object>> GetFreezeRecordsAsync(int userMembershipId);
-        Task<object> GetMembershipFreezeDetailsAsync(int userMembershipId);
-        Task<bool> HasDateOverlapAsync(int userMembershipId, DateTime startDate, DateTime endDate);
-        Task<bool> AddFreezeAsync(SaveTblMemberShipFreezeViewModel model, string createdById);
-        Task<bool> DeleteFreezeAsync(int id);
-        Task<List<object>> GetActiveMembershipsForDropdownAsync();
+        Task<PagedResult<GetWithPaginationTblMemberShipFreezeViewModel>> GetAllFreezesAsync(UserParameters userParameters, int gymBranchId);
+        Task<List<object>> GetFreezeRecordsAsync(int userMembershipId, int gymBranchId);
+        Task<object> GetMembershipFreezeDetailsAsync(int userMembershipId, int gymBranchId);
+        Task<bool> HasDateOverlapAsync(int userMembershipId, DateTime startDate, DateTime endDate, int gymBranchId);
+        Task<bool> AddFreezeAsync(SaveTblMemberShipFreezeViewModel model, string createdById, int gymBranchId);
+        Task<bool> DeleteFreezeAsync(int id, int gymBranchId);
+        Task<List<object>> GetActiveMembershipsForDropdownAsync(int gymBranchId);
     }
 }

@@ -8,20 +8,18 @@ namespace GYMappWeb.Interface
 {
     public interface ICheckin
     {
-        Task<List<GetCheckinViewModel>> GetAllCheckinsAsync();
-        Task<PagedResult<GetCheckinViewModel>> GetWithPaginations(UserParameters userParam);
-        Task<bool> Add(SaveCheckinViewModel model, string createdById,int GymBranchId);
-        Task<bool> Delete(int id);
-        SaveCheckinViewModel GetDetailsById(int id);
-        Task<GetCheckinViewModel> GetCheckinDetailsAsync(int id);
-        Task<List<SelectListItem>> GetUsersSelectList();
+        Task<List<GetCheckinViewModel>> GetAllCheckinsAsync(int gymBranchId);
+        Task<PagedResult<GetCheckinViewModel>> GetWithPaginations(UserParameters userParam, int gymBranchId);
+        Task<bool> Add(SaveCheckinViewModel model, string createdById, int gymBranchId);
+        Task<bool> Delete(int id, int gymBranchId);
+        SaveCheckinViewModel GetDetailsById(int id, int gymBranchId);
+        Task<GetCheckinViewModel> GetCheckinDetailsAsync(int id, int gymBranchId);
+        Task<List<SelectListItem>> GetUsersSelectList(int gymBranchId);
         Task<List<SelectListItem>> GetGymBranchesSelectList();
-        Task<bool> CheckPhoneExistsAsync(string phone);
+        Task<bool> CheckPhoneExistsAsync(string phone, int gymBranchId);
         Task<bool> CreateCheckinWithInvitationsAsync(SaveCheckinViewModel model, List<InvitedUserRequest> invitedUsers, string createdById, int gymBranchId);
-        Task<TblUserViewModel> SearchUserByCodeAsync(int code);
-
-        Task<TblUserViewModel> SearchUserByPhoneAsync(string phone);
-
-        Task<bool> IsUserCheckedInAsync(int userId);
+        Task<TblUserViewModel> SearchUserByCodeAsync(int code, int gymBranchId);
+        Task<TblUserViewModel> SearchUserByPhoneAsync(string phone, int gymBranchId);
+        Task<bool> IsUserCheckedInAsync(int userId, int gymBranchId);
     }
 }

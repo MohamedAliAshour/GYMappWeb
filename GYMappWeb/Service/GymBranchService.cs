@@ -5,6 +5,7 @@ using GYMappWeb.Interface;
 using GYMappWeb.Models;
 using GYMappWeb.ViewModels.GymBranch;
 using Microsoft.EntityFrameworkCore;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace GYMappWeb.Service
 {
@@ -32,6 +33,7 @@ namespace GYMappWeb.Service
                     Location = g.Location,
                     CreateDate = g.CreateDate,
                     CreatedBy = g.CreatedBy,
+                    IsActive = g.IsActive,
                     CreatedByUserName = g.CreatedBy != null && userNames.ContainsKey(g.CreatedBy)
                         ? userNames[g.CreatedBy]
                         : "Unknown"
@@ -94,6 +96,7 @@ namespace GYMappWeb.Service
                     Location = g.Location,
                     CreateDate = g.CreateDate,
                     CreatedBy = g.CreatedBy,
+                    IsActive = g.IsActive,
                     CreatedByUserName = g.CreatedBy != null && userNames.ContainsKey(g.CreatedBy)
                         ? userNames[g.CreatedBy]
                         : "Unknown"
@@ -201,6 +204,29 @@ namespace GYMappWeb.Service
             var gymBranch = _context.GymBranches.Find(id);
             return ObjectMapper.Mapper.Map<SaveGymBranchViewModel>(gymBranch);
         }
+
+        // In IGymBranch interface
+
+
+        // In GymBranchService implementation
+        public async Task<bool> ToggleActive(int id)
+        {
+            var gymBranch = await _context.GymBranches.FindAsync(id);
+            if (gymBranch == null)
+            {
+                throw new Exception("Gym Branch not found");
+            }
+
+            // Toggle the IsActive status
+            gymBranch.IsActive = !gymBranch.IsActive;
+
+            _context.Update(gymBranch);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+     
 
         public async Task<GetGymBranchViewModel> GetGymBranchDetailsAsync(int id)
         {

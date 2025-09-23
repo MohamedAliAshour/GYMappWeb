@@ -23,7 +23,7 @@ namespace GYMappWeb.Service
             _context = context;
         }
 
-        public async Task<PagedResult<GetWithPaginationTblMemberShipFreezeViewModel>> GetAllFreezesAsync(UserParameters userParameters)
+        public async Task<PagedResult<GetWithPaginationTblMemberShipFreezeViewModel>> GetAllFreezesAsync(UserParameters userParameters, int gymBranchId)
         {
             var userNames = await _context.Users
                 .Select(u => new { u.Id, u.UserName })
@@ -32,6 +32,7 @@ namespace GYMappWeb.Service
             var query = _context.TblMemberShipFreezes
                 .Include(f => f.UserMemberShip)
                 .ThenInclude(um => um.User)
+                .Where(f => f.UserMemberShip.User.GymBranchId == gymBranchId) // Filter by gym branch
                 .AsQueryable();
 
             // Apply filtering
@@ -102,10 +103,13 @@ namespace GYMappWeb.Service
                 userParameters.PageSize);
         }
 
-        public async Task<List<object>> GetFreezeRecordsAsync(int userMembershipId)
+        public async Task<List<object>> GetFreezeRecordsAsync(int userMembershipId, int gymBranchId)
         {
             return await _context.TblMemberShipFreezes
-                .Where(f => f.UserMemberShipId == userMembershipId)
+                .Include(f => f.UserMemberShip)
+                .ThenInclude(um => um.User)
+                .Where(f => f.UserMemberShipId == userMembershipId &&
+                          f.UserMemberShip.User.GymBranchId == gymBranchId) // Filter by gym branch
                 .OrderByDescending(f => f.FreezeStartDate)
                 .Select(f => new {
                     freezeStartDate = f.FreezeStartDate.ToString("yyyy-MM-dd"),
@@ -115,11 +119,13 @@ namespace GYMappWeb.Service
                 .ToListAsync<object>();
         }
 
-        public async Task<object> GetMembershipFreezeDetailsAsync(int userMembershipId)
+        public async Task<object> GetMembershipFreezeDetailsAsync(int userMembershipId, int gymBranchId)
         {
             var membership = await _context.TblUserMemberShips
                 .Include(um => um.MemberShipTypes)
-                .FirstOrDefaultAsync(um => um.UserMemberShipId == userMembershipId);
+                .Include(um => um.User)
+                .FirstOrDefaultAsync(um => um.UserMemberShipId == userMembershipId &&
+                                         um.User.GymBranchId == gymBranchId); // Filter by gym branch
 
             if (membership == null)
             {
@@ -154,30 +160,34 @@ namespace GYMappWeb.Service
             };
         }
 
-        public async Task<bool> AddFreezeAsync(SaveTblMemberShipFreezeViewModel model, string createdById)
+        public async Task<bool> AddFreezeAsync(SaveTblMemberShipFreezeViewModel model, string createdById, int gymBranchId)
         {
+            // Verify the membership belongs to the same gym branch
+            var membership = await _context.TblUserMemberShips
+                .Include(um => um.User)
+                .FirstOrDefaultAsync(m => m.UserMemberShipId == model.UserMemberShipId &&
+                                        m.User.GymBranchId == gymBranchId);
+
+            if (membership == null)
+            {
+                throw new Exception("Membership not found or doesn't belong to this gym branch");
+            }
+
             // Convert DateOnly to DateTime for calculation
             var startDate = new DateTime(model.FreezeStartDate.Year, model.FreezeStartDate.Month, model.FreezeStartDate.Day);
             var endDate = new DateTime(model.FreezeEndDate.Year, model.FreezeEndDate.Month, model.FreezeEndDate.Day);
             var freezeDuration = (endDate - startDate).Days + 1; // Add 1 to include both days
 
-            // Get the associated membership
-            var membership = await _context.TblUserMemberShips
-                .FirstOrDefaultAsync(m => m.UserMemberShipId == model.UserMemberShipId);
+            // Update the membership's total freeze days
+            membership.TotalFreezedDays = (membership.TotalFreezedDays ?? 0) + freezeDuration;
 
-            if (membership != null)
-            {
-                // Convert membership end date if it's DateOnly
-                var membershipEndDate = new DateTime(membership.EndDate.Year, membership.EndDate.Month, membership.EndDate.Day);
+            // Convert membership end date if it's DateOnly
+            var membershipEndDate = new DateTime(membership.EndDate.Year, membership.EndDate.Month, membership.EndDate.Day);
 
-                // Update the membership's total freeze days
-                membership.TotalFreezedDays = (membership.TotalFreezedDays ?? 0) + freezeDuration;
+            // Extend the membership end date by the freeze duration
+            membership.EndDate = DateOnly.FromDateTime(membershipEndDate.AddDays(freezeDuration));
 
-                // Extend the membership end date by the freeze duration
-                membership.EndDate = DateOnly.FromDateTime(membershipEndDate.AddDays(freezeDuration));
-
-                _context.Update(membership);
-            }
+            _context.Update(membership);
 
             // Create the freeze record
             model.CreatedBy = createdById;
@@ -190,15 +200,17 @@ namespace GYMappWeb.Service
             return true;
         }
 
-        public async Task<bool> DeleteFreezeAsync(int id)
+        public async Task<bool> DeleteFreezeAsync(int id, int gymBranchId)
         {
             var freeze = await _context.TblMemberShipFreezes
                 .Include(f => f.UserMemberShip)
-                .FirstOrDefaultAsync(f => f.MemberShipFreezeId == id);
+                .ThenInclude(um => um.User)
+                .FirstOrDefaultAsync(f => f.MemberShipFreezeId == id &&
+                                       f.UserMemberShip.User.GymBranchId == gymBranchId); // Filter by gym branch
 
             if (freeze == null)
             {
-                throw new Exception("Freeze record not found");
+                throw new Exception("Freeze record not found or doesn't belong to this gym branch");
             }
 
             // Calculate the freeze duration in days
@@ -223,21 +235,33 @@ namespace GYMappWeb.Service
             return true;
         }
 
-        public async Task<List<object>> GetActiveMembershipsForDropdownAsync()
+        public async Task<List<object>> GetActiveMembershipsForDropdownAsync(int gymBranchId)
         {
             return await _context.TblUserMemberShips
                 .Include(um => um.User)
                 .Include(um => um.MemberShipTypes)
-                .Where(um => um.IsActive == true)
+                .Where(um => um.IsActive == true && um.User.GymBranchId == gymBranchId)
                 .Select(um => new {
                     UserMemberShipId = um.UserMemberShipId,
-                    UserName = $"{um.User.UserName} ({um.MemberShipTypes.Name})"
+                    UserName = $"{um.User.UserName} ({um.User.UserCode})",
+                    UserCode = um.User.UserCode
                 })
                 .ToListAsync<object>();
         }
 
-        public async Task<bool> HasDateOverlapAsync(int userMembershipId, DateTime startDate, DateTime endDate)
+        public async Task<bool> HasDateOverlapAsync(int userMembershipId, DateTime startDate, DateTime endDate, int gymBranchId)
         {
+            // Verify the membership belongs to the same gym branch
+            var membership = await _context.TblUserMemberShips
+                .Include(um => um.User)
+                .FirstOrDefaultAsync(um => um.UserMemberShipId == userMembershipId &&
+                                         um.User.GymBranchId == gymBranchId);
+
+            if (membership == null)
+            {
+                throw new Exception("Membership not found or doesn't belong to this gym branch");
+            }
+
             // Get all existing freezes for this membership
             var existingFreezes = await _context.TblMemberShipFreezes
                 .Where(f => f.UserMemberShipId == userMembershipId)

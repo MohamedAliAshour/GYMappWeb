@@ -7,12 +7,12 @@ namespace GYMappWeb.Interface
 {
     public interface ITblMembershipType
     {
-        Task<PagedResult<GetWithPaginationTblMemberShipTypeViewModel>> GetAllMembershipTypesAsync(UserParameters userParameters);
-        Task<bool> AddMembershipTypeAsync(SaveTblMemberShipTypeViewModel model, string createdById);
-        Task<bool> UpdateMembershipTypeAsync(SaveTblMemberShipTypeViewModel model, int id, string updatedById);
-        Task<bool> DeleteMembershipTypeAsync(int id);
-        Task<bool> ToggleMembershipTypeStatusAsync(int id);
-        Task<bool> HasRelatedMembershipsAsync(int membershipTypeId);
-        Task<SaveTblMemberShipTypeViewModel> GetMembershipTypeDetailsAsync(int id);
+        Task<PagedResult<GetWithPaginationTblMemberShipTypeViewModel>> GetAllMembershipTypesAsync(UserParameters userParameters, int gymBranchId);
+        Task<bool> AddMembershipTypeAsync(SaveTblMemberShipTypeViewModel model, string createdById, int gymBranchId);
+        Task<bool> UpdateMembershipTypeAsync(SaveTblMemberShipTypeViewModel model, int id, string updatedById, int gymBranchId);
+        Task<bool> DeleteMembershipTypeAsync(int id, int gymBranchId);
+        Task<bool> ToggleMembershipTypeStatusAsync(int id, int gymBranchId);
+        Task<bool> HasRelatedMembershipsAsync(int membershipTypeId, int gymBranchId);
+        Task<SaveTblMemberShipTypeViewModel> GetMembershipTypeDetailsAsync(int id, int gymBranchId);
     }
 }

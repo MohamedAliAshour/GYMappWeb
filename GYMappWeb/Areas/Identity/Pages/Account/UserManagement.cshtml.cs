@@ -28,6 +28,7 @@ namespace GYMappWeb.Areas.Identity.Pages.Account
             public string UserName { get; set; }
             public int? GymBranch_ID { get; set; }
             public List<string> Roles { get; set; } = new List<string>();
+            public bool IsActive { get; set; }
         }
 
         public async Task OnGetAsync()
@@ -51,13 +52,16 @@ namespace GYMappWeb.Areas.Identity.Pages.Account
 
                 if (IsDeveloper)
                 {
-                    // Developer sees all users
-                    filteredUsers.Add(user);
+                    // Developer sees all users except other Developers
+                    if (!roles.Contains("Developer"))
+                    {
+                        filteredUsers.Add(user);
+                    }
                 }
                 else if (IsCaptain)
                 {
-                    // Captain sees only Users (not Developers)
-                    if (roles.Contains("User") && !roles.Contains("Developer"))
+                    // Captain sees only Users (not Developers or other Captains)
+                    if (roles.Contains("User") && !roles.Contains("Developer") && !roles.Contains("Captain"))
                     {
                         filteredUsers.Add(user);
                     }
@@ -79,7 +83,8 @@ namespace GYMappWeb.Areas.Identity.Pages.Account
                     Id = u.Id,
                     UserName = u.UserName,
                     GymBranch_ID = u.GymBranchId,
-                    Roles = _userManager.GetRolesAsync(u).Result.ToList()
+                    Roles = _userManager.GetRolesAsync(u).Result.ToList(),
+                    IsActive = u.IsActive
                 }).ToList();
         }
 
@@ -135,6 +140,63 @@ namespace GYMappWeb.Areas.Identity.Pages.Account
             }
 
             return Page();
+        }
+
+        public async Task<IActionResult> OnPostToggleUserStatusAsync(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return NotFound();
+            }
+
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            // Check current user's role to determine toggle permissions
+            var currentUser = await _userManager.GetUserAsync(User);
+            var currentUserRoles = await _userManager.GetRolesAsync(currentUser);
+            var targetUserRoles = await _userManager.GetRolesAsync(user);
+
+            // Developers can toggle anyone except other developers
+            if (currentUserRoles.Contains("Developer"))
+            {
+                if (targetUserRoles.Contains("Developer"))
+                {
+                    return BadRequest("Cannot toggle other developers");
+                }
+            }
+            // Captains can only toggle Users
+            else if (currentUserRoles.Contains("Captain"))
+            {
+                if (!targetUserRoles.Contains("User") || targetUserRoles.Contains("Developer") || targetUserRoles.Contains("Captain"))
+                {
+                    return BadRequest("Can only toggle regular users");
+                }
+            }
+            // Regular users cannot toggle anyone
+            else
+            {
+                return BadRequest("Insufficient permissions");
+            }
+
+            // Toggle the user's active status
+            user.IsActive = !user.IsActive;
+            var result = await _userManager.UpdateAsync(user);
+
+            if (result.Succeeded)
+            {
+                return RedirectToPage();
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return BadRequest("Failed to toggle user status");
         }
     }
 }

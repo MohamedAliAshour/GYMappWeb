@@ -11,6 +11,8 @@ namespace GYMappWeb.Interface
         Task<bool> Update(SaveGymBranchViewModel model, int id, string updatedById);
         Task<bool> Delete(int id);
         Task<bool> CheckNameExist(string name);
+
+        Task<bool> ToggleActive(int id);
         Task<bool> CheckLocationExist(string location);
         SaveGymBranchViewModel GetDetailsById(int id);
         Task<GetGymBranchViewModel> GetGymBranchDetailsAsync(int id);

@@ -21,7 +21,7 @@ namespace GYMappWeb.Service
             _context = context;
         }
 
-        public async Task<PagedResult<GetWithPaginationTblOfferViewModel>> GetAllOffersAsync(UserParameters userParameters)
+        public async Task<PagedResult<GetWithPaginationTblOfferViewModel>> GetAllOffersAsync(UserParameters userParameters, int gymBranchId)
         {
             var userNames = await _context.Users
                 .Select(u => new { u.Id, u.UserName })
@@ -29,6 +29,7 @@ namespace GYMappWeb.Service
 
             var query = _context.TblOffers
                 .Include(o => o.MemberShipTypes)
+                .Where(o => o.GymBranchId == gymBranchId) // Filter by gym branch
                 .AsQueryable();
 
             // Apply filtering
@@ -93,11 +94,21 @@ namespace GYMappWeb.Service
                 userParameters.PageSize);
         }
 
-        public async Task<bool> AddOfferAsync(SaveTblOfferViewModel model, string createdById)
+        public async Task<bool> AddOfferAsync(SaveTblOfferViewModel model, string createdById, int gymBranchId)
         {
+            // Check for duplicate offer name in the same gym branch
+            bool nameExists = await _context.TblOffers
+                .AnyAsync(o => o.OfferName.ToLower() == model.OfferName.ToLower() && o.GymBranchId == gymBranchId);
+
+            if (nameExists)
+            {
+                throw new Exception("An offer with this name already exists in this gym branch.");
+            }
+
             model.CreatedBy = createdById;
             model.CreatedDate = DateTime.Today;
             model.IsActive = true;
+            model.GymBranchId = gymBranchId; // Set gym branch ID
 
             var entity = ObjectMapper.Mapper.Map<TblOffer>(model);
             _context.Add(entity);
@@ -105,17 +116,30 @@ namespace GYMappWeb.Service
             return true;
         }
 
-        public async Task<bool> UpdateOfferAsync(SaveTblOfferViewModel model, int id, string updatedById)
+        public async Task<bool> UpdateOfferAsync(SaveTblOfferViewModel model, int id, string updatedById, int gymBranchId)
         {
             if (id != model.OffId)
             {
                 throw new Exception("Offer ID mismatch");
             }
 
-            var existingOffer = await _context.TblOffers.FindAsync(id);
+            var existingOffer = await _context.TblOffers
+                .FirstOrDefaultAsync(o => o.OffId == id && o.GymBranchId == gymBranchId);
+
             if (existingOffer == null)
             {
-                throw new Exception("Offer not found");
+                throw new Exception("Offer not found or doesn't belong to this gym branch");
+            }
+
+            // Check for duplicate name (excluding current record)
+            bool nameExists = await _context.TblOffers
+                .AnyAsync(o => o.OfferName.ToLower() == model.OfferName.ToLower() &&
+                             o.OffId != id &&
+                             o.GymBranchId == gymBranchId);
+
+            if (nameExists)
+            {
+                throw new Exception("An offer with this name already exists in this gym branch.");
             }
 
             existingOffer.OfferName = model.OfferName;
@@ -130,12 +154,14 @@ namespace GYMappWeb.Service
             return true;
         }
 
-        public async Task<bool> DeleteOfferAsync(int id)
+        public async Task<bool> DeleteOfferAsync(int id, int gymBranchId)
         {
-            var offer = await _context.TblOffers.FindAsync(id);
+            var offer = await _context.TblOffers
+                .FirstOrDefaultAsync(o => o.OffId == id && o.GymBranchId == gymBranchId);
+
             if (offer == null)
             {
-                throw new Exception("Offer not found");
+                throw new Exception("Offer not found or doesn't belong to this gym branch");
             }
 
             _context.TblOffers.Remove(offer);
@@ -143,29 +169,40 @@ namespace GYMappWeb.Service
             return true;
         }
 
-        public async Task<bool> HasRelatedMembershipsAsync(int offerId)
+        public async Task<bool> HasRelatedMembershipsAsync(int offerId, int gymBranchId)
         {
             return await _context.TblUserMemberShips
-                .AnyAsync(m => m.OffId == offerId);
+                .Include(m => m.Off)
+                .AnyAsync(m => m.OffId == offerId && m.Off.GymBranchId == gymBranchId);
         }
 
-        public async Task<TblOffer> GetOfferByIdAsync(int id)
+        public async Task<TblOffer> GetOfferByIdAsync(int id, int gymBranchId)
         {
-            return await _context.TblOffers.FindAsync(id);
+            return await _context.TblOffers
+                .FirstOrDefaultAsync(o => o.OffId == id && o.GymBranchId == gymBranchId);
         }
 
-        public async Task<SaveTblOfferViewModel> GetOfferDetailsByIdAsync(int id)
+        public async Task<SaveTblOfferViewModel> GetOfferDetailsByIdAsync(int id, int gymBranchId)
         {
-            var offer = await _context.TblOffers.FindAsync(id);
+            var offer = await _context.TblOffers
+                .FirstOrDefaultAsync(o => o.OffId == id && o.GymBranchId == gymBranchId);
+
+            if (offer == null)
+            {
+                throw new Exception("Offer not found or doesn't belong to this gym branch");
+            }
+
             return ObjectMapper.Mapper.Map<SaveTblOfferViewModel>(offer);
         }
 
-        public async Task<bool> ToggleOfferStatusAsync(int id)
+        public async Task<bool> ToggleOfferStatusAsync(int id, int gymBranchId)
         {
-            var offer = await _context.TblOffers.FindAsync(id);
+            var offer = await _context.TblOffers
+                .FirstOrDefaultAsync(o => o.OffId == id && o.GymBranchId == gymBranchId);
+
             if (offer == null)
             {
-                throw new Exception("Offer not found");
+                throw new Exception("Offer not found or doesn't belong to this gym branch");
             }
 
             // Toggle the IsActive status

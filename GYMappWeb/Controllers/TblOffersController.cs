@@ -26,13 +26,19 @@ namespace GYMappWeb.Controllers
 
         public async Task<IActionResult> Index(UserParameters userParameters)
         {
-            var offers = await _offerService.GetAllOffersAsync(userParameters);
+            var userSession = HttpContext.Session.GetUserSession();
+            var gymBranchId = userSession.GymBranchId ?? 1;
+
+            var offers = await _offerService.GetAllOffersAsync(userParameters, gymBranchId);
             return View(offers);
         }
 
         public IActionResult Create()
         {
-            SetupOfferFormViewData();
+            var userSession = HttpContext.Session.GetUserSession();
+            var gymBranchId = userSession.GymBranchId ?? 1;
+
+            SetupOfferFormViewData(gymBranchId);
             return View();
         }
 
@@ -45,7 +51,9 @@ namespace GYMappWeb.Controllers
                 try
                 {
                     var userSession = HttpContext.Session.GetUserSession();
-                    await _offerService.AddOfferAsync(model, userSession?.Id);
+                    var gymBranchId = userSession.GymBranchId ?? 1;
+
+                    await _offerService.AddOfferAsync(model, userSession?.Id, gymBranchId);
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
@@ -54,7 +62,10 @@ namespace GYMappWeb.Controllers
                 }
             }
 
-            SetupOfferFormViewData(model.MemberShipTypesId);
+            var userSessionForView = HttpContext.Session.GetUserSession();
+            var gymBranchIdForView = userSessionForView.GymBranchId ?? 1;
+
+            SetupOfferFormViewData(gymBranchIdForView, model.MemberShipTypesId);
             return View(model);
         }
 
@@ -67,8 +78,11 @@ namespace GYMappWeb.Controllers
 
             try
             {
-                var viewModel = await _offerService.GetOfferDetailsByIdAsync(id.Value);
-                SetupOfferFormViewData(viewModel.MemberShipTypesId);
+                var userSession = HttpContext.Session.GetUserSession();
+                var gymBranchId = userSession.GymBranchId ?? 1;
+
+                var viewModel = await _offerService.GetOfferDetailsByIdAsync(id.Value, gymBranchId);
+                SetupOfferFormViewData(gymBranchId, viewModel.MemberShipTypesId);
                 return View(viewModel);
             }
             catch
@@ -91,7 +105,9 @@ namespace GYMappWeb.Controllers
                 try
                 {
                     var userSession = HttpContext.Session.GetUserSession();
-                    await _offerService.UpdateOfferAsync(model, id, userSession?.Id);
+                    var gymBranchId = userSession.GymBranchId ?? 1;
+
+                    await _offerService.UpdateOfferAsync(model, id, userSession?.Id, gymBranchId);
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
@@ -100,7 +116,10 @@ namespace GYMappWeb.Controllers
                 }
             }
 
-            SetupOfferFormViewData(model.MemberShipTypesId);
+            var userSessionForView = HttpContext.Session.GetUserSession();
+            var gymBranchIdForView = userSessionForView.GymBranchId ?? 1;
+
+            SetupOfferFormViewData(gymBranchIdForView, model.MemberShipTypesId);
             return View(model);
         }
 
@@ -109,7 +128,10 @@ namespace GYMappWeb.Controllers
         {
             try
             {
-                var hasMemberships = await _offerService.HasRelatedMembershipsAsync(id);
+                var userSession = HttpContext.Session.GetUserSession();
+                var gymBranchId = userSession.GymBranchId ?? 1;
+
+                var hasMemberships = await _offerService.HasRelatedMembershipsAsync(id, gymBranchId);
                 return Json(hasMemberships);
             }
             catch (Exception ex)
@@ -124,7 +146,10 @@ namespace GYMappWeb.Controllers
         {
             try
             {
-                await _offerService.DeleteOfferAsync(id);
+                var userSession = HttpContext.Session.GetUserSession();
+                var gymBranchId = userSession.GymBranchId ?? 1;
+
+                await _offerService.DeleteOfferAsync(id, gymBranchId);
                 return Ok();
             }
             catch (Exception ex)
@@ -133,10 +158,10 @@ namespace GYMappWeb.Controllers
             }
         }
 
-        private void SetupOfferFormViewData(int? selectedMembershipTypeId = null)
+        private void SetupOfferFormViewData(int gymBranchId, int? selectedMembershipTypeId = null)
         {
             ViewData["MemberShipTypesId"] = new SelectList(
-                _context.TblMembershipTypes,
+                _context.TblMembershipTypes.Where(m => m.GymBranchId == gymBranchId && m.IsActive == true), // Filter by gym branch
                 "MemberShipTypesId",
                 "Name",
                 selectedMembershipTypeId
@@ -149,7 +174,10 @@ namespace GYMappWeb.Controllers
         {
             try
             {
-                await _offerService.ToggleOfferStatusAsync(id);
+                var userSession = HttpContext.Session.GetUserSession();
+                var gymBranchId = userSession.GymBranchId ?? 1;
+
+                await _offerService.ToggleOfferStatusAsync(id, gymBranchId);
                 return Ok();
             }
             catch (Exception ex)

@@ -129,6 +129,21 @@ namespace GYMappWeb.Controllers
             }
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleActive(int id)
+        {
+            try
+            {
+                await _gymBranchService.ToggleActive(id);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error toggling gym branch status: {ex.Message}");
+            }
+        }
+
         [HttpGet]
         public async Task<IActionResult> ValidateGymName(string value, string lang = "en")
         {

@@ -17,44 +17,8 @@ namespace GYMappWeb.Services
             _context = context;
         }
 
-        public async Task<List<GetWithPaginationTblUserViewModel>> GetAllUsersAsync()
+        public async Task<bool> Add(SaveTblUserViewModel model, string createdById,int gymBranchId)
         {
-            var userNames = await _context.Users
-                .Select(u => new { u.Id, u.UserName })
-                .ToDictionaryAsync(u => u.Id, u => u.UserName);
-
-            var users = await _context.TblUsers
-                .OrderBy(u => u.UserCode)
-                .ThenBy(u => u.UserName)
-                .Select(u => new GetWithPaginationTblUserViewModel
-                {
-                    UserId = u.UserId,
-                    UserCode = u.UserCode,
-                    UserName = u.UserName,
-                    UserPhone = u.UserPhone,
-                    IsActive = u.IsActive,
-                    Notes = u.Notes,
-                    CreatedDate = u.CreatedDate,
-                    CreatedBy = u.CreatedBy,
-                    CreatedByUserName = u.CreatedBy != null && userNames.ContainsKey(u.CreatedBy)
-                        ? userNames[u.CreatedBy]
-                        : "Unknown"
-                })
-                .ToListAsync();
-
-            return users;
-        }
-
-        public async Task<bool> Add(SaveTblUserViewModel model, string createdById)
-        {
-            // Check for duplicate username
-            bool usernameExists = await _context.TblUsers
-                .AnyAsync(u => u.UserName.ToLower() == model.UserName.ToLower());
-
-            if (usernameExists)
-            {
-                throw new Exception("A user with this name already exists.");
-            }
 
             // Check for duplicate phone number
             bool phoneExists = await _context.TblUsers
@@ -68,6 +32,7 @@ namespace GYMappWeb.Services
             // Set CreatedBy and CreatedDate
             model.CreatedBy = createdById;
             model.CreatedDate = DateTime.Today;
+            model.GymBranchId = gymBranchId;
 
             var entity = ObjectMapper.Mapper.Map<TblUser>(model);
             _context.Add(entity);
@@ -151,44 +116,44 @@ namespace GYMappWeb.Services
             }
         }
 
-        public async Task<bool> CheckNameExist(string name)
+        public async Task<bool> CheckPhoneExist(string phone, int gymBranchId)
         {
-            return await _context.TblUsers.AnyAsync(u => u.UserName.ToLower() == name.ToLower());
+            return await _context.TblUsers
+                .AnyAsync(u => u.UserPhone == phone && u.GymBranchId == gymBranchId);
         }
 
-        public async Task<bool> CheckPhoneExist(string phone)
-        {
-            return await _context.TblUsers.AnyAsync(u => u.UserPhone == phone);
-        }
-
-        public async Task<int> GetNextUserCode()
+        public async Task<int> GetNextUserCode(int gymBranchId)
         {
             var lastUser = await _context.TblUsers
+                .Where(u => u.GymBranchId == gymBranchId) // Filter by gym branch
                 .OrderByDescending(u => u.UserCode)
                 .FirstOrDefaultAsync();
 
             return lastUser != null ? lastUser.UserCode + 1 : 1;
         }
 
-        public TblUser GetById(int id)
+        public TblUser GetById(int id, int gymBranchId)
         {
-            return _context.TblUsers.Find(id);
+            return _context.TblUsers
+                .FirstOrDefault(u => u.UserId == id && u.GymBranchId == gymBranchId);
         }
 
-        public SaveTblUserViewModel GetDetailsById(int id)
+        public SaveTblUserViewModel GetDetailsById(int id, int gymBranchId)
         {
-            var tblUser = _context.TblUsers.Find(id);
+            var tblUser = _context.TblUsers
+                .FirstOrDefault(u => u.UserId == id && u.GymBranchId == gymBranchId);
+
             return ObjectMapper.Mapper.Map<SaveTblUserViewModel>(tblUser);
         }
 
-        public async Task<GetWithPaginationTblUserViewModel> GetUserDetailsAsync(int id)
+        public async Task<GetWithPaginationTblUserViewModel> GetUserDetailsAsync(int id, int gymBranchId)
         {
             var userNames = await _context.Users
                 .Select(u => new { u.Id, u.UserName })
                 .ToDictionaryAsync(u => u.Id, u => u.UserName);
 
             var user = await _context.TblUsers
-                .Where(u => u.UserId == id)
+                .Where(u => u.UserId == id && u.GymBranchId == gymBranchId)
                 .Select(u => new GetWithPaginationTblUserViewModel
                 {
                     UserId = u.UserId,
@@ -208,13 +173,16 @@ namespace GYMappWeb.Services
             return user;
         }
 
-        public async Task<PagedResult<GetWithPaginationTblUserViewModel>> GetWithPaginations(UserParameters userParameters)
+
+        public async Task<PagedResult<GetWithPaginationTblUserViewModel>> GetWithPaginations(UserParameters userParameters, int gymBranchId)
         {
             var userNames = await _context.Users
                 .Select(u => new { u.Id, u.UserName })
                 .ToDictionaryAsync(u => u.Id, u => u.UserName);
 
-            var query = _context.TblUsers.AsQueryable();
+            var query = _context.TblUsers
+                .Where(u => u.GymBranchId == gymBranchId) // Filter by gym branch
+                .AsQueryable();
 
             // Apply filtering
             if (!string.IsNullOrEmpty(userParameters.SearchTerm))
@@ -281,7 +249,7 @@ namespace GYMappWeb.Services
                 totalCount,
                 userParameters.PageNumber,
                 userParameters.PageSize);
-             }
+        }
 
     }
 }
