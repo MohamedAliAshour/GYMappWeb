@@ -48,7 +48,8 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LoginPath = "/Identity/Account/Login";
     options.AccessDeniedPath = "/Identity/Account/AccessDenied";
     options.Cookie.HttpOnly = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.None; // Change from Always to Never
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 builder.Services.AddRazorPages();
@@ -69,14 +70,13 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
-app.UseRequestLocalization();
-
 // Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
 
 app.UseStaticFiles();
 app.UseRouting();
