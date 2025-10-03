@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace GYMappWeb.Areas.Identity.Data;
 
@@ -19,10 +20,35 @@ public class GYMappWebContext : IdentityDbContext<ApplicationUser>
     public DbSet<TblUserMemberShip> TblUserMemberShips { get; set; }
     public DbSet<GymBranch> GymBranches { get; set; }
     public DbSet<Checkin> Checkins { get; set; }
+    public DbSet<LogEntry> Logs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        // Configure LogEntry table
+        builder.Entity<LogEntry>(entity =>
+        {
+            entity.ToTable("Logs");
+
+            // Indexes for better query performance
+            entity.HasIndex(e => e.Timestamp);
+            entity.HasIndex(e => e.Level);
+            entity.HasIndex(e => e.Controller);
+            entity.HasIndex(e => e.User);
+            entity.HasIndex(e => e.StatusCode);
+
+            // Configure string lengths
+            entity.Property(e => e.Level).HasMaxLength(50);
+            entity.Property(e => e.Logger).HasMaxLength(255);
+            entity.Property(e => e.Controller).HasMaxLength(100);
+            entity.Property(e => e.Action).HasMaxLength(100);
+            entity.Property(e => e.User).HasMaxLength(100);
+            entity.Property(e => e.Url).HasMaxLength(500);
+            entity.Property(e => e.IpAddress).HasMaxLength(50);
+            entity.Property(e => e.HttpMethod).HasMaxLength(10);
+            entity.Property(e => e.RequestPath).HasMaxLength(1000);
+        });
 
         // Configure ApplicationUser - Add IsActive property and GymBranchId foreign key
         builder.Entity<ApplicationUser>(entity =>

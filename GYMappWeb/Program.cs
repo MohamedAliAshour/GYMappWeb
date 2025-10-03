@@ -5,7 +5,7 @@ using GYMappWeb.Helper;
 using GYMappWeb.Services; // Add this namespace for your services
 using GYMappWeb.Interface;
 using GYMappWeb.Service;
-using Microsoft.AspNetCore.Mvc.Razor; // Add this namespace for your interfaces
+using Microsoft.AspNetCore.Mvc.Razor;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("GYMappWebContextConnection") ?? throw new InvalidOperationException("Connection string 'GYMappWebContextConnection' not found.");
@@ -25,6 +25,8 @@ builder.Services.AddScoped<ITblMembershipType, TblMembershipTypeService>();
 builder.Services.AddScoped<ITblMemberShipFreeze, TblMemberShipFreezeService>();
 builder.Services.AddScoped<IGymBranch, GymBranchService>();
 builder.Services.AddScoped<ICheckin, CheckinService>();
+builder.Services.AddScoped<ILogging, LoggingService>();
+
 // Add other services if needed
 // builder.Services.AddScoped<IMyOtherService, MyOtherService>();
 
